@@ -299,7 +299,7 @@ int fdlog_flush(void) {
  @param path MMAP缓存文件地址
  @param temp 内容
  */
-void fd_write_mmap_data_fd(char *path, unsigned char *temp) {
+void fd_write_mmap_data(char *path, unsigned char *temp) {
     fdlog_model->total_point = temp;
     fdlog_model->file_path = path; // 日志文件的路径
     char len_array[] = {'\0', '\0', '\0', '\0'};
@@ -321,7 +321,7 @@ void fd_write_mmap_data_fd(char *path, unsigned char *temp) {
             if (fd_init_file(fdlog_model)) {
                 fdlog_model->is_ok = 1;
                 fdlog_model->zlib_type = FD_ZLIB_NONE;
-                fd_flush();
+                fdlog_flush();
                 fclose(fdlog_model->file);
                 fdlog_model->file_stream_type = FD_FILE_CLOSE;
                 
@@ -390,7 +390,7 @@ void fd_read_mmap_data(const char *path_dirs) {
                                 memcpy(file_path, path_dirs, dir_len);
                                 strcat(file_path, path_str->valuestring);
                                 temp++;
-                                fd_write_mmap_data_fd(file_path, temp);
+                                fd_write_mmap_data(file_path, temp);
                             }
                         cJSON_Delete(cjson);
                     }
@@ -637,7 +637,7 @@ int fdlog_open(const char *pathname) {
     if (NULL != fdlog_model) { //回写到日志中
         
         if (fdlog_model->total_len > FD_WRITEPROTOCOL_HEAER_LENGTH) {
-            fd_flush(); // 直接强行写入 本地日志文件
+            fdlog_flush(); // 直接强行写入 本地日志文件
         }
         
         if (fdlog_model->file_stream_type == FD_FILE_OPEN) {

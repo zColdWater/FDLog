@@ -74,22 +74,6 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FDLog-Demo/fdlog/fd_log.c"
-            timestampString = "572946885.8880939"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "393"
-            endingLineNumber = "393"
-            landmarkName = "fd_read_mmap_data"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "FDLog-Demo/fdlog/fd_log.c"
             timestampString = "572946885.888381"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
