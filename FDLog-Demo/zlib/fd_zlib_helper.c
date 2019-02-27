@@ -8,6 +8,11 @@
 
 #include "fd_zlib_helper.h"
 #include "fd_aes_helper.h"
+#include <zlib.h>
+#include <stdlib.h>
+#include <string.h>
+
+
 
 /**
  压缩

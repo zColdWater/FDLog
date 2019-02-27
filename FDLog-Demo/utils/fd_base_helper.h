@@ -1,6 +1,3 @@
-#include <sys/time.h>
-#include <memory.h>
-
 #ifndef fd_base_helper_h
 #define fd_base_helper_h
 

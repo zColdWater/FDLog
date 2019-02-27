@@ -2,8 +2,7 @@
 #define fd_json_helper_h
 
 #include "cJSON.h"
-#include <stdlib.h>
-#include <string.h>
+
 
 #define FD_JSON_MAP_STRING 1
 #define FD_JSON_MAP_NUMBER 2

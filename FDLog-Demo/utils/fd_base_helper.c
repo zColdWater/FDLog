@@ -1,5 +1,7 @@
 #include "fd_base_helper.h"
 #include "fd_console_helper.h"
+#include <sys/time.h>
+#include <memory.h>
 
 #define FD_BYTEORDER_NONE  0
 #define FD_BYTEORDER_HIGH 1

@@ -9,11 +9,8 @@
 #ifndef fd_zlib_helper_h
 #define fd_zlib_helper_h
 
-#include "fd_logmodel.h"
-#include <zlib.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
+#include "fd_logmodel.h"
 
 // 定义数据块大小
 #define LOGAN_CHUNK 16384 // 16KB

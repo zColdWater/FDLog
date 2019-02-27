@@ -9,7 +9,6 @@
 #ifndef fd_aes_helper_h
 #define fd_aes_helper_h
 
-#include <string.h>
 #include <stdbool.h>
 
 

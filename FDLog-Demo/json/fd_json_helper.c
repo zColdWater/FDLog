@@ -1,5 +1,6 @@
 #include "fd_json_helper.h"
-
+#include <stdlib.h>
+#include <string.h>
 
 fd_json_map *fd_create_json_map(void) {
     fd_json_map *item = malloc(sizeof(fd_json_map));

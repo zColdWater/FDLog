@@ -1,5 +1,12 @@
 #include "fd_directory_helper.h"
 
+#include <string.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include "fd_logmodel.h"
+#include "fd_console_helper.h"
+
 #define FD_MAX_PATH 1024 //路径最大长度
 
 //判断文件和目录是否存在

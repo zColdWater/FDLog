@@ -1,10 +1,3 @@
-#include <string.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include "fd_logmodel.h"
-#include "fd_console_helper.h"
-
 #ifndef fd_directory_helper_h
 #define fd_directory_helper_h
 

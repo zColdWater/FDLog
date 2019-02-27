@@ -21,13 +21,6 @@
 #ifndef fd_mmap_helper_h
 #define fd_mmap_helper_h
 
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
 
 /**
  开启MMAP

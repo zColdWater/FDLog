@@ -9,6 +9,7 @@
 #include "fd_aes_helper.h"
 #include "mbedtls/aes.h"
 #include <stdio.h>
+#include <string.h>
 
 
 static unsigned char KEY[16] = {0}; 

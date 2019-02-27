@@ -88,6 +88,7 @@
 		4FC3AAA02224E30700B0FE77 /* cJSON.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA9E2224E30700B0FE77 /* cJSON.c */; };
 		4FC3AAA42224E34400B0FE77 /* fd_json_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AAA32224E34400B0FE77 /* fd_json_helper.c */; };
 		4FC3AAAB22251C6300B0FE77 /* fd_base_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AAAA22251C6300B0FE77 /* fd_base_helper.c */; };
+		4FC3AABB222622A100B0FE77 /* fd_construct_data.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -268,6 +269,9 @@
 		4FC3AAA32224E34400B0FE77 /* fd_json_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_json_helper.c; sourceTree = "<group>"; };
 		4FC3AAA922251C6300B0FE77 /* fd_base_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_base_helper.h; sourceTree = "<group>"; };
 		4FC3AAAA22251C6300B0FE77 /* fd_base_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_base_helper.c; sourceTree = "<group>"; };
+		4FC3AAB4222621B100B0FE77 /* fd_status.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_status.h; sourceTree = "<group>"; };
+		4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_construct_data.c; sourceTree = "<group>"; };
+		4FC3AABA222622A100B0FE77 /* fd_construct_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_construct_data.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -300,6 +304,8 @@
 		4FC3A8742221856300B0FE77 /* FDLog-Demo */ = {
 			isa = PBXGroup;
 			children = (
+				4FC3AAB52226227E00B0FE77 /* format_model */,
+				4FC3AAB22226218000B0FE77 /* fdlog */,
 				4FC3AAA522251BF200B0FE77 /* utils */,
 				4FC3AA9B2224E30700B0FE77 /* json */,
 				4FC3AA972224DFE300B0FE77 /* directory */,
@@ -564,6 +570,23 @@
 			path = utils;
 			sourceTree = "<group>";
 		};
+		4FC3AAB22226218000B0FE77 /* fdlog */ = {
+			isa = PBXGroup;
+			children = (
+				4FC3AAB4222621B100B0FE77 /* fd_status.h */,
+			);
+			path = fdlog;
+			sourceTree = "<group>";
+		};
+		4FC3AAB52226227E00B0FE77 /* format_model */ = {
+			isa = PBXGroup;
+			children = (
+				4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */,
+				4FC3AABA222622A100B0FE77 /* fd_construct_data.h */,
+			);
+			path = format_model;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -681,6 +704,7 @@
 				4FC3AA072221870C00B0FE77 /* asn1parse.c in Sources */,
 				4FC3AA332221870C00B0FE77 /* sha512.c in Sources */,
 				4FC3AA9A2224DFE300B0FE77 /* fd_directory_helper.c in Sources */,
+				4FC3AABB222622A100B0FE77 /* fd_construct_data.c in Sources */,
 				4FC3A9FA2221870C00B0FE77 /* x509_crl.c in Sources */,
 				4FC3AA032221870C00B0FE77 /* Makefile in Sources */,
 				4FC3AA022221870C00B0FE77 /* ssl_ciphersuites.c in Sources */,

@@ -1,5 +1,12 @@
 #include "fd_mmap_helper.h"
 #include "fd_console_helper.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 
 int fd_open_mmap_file(char *_filepath, unsigned char **buffer, unsigned char **cache) {
     int back = FD_MMAP_FAIL;

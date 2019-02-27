@@ -1,4 +1,6 @@
 #include "fd_console_helper.h"
+#include <stdarg.h>
+#include <stdio.h>
 
 static int fd_is_debug = 0;
 

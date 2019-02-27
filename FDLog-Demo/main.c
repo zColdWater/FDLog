@@ -12,19 +12,20 @@
 #include <string.h>
 
 // Person Model
-typedef struct
-{
-    char firstName[32];
-    char lastName[32];
-    char email[64];
-    int age;
-    float height;
-} PERSON;
+//typedef struct
+//{
+//    char firstName[32];
+//    char lastName[32];
+//    char email[64];
+//    int age;
+//    float height;
+//} PERSON;
 
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    printf("Hello, World!\n");
+    printf("size_t size: %lu \n", sizeof(size_t));
+    
+    
     
     
 //    // cJSON Demos
