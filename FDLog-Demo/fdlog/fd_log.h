@@ -19,8 +19,6 @@
 ////       FDLog 日志 API V1.0.0          ////
 /////////////////////////////////////////////
 
-
-
 /**
  FDLog: 初始化FDLog
  1.确定缓存文件类型
@@ -40,7 +38,6 @@ int fdlog_init(const char *cache_dirs,
                const char *encrypt_key16,
                const char *encrypt_iv16);
 
-
 /**
  创建本地日志文件
 
@@ -49,7 +46,31 @@ int fdlog_init(const char *cache_dirs,
  */
 int fdlog_open(const char *pathname);
 
+/**
+ 写入日志
+ 先写入缓存文件，当缓存满足条件存入本地文件。
 
+ @param flag 类型
+ @param log 日志内容
+ @param local_time 系统时间
+ @param thread_name 线程名字
+ @param thread_id 线程id
+ @param is_main 是否是主线程
+ @return 是否写入成功
+ */
+int fdlog_write(int flag,
+                char *log,
+                long long local_time,
+                char *thread_name,
+                long long thread_id,
+                int is_main);
+
+/**
+ 缓存文件写入本地日志文件
+
+ @return 是否成功写入
+ */
+int fdlog_flush(void);
 
 /**
  FDLog: 开启DEBUG模式 输出
@@ -60,8 +81,4 @@ int fdlog_open(const char *pathname);
 void fdlog_debug(int debug);
 
 #endif /* fd_log_h */
-
-
-
-
 

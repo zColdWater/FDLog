@@ -281,7 +281,7 @@ void fd_write_flush() {
 
  @return 状态
  */
-int fd_flush(void) {
+int fdlog_flush(void) {
     int back = FD_FLUSH_FAIL_INIT;
     if (!is_init_ok || NULL == fdlog_model) {
         return back;
@@ -821,7 +821,7 @@ void fd_write_section(char *data, int length) {
  @param is_main 是否为主线程，0为是主线程，1位非主线程 (int)
  */
 int
-fd_write(int flag, char *log, long long local_time, char *thread_name, long long thread_id,
+fdlog_write(int flag, char *log, long long local_time, char *thread_name, long long thread_id,
              int is_main) {
     int back = FD_WRITE_FAIL_HEADER;
     if (!is_init_ok || NULL == fdlog_model || !is_open_ok) {
