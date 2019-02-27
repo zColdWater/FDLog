@@ -539,6 +539,8 @@ int fdlog_init(const char *cache_dirs,
     
     
     if (is_init_ok) { // 初始化成功
+        
+        // 如果 fdlog_model 静态变量不存在，重新创建一份新的。
         if (NULL == fdlog_model) {
             fdlog_model = malloc(sizeof(fd_logmodel)); // 申请结构体字节总数
             if (NULL != fdlog_model) { //堆非空判断 , 如果为null , 就失败
@@ -550,10 +552,17 @@ int fdlog_init(const char *cache_dirs,
                 return back;
             }
         }
+        
+        // 如果缓存模式是MMAP 读取MMAP 缓存文件
+        // 如果缓存文件有内容 则写入文件
         if (flag == FD_MMAP_MMAP) { //MMAP的缓存模式,从缓存的MMAP中读取数据
             fd_read_mmap_data(_dir_path);
         }
+        
+        
         fd_printf("fd_init > logan init success\n");
+        
+        
     } else { // 初始化失败
         
         fd_printf("fd_open > logan init fail\n");
