@@ -11,6 +11,7 @@
 #include "cJSON.h"
 #include <string.h>
 #include "fd_log.h"
+#include <time.h>
 
 
 
@@ -53,14 +54,18 @@ int main(int argc, const char * argv[]) {
     const char key[16] = "0987654321654321";
     const char iv[16] = "0987654321654321";
     
+    unsigned long local_time = (unsigned long)time(NULL);
+    printf("local_time: %lu \n", local_time);
+    
     // 开启DEBUG
     fdlog_debug(1);
     int ret = fdlog_init(cache_dirs, log_path_dirs, max_file, key, iv);
     int ret1 = fdlog_open("日志文件");
+    int ret2 = fdlog_write(1, "阿克琉斯法国快乐哈说的话就爱哦上课hi 啊松花蛋哦 if hi 哦啊摔地哦还能否 i 哦啊啥的阿什顿", local_time, "main", 1, 1);
     
     printf("init result: %d \n", ret);
     printf("open result: %d \n", ret1);
-    
+    printf("write result: %d \n", ret2);
     
     
     

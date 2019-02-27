@@ -820,8 +820,7 @@ void fd_write_section(char *data, int length) {
  @param thread_id 线程id (long long) 为了兼容JAVA
  @param is_main 是否为主线程，0为是主线程，1位非主线程 (int)
  */
-int
-fdlog_write(int flag, char *log, long long local_time, char *thread_name, long long thread_id,
+int fdlog_write(int flag, char *log, long long local_time, char *thread_name, long long thread_id,
              int is_main) {
     int back = FD_WRITE_FAIL_HEADER;
     if (!is_init_ok || NULL == fdlog_model || !is_open_ok) {
