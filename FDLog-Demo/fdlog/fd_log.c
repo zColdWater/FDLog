@@ -401,6 +401,14 @@ void fd_read_mmap_data(const char *path_dirs) {
 }
 
 
+
+
+
+
+
+
+
+
 int fdlog_init(const char *cache_dirs,
                const char *path_dirs,
                int max_file,
@@ -496,7 +504,9 @@ int fdlog_init(const char *cache_dirs,
     if (isAddDivede)
         strcat(dirs, FD_DIVIDE_SYMBOL);
     fd_makedir(_dir_path); //创建缓存目录,如果初始化失败,注意释放_dir_path
-    // 给静态变量指针做绑定
+    
+    
+    // _logan_buffer _cache_buffer_buffer 赋值
     int flag = FD_MMAP_FAIL;
     if (NULL == _logan_buffer) { // 由于 _logan_buffer 指针 绑定了 MMAP
         if (NULL == _cache_buffer_buffer) { // 由于 _cache_buffer_buffer 指针 没有绑定 MMAP
@@ -508,6 +518,9 @@ int fdlog_init(const char *cache_dirs,
         flag = FD_MMAP_MMAP;
     }
     
+    
+    
+    // 判断缓存是哪种类型，然后改变状态。
     if (flag == FD_MMAP_MMAP) { // 使用MMAP 内存 文件绑定
         buffer_length = FD_MMAP_LENGTH;
         buffer_type = FD_MMAP_MMAP;
@@ -523,7 +536,9 @@ int fdlog_init(const char *cache_dirs,
         back = FD_INIT_FAIL_NOCACHE;
     }
     
-    if (is_init_ok) {
+    
+    
+    if (is_init_ok) { // 初始化成功
         if (NULL == fdlog_model) {
             fdlog_model = malloc(sizeof(fd_logmodel)); // 申请结构体字节总数
             if (NULL != fdlog_model) { //堆非空判断 , 如果为null , 就失败
@@ -539,17 +554,22 @@ int fdlog_init(const char *cache_dirs,
             fd_read_mmap_data(_dir_path);
         }
         fd_printf("fd_init > logan init success\n");
-    } else {
+    } else { // 初始化失败
+        
         fd_printf("fd_open > logan init fail\n");
-        // 初始化失败，删除所有路径
+        
+        // 释放 _dir_path
         if (NULL == _dir_path) {
             free(_dir_path);
             _dir_path = NULL;
         }
+        
+        // 释放 _mmap_file_path
         if (NULL == _mmap_file_path) {
             free(_mmap_file_path);
             _mmap_file_path = NULL;
         }
+        
     }
     return back;
 }
