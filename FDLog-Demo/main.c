@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include "cJSON.h"
 #include <string.h>
+#include "fd_log.h"
+
+
 
 // Person Model
 //typedef struct
@@ -23,7 +26,40 @@
 
 
 int main(int argc, const char * argv[]) {
-    printf("size_t size: %lu \n", sizeof(size_t));
+    
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working dir: %s \n", cwd);
+    } else {
+        perror("getcwd() error \n");
+        return 1;
+    }
+    
+    char* cache_dirs = (char *)malloc(1024);
+    memset(cache_dirs, 0, 1024);
+    memcpy(cache_dirs, cwd, 1024);
+    strcat(cache_dirs, "/缓存文件");
+    printf("缓存文件夹路径: %s \n", cache_dirs);
+    
+    char* log_path_dirs = (char *)malloc(1024);
+    memset(log_path_dirs, 0, 1024);
+    memcpy(log_path_dirs, cwd, 1024);
+    strcat(log_path_dirs, "/日志文件");
+    printf("日志文件夹路径: %s \n", log_path_dirs);
+
+    
+    int max_file = 1024*100;
+    
+    const char key[16] = "0987654321654321";
+    const char iv[16] = "0987654321654321";
+    
+    // 开启DEBUG
+    fdlog_debug(1);
+    int ret = fdlog_init(cache_dirs, log_path_dirs, max_file, key, iv);
+    int ret1 = fdlog_open("日志文件");
+    
+    printf("init result: %d \n", ret);
+    printf("open result: %d \n", ret1);
     
     
     

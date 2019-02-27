@@ -142,7 +142,7 @@ void fd_insert_header_file(fd_logmodel *loganModel) {
     fd_logmodel temp_model; //临时的fd_model
     int status_header = 1; // 表明 状态是 文件头日志
     memset(&temp_model, 0, sizeof(fd_logmodel)); // 清空结构体内存数据
-    if (Z_OK != fd_init_zlib(&temp_model)) { //
+    if (true != fd_init_zlib(&temp_model)) { //
         status_header = 0;
     }
     
@@ -301,7 +301,7 @@ int fd_flush(void) {
  */
 void fd_write_mmap_data_fd(char *path, unsigned char *temp) {
     fdlog_model->total_point = temp;
-    fdlog_model->file_path = path;
+    fdlog_model->file_path = path; // 日志文件的路径
     char len_array[] = {'\0', '\0', '\0', '\0'};
     len_array[0] = *temp;
     temp++;
@@ -519,7 +519,6 @@ int fdlog_init(const char *cache_dirs,
     }
     
     
-    
     // 判断缓存是哪种类型，然后改变状态。
     if (flag == FD_MMAP_MMAP) { // 使用MMAP 内存 文件绑定
         buffer_length = FD_MMAP_LENGTH;
@@ -553,8 +552,8 @@ int fdlog_init(const char *cache_dirs,
             }
         }
         
-        // 如果缓存模式是MMAP 读取MMAP 缓存文件
-        // 如果缓存文件有内容 则写入文件
+        // 如果读到了MMAP缓存文件存在 日志内容，那么将文件存入到本地日志内容中。
+        // 当没有读取到MMAP中的日志内容，那么直接退出。
         if (flag == FD_MMAP_MMAP) { //MMAP的缓存模式,从缓存的MMAP中读取数据
             fd_read_mmap_data(_dir_path);
         }
@@ -614,17 +613,18 @@ void fd_add_mmap_header(char *content, fd_logmodel *model) {
 }
 
 
-/**
- @brief 打开一个文件的写入
- @param pathname  文件名称
- */
-int fd_open(const char *pathname) {
+
+int fdlog_open(const char *pathname) {
+    
     int back = FD_OPEN_FAIL_NOINIT;
+    
+    // 必须初始化成功，不成功无法继续 fd_open 方法。
     if (!is_init_ok) {
         back = FD_OPEN_FAIL_NOINIT;
         return back;
     }
     
+    // 必要参数不能缺失，如果不满足条件 状态设置为 OPEN 失败 退出。
     is_open_ok = 0;
     if (NULL == pathname || 0 == strnlen(pathname, 128) || NULL == _logan_buffer ||
         NULL == _dir_path ||
@@ -633,10 +633,13 @@ int fd_open(const char *pathname) {
         return back;
     }
     
+    // 当total_len大于写
     if (NULL != fdlog_model) { //回写到日志中
+        
         if (fdlog_model->total_len > FD_WRITEPROTOCOL_HEAER_LENGTH) {
-            fd_flush();
+            fd_flush(); // 直接强行写入 本地日志文件
         }
+        
         if (fdlog_model->file_stream_type == FD_FILE_OPEN) {
             fclose(fdlog_model->file);
             fdlog_model->file_stream_type = FD_FILE_CLOSE;
@@ -675,7 +678,7 @@ int fd_open(const char *pathname) {
             return back;
         }
         
-        if (fd_init_zlib(fdlog_model) != Z_OK) { //初始化zlib压缩
+        if (fd_init_zlib(fdlog_model) != true) { //初始化zlib压缩
             is_open_ok = 0;
             back = FD_OPEN_FAIL_ZLIB;
             return back;
@@ -896,7 +899,7 @@ fd_write(int flag, char *log, long long local_time, char *thread_name, long long
  
  @param debug 模式
  */
-void fd_debug(int debug) {
+void fdlog_debug(int debug) {
     fd_set_debug(debug);
 }
 
