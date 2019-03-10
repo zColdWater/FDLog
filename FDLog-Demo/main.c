@@ -6,28 +6,644 @@
 //  Copyright © 2019 NIO. All rights reserved.
 //
 
+#include <dirent.h>
+#include <time.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "cJSON.h"
-#include <string.h>
 #include "fd_log.h"
-#include <time.h>
+#include "fd_directory_helper.h"
+#include "fd_core_model.h"
+#include "fd_mmap_helper.h"
+#include "fd_aes_helper.h"
+#include "fd_zlib_helper.h"
+#include "fd_json_helper.h"
+#include "fd_construct_data.h"
+
+extern FDLOGMODEL *model;
+extern unsigned char *mmap_ptr;
+extern unsigned char *mmap_tailer_ptr;
+extern int *mmap_content_len_ptr;
+extern int *mmap_header_content_len_ptr;
+extern char *mmap_header_content_ptr;
+extern int *mmap_log_content_ptr;
+extern char *log_folder_path;
+extern long *log_file_len;
+extern char *mmap_cache_file_path;
+extern char *log_file_path;
+
+long getmaximum(long a[], int numberOfElements)
+{
+    long mymaximum = 0;
+    for(int i = 0; i < numberOfElements; i++)
+    {
+        if(a[i] > mymaximum)
+        {
+            mymaximum = a[i];
+        }
+    }
+    return mymaximum;
+}
+
+
+/**
+ 获取当前时间
+ @return 时间 (使用完需要释放)
+ */
+char* get_current_date() {
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char time[18];
+    sprintf(time, "%d%d%d", (tm.tm_year + 1900),(tm.tm_mon + 1),(tm.tm_mday));
+    char* temp = (char *)malloc(sizeof(int)*3);
+    memcpy(temp, time, 18);
+    return temp;
+}
+
+/**
+ 初始化 FDLOGMODEL
+
+ @return 1成功 0失败
+ */
+FDLOGMODEL* init_logmodel() {
+
+    FDLOGMODEL *m = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
+    
+    if (m != NULL) {
+        memset(m, 0, sizeof(FDLOGMODEL));
+        m->is_ready_gzip = 0;
+        m->zlib_type = 0;
+        m->is_bind_mmap = 0;
+        memset(m->cache_remain_data, 0, 16);
+        m->cache_remain_data_len = 0;
+        
+        m->strm = NULL;
+        
+        return m;
+    }
+    else {
+        // malloc 失败 一般由于系统问题。
+        return NULL;
+    }
+}
+
+
+/**
+ 初始化创建文件夹
+
+ @param root_path 日志根路径
+ @return 1成功 0失败
+ */
+int init_fdlog_dirs(const char *root_path, FDLOGMODEL *m) {
+    
+    if ((log_folder_path == NULL) || (mmap_cache_file_path == NULL)) {
+        return 0;
+    }
+    
+    /// 缓存文件夹路径
+    char cache_folder_path[FD_MAX_PATH];
+    memset(cache_folder_path, 0, FD_MAX_PATH);
+    
+    /// 缓存文件路径
+    char cache_file_path[FD_MAX_PATH];
+    memset(cache_file_path, 0, FD_MAX_PATH);
+    
+    /// 日志文件夹路径
+    char log_folder_path1[FD_MAX_PATH];
+    memset(log_folder_path1, 0, FD_MAX_PATH);
+    
+    char path[FD_MAX_PATH];
+    memset(path, 0, FD_MAX_PATH);
+    strcat(path, root_path);
+    strcat(path, "/");
+    strcat(path, FD_LOG_FOLDER_NAME);
+    
+    strcpy(log_folder_path1, path);
+    strcat(path, "/");
+    strcat(path, FD_LOG_CACHE_FOLDER_NAME);
+    
+    strcpy(cache_folder_path, path);
+    strcat(path, "/");
+    strcat(path, FD_LOG_CACHE_NAME);
+    strcpy(cache_file_path, path);
+    
+    int ret = fd_makedir(cache_folder_path);
+
+    memcpy(mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
+    memcpy(log_folder_path, log_folder_path1, FD_MAX_PATH);
+    
+    // 失败
+    if (ret < 0) {
+        return 0;
+    }
+    else { // 成功
+        return 1;
+    }
+}
+
+
+/**
+ 插入缓存文件MMAP文件头
+
+ @return 1成功 0失败
+ */
+int insert_mmap_file_header() {
+    bool result = false;
+    
+    /// 组装MMAP文件头信息
+    cJSON *root = NULL;
+    fd_json_map *map = NULL;
+    root = cJSON_CreateObject();
+    map = fd_create_json_map();
+    char *back_data = NULL;
+    if (NULL != root) {
+        if (NULL != map) {
+            char* date = get_current_date();
+            fd_add_item_number(map, FD_VERSION_KEY, FD_VERSION_NUMBER);
+            fd_add_item_string(map, FD_DATE, date);
+            fd_add_item_number(map, FD_SIZE, FD_MMAP_LENGTH);
+            fd_inflate_json_by_map(root, map);
+            back_data = cJSON_PrintUnformatted(root);
+        }
+        cJSON_Delete(root);
+    }
+    
+    /// 置空缓存文件
+    if (mmap_ptr != NULL) {
+        memset(mmap_ptr, 0, FD_MMAP_LENGTH);
+        int len = (int)strlen(back_data);
+        unsigned char *temp = mmap_ptr;
+        /// ==== 写入缓存文件的头部内容  ====
+        *temp = FD_MMAP_FILE_HEADER;
+        temp++;
+        *temp = len;
+        temp++;
+        *temp = len >> 8;
+        temp++;
+        *temp = len >> 16;
+        temp++;
+        *temp = len >> 24;
+        temp++;
+        /// ==== 存入头部内容 ====
+        memcpy(temp, back_data, len);
+        temp += len;
+        *temp = FD_MMAP_FILE_TAILER;
+        temp++;
+        /// ==== 写入缓存文件的内容长度  ====
+        *temp = FD_MMAP_FILE_CONTENT_HEADER;
+        temp++;
+        /// 初始化内容长度为 0
+        memset(temp, 0, sizeof(int));
+        temp += sizeof(int);
+        *temp = FD_MMAP_FILE_CONTENT_TAILER;
+        
+        result = true;
+    } else {
+        printf("mmap pointer not bind memory! \n");
+    }
+    
+    printf("back_data:%s \n",back_data);
+    return result;
+}
 
 
 
-// Person Model
-//typedef struct
-//{
-//    char firstName[32];
-//    char lastName[32];
-//    char email[64];
-//    int age;
-//    float height;
-//} PERSON;
+/**
+ 写入日志
+
+ @param data 日志内容
+ @return 1成功 0失败
+ */
+int fdlog_write_to_cache(FD_Construct_Data *data) {
+    
+    if (!mmap_tailer_ptr) {
+        printf("mmap_tailer_ptr NULL!\n");
+        return 0;
+    }
+    
+    /// 写入日志到缓存文件
+    if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
+        // 开启新的日志单元
+        *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
+        /// 确定最后一条写入日志的长度位置 并且初始 = 0
+        mmap_log_content_ptr = (int *)(mmap_tailer_ptr + 1);
+        memset(mmap_log_content_ptr, 0, sizeof(int));
+        update_len_pointer(sizeof(char) + sizeof(int));
+        
+        if (!model->is_ready_gzip) {
+            int ret = fd_init_zlib1(model);
+            if (ret == 0) { return 0; }
+        }
+        
+        int ret = fd_zlib1(model, data->data, data->data_len, Z_SYNC_FLUSH);
+        printf("fd_zlib1 success! ret %d \n",ret);
+        if (ret) {
+            printf("fd_zlib1 success! \n");
+            fd_zlib_end_compress1(model);
+            // 加入写入结尾
+            *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
+            update_len_pointer(1);
+            return 1;
+        }
+    }
+    
+    return 0;
+}
+
+
+int init_global_var() {
+    
+    if (model == NULL) { model = init_logmodel(); }
+    else {
+        model->is_ready_gzip = 0;
+        model->zlib_type = 0;
+        model->is_bind_mmap = 0;
+        model->cache_remain_data_len = 0;
+        memset(model->aes_iv, 0, 16);
+        memset(model->cache_remain_data, 0, 16);
+        memset(model->strm, 0, sizeof(z_stream));
+    }
+    
+    if (mmap_header_content_ptr == NULL) { mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN); }
+    else { memset(mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN); }
+    
+    if (log_folder_path == NULL) { log_folder_path = (char*)calloc(1, FD_MAX_PATH); }
+    else { memset(log_folder_path, 0, FD_MAX_PATH); }
+    
+    if (mmap_cache_file_path == NULL) { mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH); }
+    else { memset(mmap_cache_file_path,0,FD_MAX_PATH); }
+    
+    if (log_file_len == NULL) { log_file_len = (long *)calloc(1, sizeof(long)); }
+    else { memset(log_file_len, 0, sizeof(long)); }
+    
+    if (log_file_path == NULL) { log_file_path = (char *)calloc(1, FD_MAX_PATH); }
+    else { memset(log_file_path, 0, FD_MAX_PATH); }
+    
+    if ((model == NULL) ||  (log_folder_path == NULL) || (mmap_cache_file_path == NULL) || (log_file_path == NULL) || (log_file_len == NULL)) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+
+
+/**
+ 寻找到上一次写入的文件名
+ @return 文件名
+ */
+char* look_for_last_logfile() {
+    
+    // 获取当天的日期字符串
+    char* date = get_current_date();
+    char* current_file_folder_name = (char *)calloc(1, FD_MAX_PATH);
+    strcat(current_file_folder_name,log_folder_path);
+    strcat(current_file_folder_name, "/");
+    strcat(current_file_folder_name, date);
+    
+    int folder_exist = fd_is_file_exist(current_file_folder_name);
+    if (!folder_exist) {
+        free(date);
+        free(current_file_folder_name);
+        date = NULL;
+        current_file_folder_name = NULL;
+        return NULL;
+    }
+    
+    strcat(current_file_folder_name, "/");
+    
+    char* files_name[1024] = {};
+    int i = 0;
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir (current_file_folder_name)) != NULL) {
+        while ((ent = readdir (dir)) != NULL) {
+            if (strstr(ent->d_name, date) != NULL) {
+                files_name[i] = ent->d_name;
+                i++;
+            }
+        }
+        closedir (dir);
+    } else {
+        perror ("");
+        free(date);
+        free(current_file_folder_name);
+        date = NULL;
+        current_file_folder_name = NULL;
+        return NULL;
+    }
+    
+    long files_name_number[i];
+    for(int j=0;j<i;j++) {
+        const char *c = files_name[j];
+        long d = atol(c);
+        files_name_number[j] = d;
+        printf("%ld\n", d);
+    }
+    
+    long max_file_name_num = getmaximum(files_name_number, i);
+    if (max_file_name_num == 0) {
+        free(date);
+        free(current_file_folder_name);
+        date = NULL;
+        current_file_folder_name = NULL;
+        return NULL;
+    }
+    
+    char max_file_name[12];
+    sprintf(max_file_name, "%ld", max_file_name_num);
+    strcat(current_file_folder_name, max_file_name);
+    
+    char* maxfile_name = (char*)calloc(1, FD_MAX_PATH);
+    strcpy(maxfile_name, current_file_folder_name);
+    
+    free(date);
+    free(current_file_folder_name);
+    date = NULL;
+    current_file_folder_name = NULL;
+    return maxfile_name;
+}
+
+
+
+/**
+ 创建日志文件
+ 
+ 1. 先找有没有当天文件夹
+ 2. 没有创建文件夹，并且进入文件夹创建日志文件。
+ 
+ @return 1成功 0失败
+ */
+int create_new_logfile() {
+    
+    // 获取当天的日期字符串
+    char* date = get_current_date();
+    char* current_file_folder_name = (char *)calloc(1, FD_MAX_PATH);
+    strcat(current_file_folder_name,log_folder_path);
+    strcat(current_file_folder_name, "/");
+    strcat(current_file_folder_name, date);
+    
+    int folder_exist = fd_is_file_exist(current_file_folder_name);
+    if (!folder_exist) {
+        int ret = fd_makedir(current_file_folder_name);
+        if (ret != 0) {
+            free(date);
+            free(current_file_folder_name);
+            date = NULL;
+            current_file_folder_name = NULL;
+            return 0;
+        }
+    }
+    strcat(current_file_folder_name, "/");
+    
+    int same = 1;
+    int additional = 1;
+    char file_name[FD_MAX_PATH+sizeof(int)] = {0};
+    while (same) {
+        
+        char additional_str[sizeof(int)];
+        sprintf(additional_str, "%d", additional);
+        
+        char logfile[FD_MAX_PATH+sizeof(int)] = {0};
+        strcat(logfile, date);
+        strcat(logfile, additional_str);
+        strcpy(file_name, logfile);
+        printf("logfile:%s \n",logfile);
+        
+        /// 遍历文件夹里面的文件名
+        int is_same_name = 0;
+        DIR *dir;
+        struct dirent *ent;
+        if ((dir = opendir (current_file_folder_name)) != NULL) {
+            while ((ent = readdir (dir)) != NULL) {
+                printf ("%s\n", ent->d_name);
+                if(strcmp(logfile,ent->d_name)==0) {
+                    printf("日志文件有重名\n");
+                    is_same_name = 1;
+                    break;
+                }
+            }
+            closedir (dir);
+        } else {
+            perror ("");
+            free(date);
+            free(current_file_folder_name);
+            date = NULL;
+            current_file_folder_name = NULL;
+            return 0;
+        }
+        
+        additional++;
+        same = is_same_name;
+    }
+    strcat(current_file_folder_name, file_name);
+    
+    int log_file_exist = fd_is_file_exist(current_file_folder_name);
+    if (!log_file_exist) {
+        FILE *file_temp = fopen(current_file_folder_name, "ab+");
+        if (NULL != file_temp) {  //初始化文件流开启
+            fseek(file_temp, 0, SEEK_END);
+            long longBytes = ftell(file_temp);
+            memcpy(log_file_len, &longBytes, sizeof(long));
+            if (log_file_path == NULL) {
+                log_file_path = (char *)calloc(1, FD_MAX_PATH);
+            } else {
+                memset(log_file_path, 0, FD_MAX_PATH);
+            }
+            memcpy(log_file_path, current_file_folder_name, FD_MAX_PATH);
+            fclose(file_temp);
+        } else {
+            printf("文件流打开失败!\n");
+            free(date);
+            free(current_file_folder_name);
+            date = NULL;
+            current_file_folder_name = NULL;
+            return 0;
+        }
+    }
+    
+    free(date);
+    free(current_file_folder_name);
+    date = NULL;
+    current_file_folder_name = NULL;
+    return 1;
+}
+
+
+/**
+ 同步缓存文件到本地日志文件
+ 
+ @return 1成功 0失败
+ */
+int fdlog_cache_sync_to_local() {
+    
+    int is_new_logfile = 0;
+    char* last_file_name = look_for_last_logfile();
+    // 如果找不到上一次打开文件
+    if (last_file_name == NULL) {
+        int ret = create_new_logfile();
+        if (ret) {
+            is_new_logfile = 1;
+        }
+    }
+    else {
+        // 如果找到上一次打开文件 读取数据
+        memset(log_file_path, 0, FD_MAX_PATH);
+        memcpy(log_file_path, last_file_name, FD_MAX_PATH);
+        FILE *file_temp = fopen(log_file_path, "ab+");
+        if (NULL != file_temp) {  //初始化文件流开启
+            fseek(file_temp, 0, SEEK_END);
+            long longBytes = ftell(file_temp);
+            memcpy(log_file_len, &longBytes, sizeof(long));
+            fclose(file_temp);
+        } else {
+            printf("文件流打开失败!\n");
+            free(last_file_name);
+            last_file_name = NULL;
+            return 0;
+        }
+    }
+    
+    if (!((log_file_len != NULL) && (mmap_tailer_ptr != NULL) && (mmap_content_len_ptr != NULL) && (*mmap_content_len_ptr > 0))) {
+        return 0;
+    }
+    
+    /// 重新创建文件绑定指针
+    if ((*mmap_content_len_ptr + *log_file_len) > FD_MAX_LOG_SIZE) {
+        // 如果没创建新文件 创建新文件保存日志，因为日志长度大于设定最大长度。
+        if (!is_new_logfile) {
+            memset(log_file_path, 0, FD_MAX_PATH);
+            memset(log_file_len, 0, sizeof(long));
+            create_new_logfile();
+        }
+    }
+    
+    int bind = bind_cache_file_pointer_from_header(mmap_ptr);
+    printf("bind:%d\n",bind);
+    
+    /// 尾巴必须指向 FD_MMAP_FILE_CONTENT_WRITE_TAILER 文件尾巴
+    if (*(mmap_tailer_ptr - 1) != FD_MMAP_FILE_CONTENT_WRITE_TAILER) {
+        printf("mmap_tailer_ptr != FD_MMAP_FILE_CONTENT_WRITE_TAILER!\n");
+        return 0;
+    }
+    
+    /// 开始写入日志到本地文件
+    FILE* stream;
+    stream = fopen(log_file_path, "ab+");
+    unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
+    fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);//写入到文件中
+    fflush(stream);
+    fclose(stream);
+    *log_file_len += *mmap_content_len_ptr; //修改文件大小
+    
+    /// 重置缓存MMAP相关信息
+    int ret = insert_mmap_file_header();
+    if (ret == 0) { return 0; }
+    int ret1 = bind_cache_file_pointer_from_header(mmap_ptr);
+    if (ret1 == 0) { return 0; }
+    
+    return 1;
+}
+
+
+
+int fdlog_initialize(char* root,
+                      char* key,
+                      char* iv) {
+
+    int ret = init_global_var();
+    if (ret == 0) { return 0; }
+    int ret1 = init_fdlog_dirs(root, model);
+    if (ret1 == 0) { return 0; }
+    int ret2 = fd_open_mmap_file1(model, mmap_cache_file_path, &mmap_ptr);
+    if (ret2 == 0) { return 0; }
+    fd_aes_init_key_iv(key, iv);
+    fd_aes_inflate_iv(model->aes_iv);
+    int ret3 = fd_init_zlib1(model);
+    if (ret3 == 0) { return 0; }
+    
+    // 读取缓存文件头部信息
+    int ret4 = bind_cache_file_pointer_from_header(mmap_ptr);
+    if (ret4) {
+        cJSON* croot = cJSON_Parse(mmap_header_content_ptr);
+        char* cache_date = (char*)calloc(1, 1024);
+        strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
+        printf("mmap_header_content_ptr date:%s\n",cache_date);
+        cJSON_Delete(croot);
+        char* current_date = get_current_date();
+        
+        long before = atol(cache_date);
+        long now = atol(current_date);
+        
+        if (now > before) { // 缓存文件过期，不是当天的。
+            int ret1 = fdlog_cache_sync_to_local();
+            if (ret1 == 0) { return 0; }
+            int ret2 = insert_mmap_file_header();
+            if (ret2 == 0) { return 0; }
+            int ret3 = bind_cache_file_pointer_from_header(mmap_ptr);
+            if (ret3 == 0) { return 0; }
+        }
+        else {
+            int ret0 = bind_cache_file_pointer_from_header(mmap_ptr);
+            if (ret0 == 0) { return 0; }
+        }
+    }
+    // 读取缓存文件头部信息失败
+    else {
+        int ret = insert_mmap_file_header();
+        if (ret == 0) { return 0; }
+        int ret1 = bind_cache_file_pointer_from_header(mmap_ptr);
+        if (ret1 == 0) { return 0; }
+    }
+    
+    return 1;
+}
+
+
+
+
+
+/**
+ FDLog: 日志写入
+
+ @param data 日志结构信息
+ @return 1成功 0失败
+ */
+int fdlog_auto_write(FD_Construct_Data *data) {
+    
+    printf("longBytes:%f!\n",(float)*mmap_content_len_ptr);
+    printf("maxBytes:%f!\n",(float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE));
+    
+    /// 缓存长度已经大于设置的最大值，同步到本地文件。
+    if ((float)*mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
+        printf("cache length more large than max!\n");
+        int ret = fdlog_cache_sync_to_local();
+        if (!ret) {
+            printf("sync cache to local failture!\n");
+            return 0;
+        }
+        int ret1 = fdlog_write_to_cache(data);
+        if (!ret1) {
+            printf("write to cache failture!\n");
+            return 0;
+        }
+    }
+    else {
+        int ret1 = fdlog_write_to_cache(data);
+        if (!ret1) {
+            printf("write to cache failture!\n");
+            return 0;
+        }
+    }
+    return 1;
+}
 
 
 int main(int argc, const char * argv[]) {
     
+    // 获得当前文件目录地址
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("Current working dir: %s \n", cwd);
@@ -36,91 +652,17 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
     
-    char* cache_dirs = (char *)malloc(1024);
-    memset(cache_dirs, 0, 1024);
-    memcpy(cache_dirs, cwd, 1024);
-    strcat(cache_dirs, "/缓存文件");
-    printf("缓存文件夹路径: %s \n", cache_dirs);
+    /// 写入内容到缓存文件
+    char *log = "日志我随便写，现在就俩问题，内存泄漏，大批量写入，线程。";
+    FD_Construct_Data *data = fd_construct_json_data(log, 1, 123123, "main",1, 1);
+    int success = fdlog_initialize(cwd, "0123456789012345", "0123456789012345");
+    if (success) { printf("fd_initialize_log success! \n"); }
     
-    char* log_path_dirs = (char *)malloc(1024);
-    memset(log_path_dirs, 0, 1024);
-    memcpy(log_path_dirs, cwd, 1024);
-    strcat(log_path_dirs, "/日志文件");
-    printf("日志文件夹路径: %s \n", log_path_dirs);
-
-    
-    int max_file = 1024*100;
-    
-    const char key[16] = "0987654321654321";
-    const char iv[16] = "0987654321654321";
-    
-    unsigned long local_time = (unsigned long)time(NULL);
-    printf("local_time: %lu \n", local_time);
-    
-    // 开启DEBUG
-    fdlog_debug(1);
-    int ret = fdlog_init(cache_dirs, log_path_dirs, max_file, key, iv);
-    int ret1 = fdlog_open("日志文件");
-    int ret2 = fdlog_write(1, "阿克琉斯法国快乐哈说的话就爱哦上课hi 啊松花蛋哦 if hi 哦啊摔地哦还能否 i 哦啊啥的阿什顿", local_time, "main", 1, 1);
-    
-    printf("init result: %d \n", ret);
-    printf("open result: %d \n", ret1);
-    printf("write result: %d \n", ret2);
-    
-    
-    
-//    // cJSON Demos
-//    char json_str[] = "{\"firstName\":\"Brett\"}";
-//    cJSON* root = cJSON_Parse(json_str);
-//    printf("root value: %s \n",root->valuestring);
-//    printf("root key: %s \n",root->string);
-//
-//    cJSON* item = cJSON_GetObjectItem(root,"firstName");
-//    printf("firstName value: %s \n",item->valuestring);
-//    printf("firstName key: %s \n",item->string);
-//
-//    // 释放
-//    cJSON_Delete(root);
-
-    
-//    char json_str1[] = "{\"person\":{\"firstName\":\"z\",\"lastName\":\"jadena\",\"email\":\"jadena@126.com\",\"age\":8,\"height\":1.17}}";
-//    cJSON* root1 = cJSON_Parse(json_str1);
-//    cJSON* object = cJSON_GetObjectItem(root1,"person");
-//
-//    cJSON* item;
-//    PERSON person;
-//    memset(&person, 0, sizeof(PERSON));
-//
-//    item = cJSON_GetObjectItem(object,"firstName");
-//    memcpy(person.firstName,item->valuestring,strlen(item->valuestring));
-//    item = cJSON_GetObjectItem(object,"lastName");
-//    memcpy(person.lastName,item->valuestring,strlen(item->valuestring));
-//    item = cJSON_GetObjectItem(object,"email");
-//    memcpy(person.email,item->valuestring,strlen(item->valuestring));
-//    item = cJSON_GetObjectItem(object,"age");
-//    person.age=item->valueint;
-//    item = cJSON_GetObjectItem(object,"height");
-//    person.height = item->valuedouble;
-//
-//    // 释放
-//    cJSON_Delete(root1);
-//
-//    printf("person firstName: %s \n", person.firstName);
-//    printf("person lastName: %s \n", person.lastName);
-//    printf("person email: %s \n",person.email);
-//    printf("person age: %d \n", person.age);
-//    printf("person height: %f \n", person.height);
-
-
-//    char json_str2[] = "{\"people\":[{\"firstName\":\"z\",\"lastName\":\"Jason\",\"email\":\"bbbb@126.com\",\"height\":1.67},{\"lastName\":\"jadena\",\"email\":\"jadena@126.com\",\"age\":8,\"height\":1.17},  {\"email\":\"cccc@126.com\",\"firstName\":\"z\",\"lastName\":\"Juliet\",\"age\":36,\"height\":1.55}]}";
-//    cJSON* root2 = cJSON_Parse(json_str2);
-//    cJSON* people_arr = cJSON_GetObjectItem(root2, "people");
-//    int len = cJSON_GetArraySize(people_arr);
-//    printf("数组长度 %d \n", len);
-//    cJSON* someone = cJSON_GetArrayItem(people_arr, 1);
-//    cJSON* email = cJSON_GetObjectItem(someone, "email");
-//    printf("email: %s \n", email->valuestring);
-    
+    int i = 0;
+    while (i < 99999) {
+        fdlog_auto_write(data);
+        i++;
+    }
     
     return 0;
 }

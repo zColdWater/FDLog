@@ -21,6 +21,8 @@
 #ifndef fd_mmap_helper_h
 #define fd_mmap_helper_h
 
+#include "fd_core_model.h"
+
 
 /**
  开启MMAP
@@ -31,5 +33,8 @@
  @return 开启状态 (1)MMAP (0)MEMORY (-1)FAIL
  */
 int fd_open_mmap_file(char *_filepath, unsigned char **buffer, unsigned char **cache);
+
+int fd_open_mmap_file1(FDLOGMODEL *model,char *_filepath, unsigned char **buffer);
+
 
 #endif

@@ -11,6 +11,7 @@
 
 #include <stdbool.h>
 #include "fd_logmodel.h"
+#include "fd_core_model.h"
 
 // 定义数据块大小
 #define LOGAN_CHUNK 16384 // 16KB
@@ -33,6 +34,8 @@
  */
 bool fd_init_zlib(fd_logmodel *model);
 
+bool fd_init_zlib1(FDLOGMODEL *m);
+
 
 /**
  开始压缩
@@ -43,6 +46,8 @@ bool fd_init_zlib(fd_logmodel *model);
  */
 void fd_zlib_compress(fd_logmodel *model, char *data, int data_len);
 
+bool fd_zlib1(FDLOGMODEL *model, char *data, int data_len, int type);
+
 
 /**
  结束压缩
@@ -52,7 +57,7 @@ void fd_zlib_compress(fd_logmodel *model, char *data, int data_len);
  @param model logmodel
  */
 void fd_zlib_end_compress(fd_logmodel *model);
-
+void fd_zlib_end_compress1(FDLOGMODEL *model);
 
 /**
  释放压缩流

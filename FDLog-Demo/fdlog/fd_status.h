@@ -1,6 +1,8 @@
 #ifndef fd_status_h
 #define fd_status_h
 
+#include "fd_core_model.h"
+
 #define FD_INIT_STATUS "clogan_init" //初始化函数
 #define FD_INIT_SUCCESS_MMAP -1010 //初始化成功, mmap内存
 #define FD_INIT_SUCCESS_MEMORY -1020 //初始化成功, 堆内存
@@ -30,5 +32,7 @@
 #define FD_FLUSH_STATUS "clogan_flush" //强制写入函数
 #define FD_FLUSH_SUCCESS -5010 //fush日志成功
 #define FD_FLUSH_FAIL_INIT -5020 //初始化失败,日志flush不成功
+
+
 
 #endif

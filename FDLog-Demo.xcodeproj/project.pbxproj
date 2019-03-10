@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F7489E9223235040042EEA7 /* fd_core_model.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F7489E8223235040042EEA7 /* fd_core_model.c */; };
 		4FC3A8762221856300B0FE77 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A8752221856300B0FE77 /* main.c */; };
 		4FC3A9F02221870C00B0FE77 /* x509_create.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9A62221870C00B0FE77 /* x509_create.c */; };
 		4FC3A9F12221870C00B0FE77 /* x509_crt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9A72221870C00B0FE77 /* x509_crt.c */; };
@@ -105,6 +106,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F7489E6222E3D960042EEA7 /* fd_core_model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_core_model.h; sourceTree = "<group>"; };
+		4F7489E8223235040042EEA7 /* fd_core_model.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fd_core_model.c; sourceTree = "<group>"; };
 		4FC3A8722221856300B0FE77 /* FDLog-Demo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FDLog-Demo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FC3A8752221856300B0FE77 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		4FC3A95C2221870C00B0FE77 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -504,6 +507,8 @@
 			isa = PBXGroup;
 			children = (
 				4FC3AA49222387AF00B0FE77 /* fd_logmodel.h */,
+				4F7489E6222E3D960042EEA7 /* fd_core_model.h */,
+				4F7489E8223235040042EEA7 /* fd_core_model.c */,
 			);
 			path = model;
 			sourceTree = "<group>";
@@ -706,6 +711,7 @@
 				4FC3AA132221870C00B0FE77 /* cmac.c in Sources */,
 				4FC3A9FF2221870C00B0FE77 /* aesni.c in Sources */,
 				4FC3AA142221870C00B0FE77 /* bignum.c in Sources */,
+				4F7489E9223235040042EEA7 /* fd_core_model.c in Sources */,
 				4FC3AA072221870C00B0FE77 /* asn1parse.c in Sources */,
 				4FC3AA332221870C00B0FE77 /* sha512.c in Sources */,
 				4FC3AA9A2224DFE300B0FE77 /* fd_directory_helper.c in Sources */,
