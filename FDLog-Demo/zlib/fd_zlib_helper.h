@@ -10,13 +10,11 @@
 #define fd_zlib_helper_h
 
 #include <stdbool.h>
-#include "fd_logmodel.h"
 #include "fd_core_model.h"
 
-// 定义数据块大小
-#define LOGAN_CHUNK 16384 // 16KB
+#define LOGAN_CHUNK 16384 // 定义数据块大小 16KB
 
-// 定义Logan_zlib的状态类型
+/// Compress State
 #define FD_ZLIB_NONE 0
 #define FD_ZLIB_INIT 1
 #define FD_ZLIB_ING  2
@@ -24,48 +22,8 @@
 #define FD_ZLIB_FAIL 4
 
 
-/**
- 初始化zlib
-
- 初始化zlib，并且修改log模型里面的关于zlib相关属性
- 
- @param model log模型
- @return bool 初始化是否成功
- */
-bool fd_init_zlib(fd_logmodel *model);
-
-bool fd_init_zlib1(FDLOGMODEL *m);
-
-
-/**
- 开始压缩
-
- @param model logmodel
- @param data 待压缩的字节
- @param data_len 待压缩的字节长度
- */
-void fd_zlib_compress(fd_logmodel *model, char *data, int data_len);
-
-bool fd_zlib1(FDLOGMODEL *model, char *data, int data_len, int type);
-
-
-/**
- 结束压缩
- 
- 将剩余数据全部压缩 也是z_stream最后一次压缩
-
- @param model logmodel
- */
-void fd_zlib_end_compress(fd_logmodel *model);
-void fd_zlib_end_compress1(FDLOGMODEL *model);
-
-/**
- 释放压缩流
- 
- 修正压缩相关状态 删除初始化的z_stream
-
- @param model logmodel
- */
-void fd_zlib_delete_stream(fd_logmodel *model);
+bool fd_init_zlib(FDLOGMODEL *model);
+bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type);
+void fd_zlib_end_compress(FDLOGMODEL *model);
 
 #endif /* fd_zlib_helper_h */

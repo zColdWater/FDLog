@@ -32,8 +32,6 @@
  @param cache 未绑定MMAP成功 使用内存 也就是静态变量 来存缓存
  @return 开启状态 (1)MMAP (0)MEMORY (-1)FAIL
  */
-int fd_open_mmap_file(char *_filepath, unsigned char **buffer, unsigned char **cache);
-
 int fd_open_mmap_file1(FDLOGMODEL *model,char *_filepath, unsigned char **buffer);
 
 

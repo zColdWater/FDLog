@@ -12,6 +12,8 @@
 #include <zlib.h>
 #include <stdio.h>
 
+#define FD_VERSION_KEY "fdlog_version"
+#define FD_VERSION_NUMBER 1 // FDLog 版本号
 #define FD_VERSION "v1"
 #define FD_LOG_FOLDER_NAME "fdlog_" FD_VERSION
 #define FD_LOG_CACHE_FOLDER_NAME "cache"
@@ -42,6 +44,8 @@
 #define FD_MMAP_FILE_CONTENT_WRITE_TAILER '@'
 
 
+#define READY_GZIP 1 // 可以压缩GZIP [fd_logmodel.is_ready_gzip]
+#define NOT_READY_GZIP 0 // 不可以压缩GZIP [fd_logmodel.is_ready_gzip]
 
 
 /**

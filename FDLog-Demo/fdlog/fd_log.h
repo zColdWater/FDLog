@@ -8,77 +8,78 @@
 
 #ifndef fd_log_h
 #define fd_log_h
-
-#include <stdio.h>
-#include <zlib.h>
-#include <stdlib.h>
-#include "fd_logmodel.h"
-
+#include "fd_construct_data.h"
 
 /////////////////////////////////////////////
 ////       FDLog 日志 API V1.0.0          ////
 /////////////////////////////////////////////
 
 /**
- FDLog: 初始化FDLog
- 1.确定缓存文件类型
- 2.如果缓存文件有内容，创建本地日志文件，并且将缓存写入本地。
- 3.确定AES加密 Key 和 IV
+ 日志初始化
 
- @param cache_dirs 日志缓存文件夹路径
- @param path_dirs 日志本地文件夹路径
- @param max_file 文件最大长度
- @param encrypt_key16 16位Key
- @param encrypt_iv16 16位向量
- @return 初始化状态
- */
-int fdlog_init(const char *cache_dirs,
-               const char *path_dirs,
-               int max_file,
-               const char *encrypt_key16,
-               const char *encrypt_iv16);
-
-/**
- 创建本地日志文件
-
- @param pathname 文件名字，一般以时间为主
- @return 打开文件的状态
- */
-int fdlog_open(const char *pathname);
-
-/**
- 写入日志
- 先写入缓存文件，当缓存满足条件存入本地文件。
-
- @param flag 类型
- @param log 日志内容
- @param local_time 系统时间
- @param thread_name 线程名字
- @param thread_id 线程id
- @param is_main 是否是主线程
- @return 是否写入成功
- */
-int fdlog_write(int flag,
-                char *log,
-                long long local_time,
-                char *thread_name,
-                long long thread_id,
-                int is_main);
-
-/**
- 缓存文件写入本地日志文件
-
- @return 是否成功写入
- */
-int fdlog_flush(void);
-
-/**
- FDLog: 开启DEBUG模式 输出
- 是否为debug环境 1为开启 0 为关闭
+ Usage:
+ // 当前地址
+ char cwd[1024];
+ if (getcwd(cwd, sizeof(cwd)) != NULL) {
+ printf("Current working dir: %s \n", cwd);
+ } else {
+ perror("getcwd() error \n");
+ return 1;
+ }
  
- @param debug 是否开启
+ // 开始记录日志
+ char *log = "FDLog 日志记录！";
+ int flag = 5;
+ long long localtime = 123123;
+ char thread_name[] = "main";
+ int thread_id = 1;
+ int is_main = 1;
+ FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
+ 
+ char KEY[] = "0123456789012345";
+ char IV[] = "0123456789012345";
+ int success = fdlog_initialize(cwd, KEY, IV);
+ if (!success) {
+ printf("fd_initialize_log failture! \n");
+ }
+ 
+ @param root 日志根目录
+ @param key AES128 KEY (加密方式用的是AES128 PADDING模式PKCS7 CBC模式)
+ @param iv AES128 IV (加密方式用的是AES128 PADDING模式PKCS7 CBC模式)
+ @return 1成功 0失败
  */
-void fdlog_debug(int debug);
+int fdlog_initialize(char* root, char* key, char* iv);
+
+/**
+ 写日志
+
+ 需要 fdlog_initialize 成功后才可以调用。
+ 
+ Usage:
+ // 开始记录日志
+ char *log = "FDLog 日志记录！";
+ int flag = 5;
+ long long localtime = 123123;
+ char thread_name[] = "main";
+ int thread_id = 1;
+ int is_main = 1;
+ FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
+ fdlog(data);
+ 
+ @param data 日志信息数据结构
+ @return 1成功 0失败
+ */
+int fdlog(FD_Construct_Data *data);
+
+/**
+ 同步缓存到磁盘
+
+ 需要 fdlog_initialize 成功后才可以调用。
+ 强制将缓存的日志同步的本地日志文件中，无视一切规则。
+ 
+ @return 1成功 0失败
+ */
+int fdlog_sync(void);
 
 #endif /* fd_log_h */
 

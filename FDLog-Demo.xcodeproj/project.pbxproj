@@ -256,7 +256,6 @@
 		4FC3A9ED2221870C00B0FE77 /* ecjpake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ecjpake.c; sourceTree = "<group>"; };
 		4FC3A9EE2221870C00B0FE77 /* cipher.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cipher.c; sourceTree = "<group>"; };
 		4FC3A9EF2221870C00B0FE77 /* ecdsa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ecdsa.c; sourceTree = "<group>"; };
-		4FC3AA49222387AF00B0FE77 /* fd_logmodel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_logmodel.h; sourceTree = "<group>"; };
 		4FC3AA4B222387AF00B0FE77 /* fd_aes_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_aes_helper.c; sourceTree = "<group>"; };
 		4FC3AA4C222387AF00B0FE77 /* fd_aes_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_aes_helper.h; sourceTree = "<group>"; };
 		4FC3AA4E222387AF00B0FE77 /* fd_zlib_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_zlib_helper.h; sourceTree = "<group>"; };
@@ -506,7 +505,6 @@
 		4FC3AA48222387AF00B0FE77 /* model */ = {
 			isa = PBXGroup;
 			children = (
-				4FC3AA49222387AF00B0FE77 /* fd_logmodel.h */,
 				4F7489E6222E3D960042EEA7 /* fd_core_model.h */,
 				4F7489E8223235040042EEA7 /* fd_core_model.c */,
 			);
