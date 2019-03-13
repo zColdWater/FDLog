@@ -8,7 +8,12 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <time.h>
+#include <string.h>
+#include <stdlib.h>
 #include "fd_log.h"
+#include "fd_aes_helper.h"
 
 int main(int argc, const char * argv[]) {
     
@@ -20,7 +25,7 @@ int main(int argc, const char * argv[]) {
         perror("getcwd() error \n");
         return 1;
     }
-    
+
     // 开始记录日志
     char *log = "FDLog 日志记录！";
     int flag = 5;
@@ -38,14 +43,11 @@ int main(int argc, const char * argv[]) {
     
     fdlog(data);
 //    fdlog_sync();
-    
-//    int i = 0;
-//    while (i < 99) {
-//        fdlog(data);
-//        i++;
-//    }
+
     
     
-    
+
+
+
     return 0;
 }

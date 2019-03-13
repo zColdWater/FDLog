@@ -232,6 +232,7 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     /// 写入日志到缓存文件
     if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
+        
         // 开启新的日志单元
         *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
         /// 确定最后一条写入日志的长度位置 并且初始 = 0
@@ -255,7 +256,6 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
             return 1;
         }
     }
-    
     return 0;
 }
 

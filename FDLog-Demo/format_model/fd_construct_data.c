@@ -25,12 +25,15 @@ fd_construct_json_data(char *log, int flag, long long local_time, char *thread_n
     
     if (NULL != root) {
         if (NULL != map) {
+            
             fd_add_item_string(map, log_key, log);
             fd_add_item_number(map, flag_key, (double) flag);
             fd_add_item_number(map, localtime_key, (double) local_time);
             fd_add_item_string(map, threadname_key, thread_name);
             fd_add_item_number(map, threadid_key, (double) thread_id);
             fd_add_item_bool(map, ismain_key, is_main);
+            
+            
             fd_inflate_json_by_map(root, map);
             
             // 生成Jsonstring

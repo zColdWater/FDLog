@@ -12,6 +12,18 @@
 #include <zlib.h>
 #include <stdio.h>
 
+
+/** 日志缓存结构
+|AES剩余数据头部|4字节存储长度|16字节存放剩余数据 不够用0部位|AES剩余数据尾部|
+|缓存文件头部|头部信息|缓存文件的尾部|
+|缓存文件总内容长度头部|4字节存储总长度|缓存文件总内容长度尾部|
+|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
+|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
+|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
+|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
+|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
+*/
+
 #define FD_VERSION_KEY "fdlog_version"
 #define FD_VERSION_NUMBER 1 // FDLog 版本号
 #define FD_VERSION "v1"
@@ -28,14 +40,21 @@
 //#define FD_MAX_GZIP_SIZE 100
 #define FD_MAX_LOG_SIZE 1024*1024*2 // 最大日志文件尺寸
 
+/// 缓存文件 剩余数据字节的头部
+/// 为了存放一次AES加密放不下的数据的长度记录
+#define FD_MMAP_FILE_REMAIN_DATA_HEADER '*'
+/// 缓存文件 剩余数据字节的尾部
+/// 为了存放一次AES加密放不下的数据的长度记录
+#define FD_MMAP_FILE_REMAIN_DATA_TAILER '&'
+
 /// 缓存文件的头部的头字符
 #define FD_MMAP_FILE_HEADER '#'
 /// 缓存文件的头部的尾字符
 #define FD_MMAP_FILE_TAILER '$'
 
-/// 缓存文件的日志内容长度头
+/// 缓存文件的日志总内容长度头
 #define FD_MMAP_FILE_CONTENT_HEADER '%'
-/// 缓存文件的日志内容长度尾
+/// 缓存文件的日志总内容长度尾
 #define FD_MMAP_FILE_CONTENT_TAILER '&'
 
 /// 缓存内容 写入头
