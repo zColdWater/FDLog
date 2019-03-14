@@ -116,15 +116,16 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
             if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
                 temp += 1;
                 printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
+                mmap_content_len_ptr = (int*)temp;
+                printf("mmap_content_len_ptr:%d\n",*mmap_content_len_ptr);
                 temp += sizeof(int);
                 
                 if (*temp == FD_MMAP_FILE_CONTENT_TAILER) {
                     printf("READ FD_MMAP_FILE_CONTENT_TAILER ✅\n");
-                    temp -= sizeof(int);
+                    temp += 1;
                     
                     /// 读取总内容长度
                     if (mmap_header_content_ptr != NULL) {
-                        mmap_content_len_ptr = (int*)temp;
                         memcpy(mmap_header_content_ptr, header_content, *mmap_header_content_len_ptr);
 //                        free(header_content);
 //                        header_content = NULL;
@@ -135,6 +136,11 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                         int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
                         int mmap_last_log_distance_len = 2 + sizeof(int);
                         
+                        printf("mmap_header_len:%d\n",mmap_header_len);
+                        printf("mmap_remain_len:%d\n",mmap_remain_len);
+                        printf("mmap_content_len:%d\n",mmap_content_len);
+                        printf("mmap_last_log_distance_len:%d\n",mmap_last_log_distance_len);
+                        
                         // 移动距离
                         int move_len = mmap_header_len + mmap_remain_len + mmap_content_len + mmap_last_log_distance_len;
                         
@@ -142,10 +148,24 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                         mmap_tailer_ptr += move_len;
                         
                         
-                        // 验证尾部指针 是否指向正确
-                        int content_len = *mmap_content_len_ptr
+                        // 验证指针绑定是否正确
+                        int content_len = *mmap_content_len_ptr;
+                        unsigned char *temp1 = mmap_ptr + mmap_header_len + mmap_remain_len + mmap_last_log_distance_len;
+                        if (!(*temp1 == FD_MMAP_FILE_CONTENT_HEADER)) {
+                            printf("binding ptr failture occur FD_MMAP_FILE_CONTENT_HEADER! ❌ \n");
+                            return 0;
+                        }
+                        temp1 += 1;
+                        temp1 += sizeof(int);
+                        temp1 += 1;
+                        temp1 += content_len;
                         
-                        
+                        if (!(temp1 == mmap_tailer_ptr)) {
+                            printf("temp1: %p \n",temp1);
+                            printf("mmap_tailer_ptr: %p \n",mmap_tailer_ptr);
+                            printf("binding ptr failture occur temp1 == mmap_tailer_ptr! ❌ \n");
+                            return 0;
+                        }
                         return 1;
                     }
                 }

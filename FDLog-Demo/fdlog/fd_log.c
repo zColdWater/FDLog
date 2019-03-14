@@ -259,8 +259,6 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     
     
-    
-    
     // 1. 写入每条日志 不加结尾
     // 2. 写完一条日志 更新距离文件尾部的距离字段
     
