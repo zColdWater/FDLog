@@ -14,8 +14,9 @@
 
 
 /** 日志缓存结构
-|AES剩余数据头部|4字节存储长度|16字节存放剩余数据 不够用0部位|AES剩余数据尾部|
 |缓存文件头部|头部信息|缓存文件的尾部|
+|AES剩余数据头部|4字节存储长度|16字节存放剩余数据 不够用0部位|AES剩余数据尾部|
+|最后一条日志长度头部|4字节存储 从文件头到最后一条日志的长度记录开始位置|最后一条日志长度尾部
 |缓存文件总内容长度头部|4字节存储总长度|缓存文件总内容长度尾部|
 |缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
 |缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
@@ -61,6 +62,11 @@
 #define FD_MMAP_FILE_CONTENT_WRITE_HEADER '!'
 /// 缓存内容 写入尾
 #define FD_MMAP_FILE_CONTENT_WRITE_TAILER '@'
+
+/// 记录最后一条日志长度记录 头部
+#define FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER '^'
+/// 记录最后一条日志长度记录 尾部
+#define FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER '_'
 
 
 #define READY_GZIP 1 // 可以压缩GZIP [fd_logmodel.is_ready_gzip]

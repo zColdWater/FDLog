@@ -34,6 +34,10 @@ unsigned char *mmap_ptr = NULL;
 /// 位置不改变永远指向缓存文件 内容最后位置
 unsigned char *mmap_tailer_ptr = NULL;
 
+/// MMAP剩余数据长度 指针
+/// 位置不改变 指向剩余数据长度
+unsigned char *mmap_remain_ptr = NULL;
+
 /// MMAP内容长度 指针
 /// 位置不改变永远指向缓存文件 内容长度
 int *mmap_content_len_ptr = NULL;
@@ -78,6 +82,20 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
         if (*temp == FD_MMAP_FILE_TAILER) {
             printf("READ FD_MMAP_FILE_TAILER ✅\n");
             temp += 1;
+            
+            if (*temp == FD_MMAP_FILE_REMAIN_DATA_HEADER) {
+                mmap_remain_ptr = temp;
+                temp += 1;
+                printf("READ FD_MMAP_FILE_REMAIN_DATA_HEADER ✅\n");
+                temp += sizeof(int);
+                temp += 16;
+                if (!(*temp == FD_MMAP_FILE_REMAIN_DATA_TAILER)) {
+                    printf("READ FD_MMAP_FILE_REMAIN_DATA_TAILER ❌\n");
+                    return 0;
+                }
+                temp += 1;
+            }
+            
             if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
                 temp += 1;
                 printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
@@ -95,7 +113,7 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
 //                        header_content = NULL;
                         
                         mmap_tailer_ptr = mmap_ptr;
-                        int move_len = 2 + sizeof(int) + *mmap_header_content_len_ptr + 2 + sizeof(int) + *mmap_content_len_ptr;
+                        int move_len = 2 + sizeof(int) + *mmap_header_content_len_ptr + 2 + sizeof(int) + 16 + 2 + sizeof(int) + *mmap_content_len_ptr;
                         printf("move_len:%d \n",move_len);
                         mmap_tailer_ptr += move_len;
                         return 1;

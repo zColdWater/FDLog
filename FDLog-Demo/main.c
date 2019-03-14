@@ -42,12 +42,7 @@ int main(int argc, const char * argv[]) {
     }
     
     fdlog(data);
-//    fdlog_sync();
-
-    
-    
-
-
+    fdlog_sync();
 
     return 0;
 }

@@ -146,8 +146,13 @@ int init_fdlog_dirs(const char *root_path, FDLOGMODEL *m) {
 }
 
 
+
 /**
- 插入缓存文件MMAP文件头
+ 写入mmap头部
+ 
+ 0. 【剩余数据头部】 【剩余数据】 【剩余数据尾】
+ 1. 【缓存文件头部】 【缓存文件头部信息】 【缓存文件尾】
+ 2. 【日志总长度头部】 【日志总长度】 【日志总长度尾部】
  
  @return 1成功 0失败
  */
@@ -193,15 +198,23 @@ int insert_mmap_file_header() {
         temp += len;
         *temp = FD_MMAP_FILE_TAILER;
         temp++;
-        /// ==== 写入缓存文件的内容长度  ====
+        
+        /// ==== 写入缓存剩余数据头部内容 ====
+        *temp = FD_MMAP_FILE_REMAIN_DATA_HEADER;
+        temp ++;
+        temp += sizeof(int) + 16;
+        *temp = FD_MMAP_FILE_REMAIN_DATA_TAILER;
+        temp ++;
+        
+        /// ==== 写入缓存文件的总内容长度  ====
         *temp = FD_MMAP_FILE_CONTENT_HEADER;
         temp++;
-        /// 初始化内容长度为 0
-        memset(temp, 0, sizeof(int));
         temp += sizeof(int);
         *temp = FD_MMAP_FILE_CONTENT_TAILER;
+        temp ++;
         
         result = true;
+        
     } else {
         printf("mmap pointer not bind memory! \n");
     }
@@ -230,6 +243,10 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         return 0;
     }
     
+    printf("mmap 缓存长度: %d \n",*mmap_content_len_ptr);
+    
+    
+        
     /// 写入日志到缓存文件
     if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
         
