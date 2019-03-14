@@ -140,6 +140,12 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                         
                         printf("move_len:%d \n",move_len);
                         mmap_tailer_ptr += move_len;
+                        
+                        
+                        // 验证尾部指针 是否指向正确
+                        int content_len = *mmap_content_len_ptr
+                        
+                        
                         return 1;
                     }
                 }
