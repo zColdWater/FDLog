@@ -130,7 +130,14 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
 //                        header_content = NULL;
                         
                         mmap_tailer_ptr = mmap_ptr;
-                        int move_len = 2 + sizeof(int) + *mmap_header_content_len_ptr + 2 + sizeof(int) + 16 + 2 + sizeof(int) + *mmap_content_len_ptr;
+                        int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
+                        int mmap_remain_len = 2 + sizeof(int) + 16;
+                        int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
+                        int mmap_last_log_distance_len = 2 + sizeof(int);
+                        
+                        // 移动距离
+                        int move_len = mmap_header_len + mmap_remain_len + mmap_content_len + mmap_last_log_distance_len;
+                        
                         printf("move_len:%d \n",move_len);
                         mmap_tailer_ptr += move_len;
                         return 1;

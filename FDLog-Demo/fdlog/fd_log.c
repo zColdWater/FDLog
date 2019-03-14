@@ -252,6 +252,18 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         printf("mmap_tailer_ptr NULL!\n");
         return 0;
     }
+    
+    if (!mmap_last_log_content_len_distance_ptr) {
+        printf("mmap_last_log_content_len_distance_ptr NULL!\n");
+    }
+    
+    
+    
+    
+    
+    // 1. 写入每条日志 不加结尾
+    // 2. 写完一条日志 更新距离文件尾部的距离字段
+    
         
     /// 写入日志到缓存文件
     if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
@@ -280,6 +292,8 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
             return 1;
         }
     }
+    
+    
     return 0;
 }
 
