@@ -23,6 +23,7 @@
 extern FDLOGMODEL *model;
 extern unsigned char *mmap_ptr;
 extern unsigned char *mmap_tailer_ptr;
+extern unsigned char *mmap_last_log_content_len_distance_ptr;
 extern int *mmap_content_len_ptr;
 extern int *mmap_header_content_len_ptr;
 extern char *mmap_header_content_ptr;
@@ -31,6 +32,8 @@ extern char *log_folder_path;
 extern long *log_file_len;
 extern char *mmap_cache_file_path;
 extern char *log_file_path;
+
+
 
 /// 初始化成功标志 1成功 0失败
 static int is_init_ok = 0;
@@ -207,10 +210,10 @@ int insert_mmap_file_header() {
         temp ++;
         
         /// ==== 写入记录最后一条日志距离内容 ====
-        *temp = FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER;
+        *temp = FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_HEADER;
         temp ++;
         temp += sizeof(int);
-        *temp = FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER;
+        *temp = FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_TAILER;
         temp ++;
         
         /// ==== 写入缓存文件的总内容长度  ====
@@ -249,15 +252,13 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         printf("mmap_tailer_ptr NULL!\n");
         return 0;
     }
-    
-    printf("mmap 缓存长度: %d \n",*mmap_content_len_ptr);
-    
         
     /// 写入日志到缓存文件
     if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
         
         // 开启新的日志单元
         *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
+        
         /// 确定最后一条写入日志的长度位置 并且初始 = 0
         mmap_log_content_ptr = (int *)(mmap_tailer_ptr + 1);
         memset(mmap_log_content_ptr, 0, sizeof(int));

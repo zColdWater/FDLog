@@ -64,9 +64,9 @@
 #define FD_MMAP_FILE_CONTENT_WRITE_TAILER '@'
 
 /// 记录最后一条日志长度记录 头部
-#define FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER '^'
+#define FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_HEADER '^'
 /// 记录最后一条日志长度记录 尾部
-#define FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER '_'
+#define FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_TAILER '_'
 
 
 #define READY_GZIP 1 // 可以压缩GZIP [fd_logmodel.is_ready_gzip]

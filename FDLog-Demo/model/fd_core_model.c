@@ -100,12 +100,12 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                 temp += 1;
             }
             
-            if (*temp == FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER) {
+            if (*temp == FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_HEADER) {
                 mmap_last_log_content_len_distance_ptr = temp;
                 temp += 1;
                 printf("READ FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER ✅\n");
                 temp += sizeof(int);
-                if (!(*temp == FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER)) {
+                if (!(*temp == FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_TAILER)) {
                     printf("READ FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER ❌\n");
                     return 0;
                 }
