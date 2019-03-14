@@ -38,6 +38,9 @@ unsigned char *mmap_tailer_ptr = NULL;
 /// 位置不改变 指向剩余数据长度
 unsigned char *mmap_remain_ptr = NULL;
 
+/// MMAP从文件头到最后一条日志记录长度的位置 指针
+unsigned char *mmap_last_log_content_len_distance_ptr = NULL;
+
 /// MMAP内容长度 指针
 /// 位置不改变永远指向缓存文件 内容长度
 int *mmap_content_len_ptr = NULL;
@@ -83,6 +86,7 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
             printf("READ FD_MMAP_FILE_TAILER ✅\n");
             temp += 1;
             
+            // 判断是否是 剩余数据的头部
             if (*temp == FD_MMAP_FILE_REMAIN_DATA_HEADER) {
                 mmap_remain_ptr = temp;
                 temp += 1;
@@ -96,6 +100,19 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                 temp += 1;
             }
             
+            if (*temp == FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER) {
+                mmap_last_log_content_len_distance_ptr = temp;
+                temp += 1;
+                printf("READ FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER ✅\n");
+                temp += sizeof(int);
+                if (!(*temp == FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER)) {
+                    printf("READ FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER ❌\n");
+                    return 0;
+                }
+                temp += 1;
+            }
+            
+            // 判断是否是 文件内容的数据的头部
             if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
                 temp += 1;
                 printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");

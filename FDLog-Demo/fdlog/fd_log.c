@@ -206,6 +206,13 @@ int insert_mmap_file_header() {
         *temp = FD_MMAP_FILE_REMAIN_DATA_TAILER;
         temp ++;
         
+        /// ==== 写入记录最后一条日志距离内容 ====
+        *temp = FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER;
+        temp ++;
+        temp += sizeof(int);
+        *temp = FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_TAILER;
+        temp ++;
+        
         /// ==== 写入缓存文件的总内容长度  ====
         *temp = FD_MMAP_FILE_CONTENT_HEADER;
         temp++;
@@ -244,7 +251,6 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     }
     
     printf("mmap 缓存长度: %d \n",*mmap_content_len_ptr);
-    
     
         
     /// 写入日志到缓存文件
