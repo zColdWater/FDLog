@@ -20,6 +20,9 @@ extern int *mmap_content_len_ptr;
 extern int *mmap_header_content_len_ptr;
 extern char *mmap_header_content_ptr;
 extern int *mmap_log_content_ptr;
+extern unsigned char *mmap_last_log_content_len_distance_ptr;
+
+
 
 
 bool fd_init_zlib(FDLOGMODEL *model) {
@@ -30,11 +33,11 @@ bool fd_init_zlib(FDLOGMODEL *model) {
     model->zlib_type = FD_ZLIB_FAIL;
 
     if (model->strm != NULL) {
-//        free(m->strm);
+        free(model->strm);
         model->strm = NULL;
     }
     
-    model->strm = (z_stream *) malloc(sizeof(z_stream));
+    model->strm = (z_stream *)malloc(sizeof(z_stream));
     if (model == NULL) {
         printf("m->strm = (z_stream *) malloc(sizeof(z_stream)) failture \n");
         return false;
@@ -129,9 +132,21 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
                     /// 更新最后一条未写完日志 内容长度。
                     int total_handler_len = *mmap_log_content_ptr + handler_len;
                     memcpy(mmap_log_content_ptr, &total_handler_len, sizeof(int));
-                    /// 更新长度 和 重定位尾指针
-                    update_len_pointer(handler_len);
                     
+                    /// 更新距离尾部距离
+                    if (type == Z_FINISH) {
+                        memset(mmap_last_log_content_len_distance_ptr, 0, sizeof(int));
+                    }
+                    else {
+                        int distance_to_cache_file_tailer = total_handler_len + 1 + sizeof(int);
+                        memcpy(mmap_last_log_content_len_distance_ptr, &distance_to_cache_file_tailer, sizeof(int));
+                        printf("distance_to_cache_file_tailer: %d \n",distance_to_cache_file_tailer);
+                    }
+
+                    printf("mmap_log_content_ptr: %d \n",*mmap_log_content_ptr);
+                    printf("mmap_last_log_content_len_distance_ptr: %d \n",*(int*)mmap_last_log_content_len_distance_ptr);
+                    
+                    bind_cache_file_pointer_from_header(mmap_ptr);
                 }
                 
                 // 如果本次压缩存在剩余数据长度
@@ -157,22 +172,27 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
                 model->cache_remain_data_len = remain_len;
             }
         } while (strm->avail_out == 0); // avail_out， next_out还有多少字节空间可以用来保存输出字节
-        
         return true;
-        
     } else {
-        
         return false;
-        
     }
 }
 
 
 void fd_zlib_end_compress(FDLOGMODEL *model) {
+    
+    printf("mmap_last_log_content_len_distance_ptr:%d \n",*(int *)mmap_last_log_content_len_distance_ptr);
+    
     // 完成压缩
     fd_zlib_compress(model, NULL, 0, Z_FINISH);
     // 压缩完成以后,释放空间,但是注意,仅仅是释放deflateInit中申请的空间,自己申请的空间还是需要自己释放
     (void) deflateEnd(model->strm);
+    
+    // 更新 之前完整的数据长度 到总长度中。
+    int prev = *mmap_log_content_ptr + 1 + sizeof(int);
+    bind_cache_file_pointer_from_header(mmap_ptr);
+    printf("prev:%d \n",prev);
+    
     // 算出和16字节差多少
     int val = 16 - model->cache_remain_data_len;
     // 声明一个16字节的数组
@@ -191,10 +211,14 @@ void fd_zlib_end_compress(FDLOGMODEL *model) {
                    (unsigned char *) model->aes_iv);
     
     /// 更新最后一条未写完日志 内容长度。
-    int total_handler_len = *mmap_log_content_ptr + 16;
-    memcpy(mmap_log_content_ptr, &total_handler_len, sizeof(int));
-    update_len_pointer(16);
+    *(int *)mmap_last_log_content_len_distance_ptr = *(int *)mmap_last_log_content_len_distance_ptr + 16;
+    bind_cache_file_pointer_from_header(mmap_ptr);
+    /// 重置这段内存
+    memset(mmap_last_log_content_len_distance_ptr, 0, sizeof(int));
     
+    update_mmap_content_len(16 + prev);
+
+
     // 重置剩余数据长度为0
     model->cache_remain_data_len = 0;
     // 改变 Zlib 状态

@@ -38,7 +38,7 @@
 #define FD_DATE "fd_date"
 #define FD_SIZE "fd_mmap_size"
 
-//#define FD_MAX_GZIP_SIZE 100
+#define FD_MAX_GZIP_SIZE 1024
 #define FD_MAX_LOG_SIZE 1024*1024*2 // 最大日志文件尺寸
 
 /// 缓存文件 剩余数据字节的头部
@@ -113,7 +113,7 @@ typedef struct fd_core_model {
 
 int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer);
 
-int update_len_pointer(int increase_content_len);
+int update_mmap_content_len(int increase_content_len);
 
 
 #endif /* fd_core_model_h */

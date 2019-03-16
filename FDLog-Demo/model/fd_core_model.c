@@ -101,8 +101,9 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
             }
             
             if (*temp == FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_HEADER) {
-                mmap_last_log_content_len_distance_ptr = temp;
                 temp += 1;
+                mmap_last_log_content_len_distance_ptr = temp;
+                printf("mmap_last_log_content_len_distance_ptr: %d \n",*(int *)mmap_last_log_content_len_distance_ptr);
                 printf("READ FD_MMAP_LAST_LOG_CONTENT_LEN_DISTANCE_HEADER ✅\n");
                 temp += sizeof(int);
                 if (!(*temp == FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_TAILER)) {
@@ -127,8 +128,8 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                     /// 读取总内容长度
                     if (mmap_header_content_ptr != NULL) {
                         memcpy(mmap_header_content_ptr, header_content, *mmap_header_content_len_ptr);
-//                        free(header_content);
-//                        header_content = NULL;
+                        free(header_content);
+                        header_content = NULL;
                         
                         mmap_tailer_ptr = mmap_ptr;
                         int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
@@ -148,24 +149,36 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
                         mmap_tailer_ptr += move_len;
                         
                         
-                        // 验证指针绑定是否正确
-                        int content_len = *mmap_content_len_ptr;
-                        unsigned char *temp1 = mmap_ptr + mmap_header_len + mmap_remain_len + mmap_last_log_distance_len;
-                        if (!(*temp1 == FD_MMAP_FILE_CONTENT_HEADER)) {
-                            printf("binding ptr failture occur FD_MMAP_FILE_CONTENT_HEADER! ❌ \n");
-                            return 0;
-                        }
-                        temp1 += 1;
-                        temp1 += sizeof(int);
-                        temp1 += 1;
-                        temp1 += content_len;
+                        // 指针绑定是否正确
+                        // 开始 ==== 验证
+//                        int content_len = *mmap_content_len_ptr;
+//                        unsigned char *temp1 = mmap_ptr + mmap_header_len + mmap_remain_len + mmap_last_log_distance_len;
+//                        if (!(*temp1 == FD_MMAP_FILE_CONTENT_HEADER)) {
+//                            printf("binding ptr failture occur FD_MMAP_FILE_CONTENT_HEADER! ❌ \n");
+//                            return 0;
+//                        }
+//                        temp1 += 1;
+//                        temp1 += sizeof(int);
+//                        temp1 += 1;
+//                        temp1 += content_len;
+//
+//                        if (!(temp1 == mmap_tailer_ptr)) {
+//                            printf("temp1: %p \n",temp1);
+//                            printf("mmap_tailer_ptr: %p \n",mmap_tailer_ptr);
+//                            printf("binding ptr failture occur temp1 == mmap_tailer_ptr! ❌ \n");
+//                            return 0;
+//                        }
+                        // 结束 ==== 验证
                         
-                        if (!(temp1 == mmap_tailer_ptr)) {
-                            printf("temp1: %p \n",temp1);
-                            printf("mmap_tailer_ptr: %p \n",mmap_tailer_ptr);
-                            printf("binding ptr failture occur temp1 == mmap_tailer_ptr! ❌ \n");
-                            return 0;
-                        }
+                        
+                        // 获取到最后一条日志的长度 重新校正 mmap_tailer_ptr 指针
+                        int last_log_distance_from_tailer_len = *(int *)mmap_last_log_content_len_distance_ptr;
+                        mmap_tailer_ptr += last_log_distance_from_tailer_len;
+                        // 确定最后一条日志的内容长度指针 指向
+                        mmap_log_content_ptr = (int *)(mmap_tailer_ptr - last_log_distance_from_tailer_len + 1);
+                        printf("mmap_log_content_ptr:%d \n",*mmap_log_content_ptr);
+                        
+                        
                         return 1;
                     }
                 }
@@ -176,24 +189,15 @@ int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer) {
 }
 
 
-int update_len_pointer(int increase_content_len) {
+int update_mmap_content_len(int increase_content_len) {
     if ((mmap_ptr != NULL) && (mmap_content_len_ptr != NULL) && (mmap_header_content_ptr != NULL) && (mmap_header_content_len_ptr != NULL) && (mmap_tailer_ptr != NULL)) {
-        
-        int ret = bind_cache_file_pointer_from_header(mmap_ptr);
-        if (ret == 0) { return 0; }
-        
         /// 更新内容长度
         int new_len = *mmap_content_len_ptr + increase_content_len;
         memcpy(mmap_content_len_ptr,&(new_len),sizeof(int));
         printf("mmap_content_len_ptr:%d \n",*mmap_content_len_ptr);
-
-        /// 移动尾巴
-        mmap_tailer_ptr += increase_content_len;
+        
         return 1;
     }
     return 0;
 }
-
-
-
 

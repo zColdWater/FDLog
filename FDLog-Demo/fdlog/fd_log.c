@@ -257,22 +257,36 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         printf("mmap_last_log_content_len_distance_ptr NULL!\n");
     }
     
+    // 更新指针绑定指向
+    bind_cache_file_pointer_from_header(mmap_ptr);
+    printf("mmap_log_content_ptr write: %d \n",*mmap_log_content_ptr);
     
-    
-    // 1. 写入每条日志 不加结尾
-    // 2. 写完一条日志 更新距离文件尾部的距离字段
-    
+    // 当单条日志内容长度 大于 FD_MAX_GZIP_SIZE 设定的长度 需要进行结束写入
+    if ((*mmap_log_content_ptr + data->data_len) > FD_MAX_GZIP_SIZE) {
+        fd_zlib_end_compress(model);
         
+        // 加入写入结尾
+        *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
+        update_mmap_content_len(1);
+        bind_cache_file_pointer_from_header(mmap_ptr);
+        
+        // 重新赋值IV
+        fd_aes_inflate_iv(model->aes_iv);
+    }
+    
     /// 写入日志到缓存文件
+    /// 如果已经是一个完整的单元 或者 还没有写一个单元
     if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
         
         // 开启新的日志单元
         *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
+        mmap_tailer_ptr += 1;
         
         /// 确定最后一条写入日志的长度位置 并且初始 = 0
-        mmap_log_content_ptr = (int *)(mmap_tailer_ptr + 1);
+        mmap_log_content_ptr = (int *)mmap_tailer_ptr;
         memset(mmap_log_content_ptr, 0, sizeof(int));
-        update_len_pointer(sizeof(char) + sizeof(int));
+        
+        mmap_tailer_ptr += sizeof(int);
         
         if (!model->is_ready_gzip) {
             int ret = fd_init_zlib(model);
@@ -283,14 +297,23 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         printf("fd_zlib1 success! ret %d \n",ret);
         if (ret) {
             printf("fd_zlib1 success! \n");
-            fd_zlib_end_compress(model);
-            // 加入写入结尾
-            *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
-            update_len_pointer(1);
             return 1;
         }
     }
-    
+    else {
+        // 如果不是刚开始新开一条日志，则继续写入。
+        if (!model->is_ready_gzip) {
+            int ret = fd_init_zlib(model);
+            if (ret == 0) { return 0; }
+        }
+        
+        int ret = fd_zlib_compress(model, data->data, data->data_len, Z_SYNC_FLUSH);
+        printf("fd_zlib1 success! ret %d \n",ret);
+        if (ret) {
+            printf("fd_zlib1 success! \n");
+            return 1;
+        }
+    }
     
     return 0;
 }
