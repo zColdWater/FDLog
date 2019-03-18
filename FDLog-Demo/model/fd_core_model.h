@@ -38,7 +38,7 @@
 #define FD_DATE "fd_date"
 #define FD_SIZE "fd_mmap_size"
 
-#define FD_MAX_GZIP_SIZE 1024
+#define FD_MAX_GZIP_SIZE 1024*50
 #define FD_MAX_LOG_SIZE 1024*1024*2 // 最大日志文件尺寸
 
 /// 缓存文件 剩余数据字节的头部

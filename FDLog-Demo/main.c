@@ -41,12 +41,15 @@ int main(int argc, const char * argv[]) {
          printf("fd_initialize_log failture! \n");
     }
     
-    int i = 1;
-    while (i < 999999) {
-        printf("i: %d\n",i);
-        fdlog(data);
-        i++;
-    }
+    fdlog(data);
+    
+    
+//    int i = 1;
+//    while (i < 999999) {
+//        printf("i: %d\n",i);
+//        fdlog(data);
+//        i++;
+//    }
 
 
 //    fdlog_sync();

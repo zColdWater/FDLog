@@ -263,6 +263,21 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     // 当单条日志内容长度 大于 FD_MAX_GZIP_SIZE 设定的长度 需要进行结束写入
     if ((*mmap_log_content_ptr + data->data_len) > FD_MAX_GZIP_SIZE) {
+        
+        
+        /// 添加 '}' 符号
+        /// 如果不是刚开始新开一条日志，则继续写入。
+        if (!model->is_ready_gzip) {
+            int ret = fd_init_zlib(model);
+            if (ret == 0) { return 0; }
+        }
+        /// 非首次写入
+        char array_tailer = ']';
+        int ret = fd_zlib_compress(model, &array_tailer, 1, Z_SYNC_FLUSH);
+        printf("fd_zlib1 success! ret %d \n",ret);
+        
+        
+        
         fd_zlib_end_compress(model);
         
         // 加入写入结尾
@@ -293,6 +308,12 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
             if (ret == 0) { return 0; }
         }
         
+        
+        char array_head = '[';
+        int ret0 = fd_zlib_compress(model, &array_head, 1, Z_SYNC_FLUSH);
+        printf("fd_zlib1 success! ret %d \n",ret0);
+        
+        
         int ret = fd_zlib_compress(model, data->data, data->data_len, Z_SYNC_FLUSH);
         printf("fd_zlib1 success! ret %d \n",ret);
         if (ret) {
@@ -301,12 +322,21 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         }
     }
     else {
+        
         // 如果不是刚开始新开一条日志，则继续写入。
         if (!model->is_ready_gzip) {
             int ret = fd_init_zlib(model);
             if (ret == 0) { return 0; }
         }
         
+        
+        /// 连接字典 用,分割
+        char comma = ',';
+        int ret0 = fd_zlib_compress(model, &comma, 1, Z_SYNC_FLUSH);
+        printf("fd_zlib1 success! ret %d \n",ret0);
+        
+        
+        // 非首次写入
         int ret = fd_zlib_compress(model, data->data, data->data_len, Z_SYNC_FLUSH);
         printf("fd_zlib1 success! ret %d \n",ret);
         if (ret) {
@@ -593,17 +623,34 @@ int fdlog_sync() {
     }
     
     int bind = bind_cache_file_pointer_from_header(mmap_ptr);
-    printf("bind:%d\n",bind);
+    printf("bind result:%d\n",bind);
     
+
+    printf("*(mmap_tailer_ptr - 1): %02X \n",*(mmap_tailer_ptr - 1));
     /// 尾巴必须指向 FD_MMAP_FILE_CONTENT_WRITE_TAILER 文件尾巴
+    /// 没有结尾 先进行结尾
     if (*(mmap_tailer_ptr - 1) != FD_MMAP_FILE_CONTENT_WRITE_TAILER) {
-        printf("mmap_tailer_ptr != FD_MMAP_FILE_CONTENT_WRITE_TAILER!\n");
-        return 0;
+        fd_zlib_end_compress(model);
+        bind_cache_file_pointer_from_header(mmap_ptr);
+        
+        // 临时添加 因为多了 16字节
+        mmap_tailer_ptr = mmap_tailer_ptr - 16;
+        printf("*(mmap_tailer_ptr - 1): %02X \n",*(mmap_tailer_ptr - 1));
+        // 加入写入结尾
+        *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
+        update_mmap_content_len(1);
+        bind_cache_file_pointer_from_header(mmap_ptr);
+        // 重新赋值IV
+        fd_aes_inflate_iv(model->aes_iv);
     }
+    
     
     /// 开始写入日志到本地文件
     FILE* stream;
     stream = fopen(log_file_path, "ab+");
+    printf("*(mmap_tailer_ptr - 1): %02X \n",*(mmap_tailer_ptr - 1));
+    printf("*mmap_content_len_ptr: %02X \n",*mmap_content_len_ptr);
+
     unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
     fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);//写入到文件中
     fflush(stream);

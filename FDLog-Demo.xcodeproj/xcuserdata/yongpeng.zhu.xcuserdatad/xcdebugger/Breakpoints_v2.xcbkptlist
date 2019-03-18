@@ -6,16 +6,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FDLog-Demo/fdlog/fd_log.c"
-            timestampString = "574333164.147019"
+            timestampString = "574523941.89459"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "246"
-            endingLineNumber = "246"
-            landmarkName = "fdlog_write_to_cache"
+            startingLineNumber = "579"
+            endingLineNumber = "579"
+            landmarkName = "fdlog_sync"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
