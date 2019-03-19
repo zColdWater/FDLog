@@ -29,7 +29,6 @@
 
  @param _filepath MMAP 缓存文件地址
  @param buffer MMAP绑定文件的内存指针 绑定成功，操作内存 等于操作文件。(当MMAP无法malloc创建，buffer指向 内存缓存指针)
- @param cache 未绑定MMAP成功 使用内存 也就是静态变量 来存缓存
  @return 开启状态 (1)MMAP (0)MEMORY (-1)FAIL
  */
 int fd_open_mmap_file1(FDLOGMODEL *model,char *_filepath, unsigned char **buffer);

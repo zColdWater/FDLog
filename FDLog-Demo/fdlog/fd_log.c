@@ -23,15 +23,16 @@
 extern FDLOGMODEL *model;
 extern unsigned char *mmap_ptr;
 extern unsigned char *mmap_tailer_ptr;
-extern unsigned char *mmap_last_log_content_len_distance_ptr;
 extern int *mmap_content_len_ptr;
+extern int *mmap_current_log_len_ptr;
+extern int *mmap_header_content_len_ptr;
 extern int *mmap_header_content_len_ptr;
 extern char *mmap_header_content_ptr;
-extern int *mmap_log_content_ptr;
 extern char *log_folder_path;
 extern long *log_file_len;
 extern char *mmap_cache_file_path;
 extern char *log_file_path;
+
 
 
 
@@ -202,19 +203,6 @@ int insert_mmap_file_header() {
         *temp = FD_MMAP_FILE_TAILER;
         temp++;
         
-        /// ==== 写入缓存剩余数据头部内容 ====
-        *temp = FD_MMAP_FILE_REMAIN_DATA_HEADER;
-        temp ++;
-        temp += sizeof(int) + 16;
-        *temp = FD_MMAP_FILE_REMAIN_DATA_TAILER;
-        temp ++;
-        
-        /// ==== 写入记录最后一条日志距离内容 ====
-        *temp = FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_HEADER;
-        temp ++;
-        temp += sizeof(int);
-        *temp = FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_TAILER;
-        temp ++;
         
         /// ==== 写入缓存文件的总内容长度  ====
         *temp = FD_MMAP_FILE_CONTENT_HEADER;
@@ -253,96 +241,32 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         return 0;
     }
     
-    if (!mmap_last_log_content_len_distance_ptr) {
-        printf("mmap_last_log_content_len_distance_ptr NULL!\n");
-    }
-    
-    // 更新指针绑定指向
-    bind_cache_file_pointer_from_header(mmap_ptr);
-    printf("mmap_log_content_ptr write: %d \n",*mmap_log_content_ptr);
-    
-    // 当单条日志内容长度 大于 FD_MAX_GZIP_SIZE 设定的长度 需要进行结束写入
-    if ((*mmap_log_content_ptr + data->data_len) > FD_MAX_GZIP_SIZE) {
-        
-        
-        /// 添加 '}' 符号
-        /// 如果不是刚开始新开一条日志，则继续写入。
-        if (!model->is_ready_gzip) {
-            int ret = fd_init_zlib(model);
-            if (ret == 0) { return 0; }
+    if (!model->is_ready_gzip) {
+        printf("model->is_ready_gzip NULL! \n");
+        int ret = fd_init_zlib(model);
+        if (ret == 0) {
+            printf("fd_init_zlib error! \n");
+            return 0;
         }
-        /// 非首次写入
-        char array_tailer = ']';
-        int ret = fd_zlib_compress(model, &array_tailer, 1, Z_SYNC_FLUSH);
-        printf("fd_zlib1 success! ret %d \n",ret);
-        
-        
-        
-        fd_zlib_end_compress(model);
-        
-        // 加入写入结尾
-        *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
-        update_mmap_content_len(1);
-        bind_cache_file_pointer_from_header(mmap_ptr);
-        
-        // 重新赋值IV
-        fd_aes_inflate_iv(model->aes_iv);
     }
     
-    /// 写入日志到缓存文件
-    /// 如果已经是一个完整的单元 或者 还没有写一个单元
     if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
-        
-        // 开启新的日志单元
         *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
         mmap_tailer_ptr += 1;
-        
-        /// 确定最后一条写入日志的长度位置 并且初始 = 0
-        mmap_log_content_ptr = (int *)mmap_tailer_ptr;
-        memset(mmap_log_content_ptr, 0, sizeof(int));
-        
+        mmap_current_log_len_ptr = (int *)mmap_tailer_ptr; // 绑定指针
         mmap_tailer_ptr += sizeof(int);
-        
-        if (!model->is_ready_gzip) {
-            int ret = fd_init_zlib(model);
-            if (ret == 0) { return 0; }
-        }
-        
-        
-        char array_head = '[';
-        int ret0 = fd_zlib_compress(model, &array_head, 1, Z_SYNC_FLUSH);
-        printf("fd_zlib1 success! ret %d \n",ret0);
-        
         
         int ret = fd_zlib_compress(model, data->data, data->data_len, Z_SYNC_FLUSH);
         printf("fd_zlib1 success! ret %d \n",ret);
         if (ret) {
-            printf("fd_zlib1 success! \n");
+            fd_zlib_end_compress(model);
+            fd_aes_inflate_iv(model->aes_iv);
             return 1;
         }
     }
     else {
-        
-        // 如果不是刚开始新开一条日志，则继续写入。
-        if (!model->is_ready_gzip) {
-            int ret = fd_init_zlib(model);
-            if (ret == 0) { return 0; }
-        }
-        
-        
-        /// 连接字典 用,分割
-        char comma = ',';
-        int ret0 = fd_zlib_compress(model, &comma, 1, Z_SYNC_FLUSH);
-        printf("fd_zlib1 success! ret %d \n",ret0);
-        
-        
-        // 非首次写入
-        int ret = fd_zlib_compress(model, data->data, data->data_len, Z_SYNC_FLUSH);
-        printf("fd_zlib1 success! ret %d \n",ret);
-        if (ret) {
-            printf("fd_zlib1 success! \n");
-            return 1;
-        }
+        // 日志中断 删掉之前坏数据
+        printf("日志中断! \n");
     }
     
     return 0;
@@ -622,16 +546,15 @@ int fdlog_sync() {
         }
     }
     
-    int bind = bind_cache_file_pointer_from_header(mmap_ptr);
+    int bind = adjust_mmap_tailer(mmap_ptr);
     printf("bind result:%d\n",bind);
     
 
-    printf("*(mmap_tailer_ptr - 1): %02X \n",*(mmap_tailer_ptr - 1));
     /// 尾巴必须指向 FD_MMAP_FILE_CONTENT_WRITE_TAILER 文件尾巴
     /// 没有结尾 先进行结尾
     if (*(mmap_tailer_ptr - 1) != FD_MMAP_FILE_CONTENT_WRITE_TAILER) {
         fd_zlib_end_compress(model);
-        bind_cache_file_pointer_from_header(mmap_ptr);
+        adjust_mmap_tailer(mmap_ptr);
         
         // 临时添加 因为多了 16字节
         mmap_tailer_ptr = mmap_tailer_ptr - 16;
@@ -639,7 +562,7 @@ int fdlog_sync() {
         // 加入写入结尾
         *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
         update_mmap_content_len(1);
-        bind_cache_file_pointer_from_header(mmap_ptr);
+        adjust_mmap_tailer(mmap_ptr);
         // 重新赋值IV
         fd_aes_inflate_iv(model->aes_iv);
     }
@@ -660,7 +583,7 @@ int fdlog_sync() {
     /// 重置缓存MMAP相关信息
     int ret = insert_mmap_file_header();
     if (ret == 0) { return 0; }
-    int ret1 = bind_cache_file_pointer_from_header(mmap_ptr);
+    int ret1 = adjust_mmap_tailer(mmap_ptr);
     if (ret1 == 0) { return 0; }
     
     return 1;
@@ -683,7 +606,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     if (ret3 == 0) { return 0; }
     
     // 读取缓存文件头部信息
-    int ret4 = bind_cache_file_pointer_from_header(mmap_ptr);
+    int ret4 = adjust_mmap_tailer(mmap_ptr);
     if (ret4) {
         cJSON* croot = cJSON_Parse(mmap_header_content_ptr);
         char* cache_date = (char*)calloc(1, 1024);
@@ -700,11 +623,11 @@ int fdlog_initialize(char* root, char* key, char* iv) {
             if (ret1 == 0) { return 0; }
             int ret2 = insert_mmap_file_header();
             if (ret2 == 0) { return 0; }
-            int ret3 = bind_cache_file_pointer_from_header(mmap_ptr);
+            int ret3 = adjust_mmap_tailer(mmap_ptr);
             if (ret3 == 0) { return 0; }
         }
         else {
-            int ret0 = bind_cache_file_pointer_from_header(mmap_ptr);
+            int ret0 = adjust_mmap_tailer(mmap_ptr);
             if (ret0 == 0) { return 0; }
         }
     }
@@ -712,7 +635,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     else {
         int ret = insert_mmap_file_header();
         if (ret == 0) { return 0; }
-        int ret1 = bind_cache_file_pointer_from_header(mmap_ptr);
+        int ret1 = adjust_mmap_tailer(mmap_ptr);
         if (ret1 == 0) { return 0; }
     }
     
@@ -734,9 +657,6 @@ int fdlog(FD_Construct_Data *data) {
         printf("fdlog init failture!\n");
         return 0;
     }
-    
-    printf("longBytes:%f!\n",(float)*mmap_content_len_ptr);
-    printf("maxBytes:%f!\n",(float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE));
     
     /// 缓存长度已经大于设置的最大值，同步到本地文件。
     if ((float)*mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {

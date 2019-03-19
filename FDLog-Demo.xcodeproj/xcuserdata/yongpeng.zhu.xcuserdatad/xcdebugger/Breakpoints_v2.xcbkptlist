@@ -9,13 +9,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FDLog-Demo/fdlog/fd_log.c"
-            timestampString = "574523941.89459"
+            filePath = "FDLog-Demo/main.c"
+            timestampString = "574678155.022213"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "579"
-            endingLineNumber = "579"
-            landmarkName = "fdlog_sync"
+            startingLineNumber = "47"
+            endingLineNumber = "47"
+            landmarkName = "main"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

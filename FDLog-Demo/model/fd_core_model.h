@@ -15,8 +15,6 @@
 
 /** 日志缓存结构
 |缓存文件头部|头部信息|缓存文件的尾部|
-|AES剩余数据头部|4字节存储长度|16字节存放剩余数据 不够用0部位|AES剩余数据尾部|
-|最后一条日志长度头部|4字节存储 从文件头到最后一条日志的长度记录开始位置|最后一条日志长度尾部
 |缓存文件总内容长度头部|4字节存储总长度|缓存文件总内容长度尾部|
 |缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
 |缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
@@ -38,15 +36,9 @@
 #define FD_DATE "fd_date"
 #define FD_SIZE "fd_mmap_size"
 
-#define FD_MAX_GZIP_SIZE 1024*50
+//#define FD_MAX_GZIP_SIZE 1024*50
 #define FD_MAX_LOG_SIZE 1024*1024*2 // 最大日志文件尺寸
 
-/// 缓存文件 剩余数据字节的头部
-/// 为了存放一次AES加密放不下的数据的长度记录
-#define FD_MMAP_FILE_REMAIN_DATA_HEADER '*'
-/// 缓存文件 剩余数据字节的尾部
-/// 为了存放一次AES加密放不下的数据的长度记录
-#define FD_MMAP_FILE_REMAIN_DATA_TAILER '&'
 
 /// 缓存文件的头部的头字符
 #define FD_MMAP_FILE_HEADER '#'
@@ -62,11 +54,6 @@
 #define FD_MMAP_FILE_CONTENT_WRITE_HEADER '!'
 /// 缓存内容 写入尾
 #define FD_MMAP_FILE_CONTENT_WRITE_TAILER '@'
-
-/// 记录最后一条日志长度记录 头部
-#define FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_HEADER '^'
-/// 记录最后一条日志长度记录 尾部
-#define FD_MMAP_LAST_LOG_DISTANCE_TO_FILE_END_TAILER '_'
 
 
 #define READY_GZIP 1 // 可以压缩GZIP [fd_logmodel.is_ready_gzip]
@@ -111,7 +98,7 @@ typedef struct fd_core_model {
 } FDLOGMODEL;
 
 
-int bind_cache_file_pointer_from_header(unsigned char *mmap_buffer);
+int adjust_mmap_tailer(unsigned char *mmap_buffer);
 
 int update_mmap_content_len(int increase_content_len);
 

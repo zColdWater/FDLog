@@ -12,15 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 extern FDLOGMODEL *model;
 extern unsigned char *mmap_ptr;
 extern unsigned char *mmap_tailer_ptr;
 extern int *mmap_content_len_ptr;
+extern int *mmap_current_log_len_ptr;
 extern int *mmap_header_content_len_ptr;
 extern char *mmap_header_content_ptr;
-extern int *mmap_log_content_ptr;
-extern unsigned char *mmap_last_log_content_len_distance_ptr;
 
 
 
@@ -128,25 +126,9 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
                     // 开始进行AES加密操作 并且 当执行完加密操作 也把数据写入了缓存
                     fd_aes_encrypt((unsigned char *) gzip_data, mmap_tailer_ptr, handler_len,
                                    (unsigned char *) model->aes_iv);
-                    
-                    /// 更新最后一条未写完日志 内容长度。
-                    int total_handler_len = *mmap_log_content_ptr + handler_len;
-                    memcpy(mmap_log_content_ptr, &total_handler_len, sizeof(int));
-                    
-                    /// 更新距离尾部距离
-                    if (type == Z_FINISH) {
-                        memset(mmap_last_log_content_len_distance_ptr, 0, sizeof(int));
-                    }
-                    else {
-                        int distance_to_cache_file_tailer = total_handler_len + 1 + sizeof(int);
-                        memcpy(mmap_last_log_content_len_distance_ptr, &distance_to_cache_file_tailer, sizeof(int));
-                        printf("distance_to_cache_file_tailer: %d \n",distance_to_cache_file_tailer);
-                    }
 
-                    printf("mmap_log_content_ptr: %d \n",*mmap_log_content_ptr);
-                    printf("mmap_last_log_content_len_distance_ptr: %d \n",*(int*)mmap_last_log_content_len_distance_ptr);
-                    
-                    bind_cache_file_pointer_from_header(mmap_ptr);
+                    *mmap_current_log_len_ptr += handler_len;
+                    mmap_tailer_ptr += handler_len;
                 }
                 
                 // 如果本次压缩存在剩余数据长度
@@ -180,50 +162,30 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
 
 
 void fd_zlib_end_compress(FDLOGMODEL *model) {
-    
-    printf("mmap_last_log_content_len_distance_ptr:%d \n",*(int *)mmap_last_log_content_len_distance_ptr);
-    
-    // 完成压缩
     fd_zlib_compress(model, NULL, 0, Z_FINISH);
-    // 压缩完成以后,释放空间,但是注意,仅仅是释放deflateInit中申请的空间,自己申请的空间还是需要自己释放
     (void) deflateEnd(model->strm);
     
-    // 更新 之前完整的数据长度 到总长度中。
-    int prev = *mmap_log_content_ptr + 1 + sizeof(int);
-    bind_cache_file_pointer_from_header(mmap_ptr);
-    printf("prev:%d \n",prev);
-    
-    // 算出和16字节差多少
     int val = 16 - model->cache_remain_data_len;
-    // 声明一个16字节的数组
     char data[16];
-    // 用差值填满这 data 16字节
     memset(data, val, 16);
     
-    // 如果存在剩余数据
     if (model->cache_remain_data_len) {
-        //将剩余的数组写入data数组
         memcpy(data, model->cache_remain_data, model->cache_remain_data_len);
     }
     
-    // 开始AES加密 并且 写入缓存
     fd_aes_encrypt((unsigned char *) data, mmap_tailer_ptr, 16,
                    (unsigned char *) model->aes_iv);
     
-    /// 更新最后一条未写完日志 内容长度。
-    *(int *)mmap_last_log_content_len_distance_ptr = *(int *)mmap_last_log_content_len_distance_ptr + 16;
-    bind_cache_file_pointer_from_header(mmap_ptr);
-    /// 重置这段内存
-    memset(mmap_last_log_content_len_distance_ptr, 0, sizeof(int));
+    mmap_tailer_ptr += 16;
+    *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
+    mmap_tailer_ptr++;
+    *mmap_current_log_len_ptr += 16;
     
-    update_mmap_content_len(16 + prev);
+    // 只有当结束压缩的时候 才会将总数据长度 录入到 mmap_content_len_ptr，算做有效的日志。
+    *mmap_content_len_ptr += (*mmap_current_log_len_ptr + 2 + sizeof(int));
 
-
-    // 重置剩余数据长度为0
     model->cache_remain_data_len = 0;
-    // 改变 Zlib 状态
     model->zlib_type = FD_ZLIB_END;
-    // 改变 is_ready_gzip 状态
     model->is_ready_gzip = NOT_READY_GZIP;
 }
 
