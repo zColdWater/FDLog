@@ -380,70 +380,80 @@ int fdlog_update_cache_point_position() {
 int fdlog_sync() {
     
     if (!is_init_ok) {
-        printf("fdlog init failture!\n");
+        printf("FDLog fdlog_sync: init failture! \n");
+        return 0;
+    }
+    
+    if (model->is_zlibing) {
+        printf("FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
         return 0;
     }
     
     int is_new_logfile = 0;
     char* last_file_name = look_for_last_logfile();
-    // 如果找不到上一次打开文件
+    // 如果 找不到上一次的日志文件
     if (last_file_name == NULL) {
-        int ret = create_new_logfile();
-        if (ret) {
+        if (create_new_logfile()) {
             is_new_logfile = 1;
         }
     }
+    
+    // 如果 找到上一次打开文件 读取数据
     else {
-        // 如果找到上一次打开文件 读取数据
+        
+        // Save last_file_name path to log_file_path
         memset(log_file_path, 0, FD_MAX_PATH);
         memcpy(log_file_path, last_file_name, FD_MAX_PATH);
+        
+        // open file stream use `ab+`
         FILE *file_temp = fopen(log_file_path, "ab+");
-        if (NULL != file_temp) {  //初始化文件流开启
+        if (NULL != file_temp) {
             fseek(file_temp, 0, SEEK_END);
             long longBytes = ftell(file_temp);
+            // get log file length
             memcpy(log_file_len, &longBytes, sizeof(long));
             fclose(file_temp);
         } else {
-            printf("文件流打开失败!\n");
+            printf("FDLog fdlog_sync: fopen log file failture! \n");
             free(last_file_name);
             last_file_name = NULL;
             return 0;
         }
     }
     
-    if (!((log_file_len != NULL) && (mmap_tailer_ptr != NULL) && (mmap_content_len_ptr != NULL) && (*mmap_content_len_ptr > 0))) {
-        return 0;
-    }
-    
-    /// 重新创建文件绑定指针
+    // 如果当前日志文件大小大于日志设定最大大小，重新创建新日志文件。
     if ((*log_file_len) > FD_MAX_LOG_SIZE) {
-        printf("log_file_len: %lu \n",*log_file_len);
-        // 如果没创建新文件 创建新文件保存日志，因为日志长度大于设定最大长度。
+        printf("FDLog fdlog_sync: current log file size:%lu \n",*log_file_len);
+        
         if (!is_new_logfile) {
             memset(log_file_path, 0, FD_MAX_PATH);
             memset(log_file_len, 0, sizeof(long));
             create_new_logfile();
         }
+        else {
+            printf("FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
+            return 0;
+        }
     }
     
-    int bind = fdlog_update_cache_point_position();
-    printf("bind result:%d\n",bind);
-    
-    /// 开始写入日志到本地文件
     FILE* stream;
     stream = fopen(log_file_path, "ab+");
-
     unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
-    fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);//写入到文件中
+    fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);
     fflush(stream);
     fclose(stream);
-    *log_file_len += *mmap_content_len_ptr; //修改文件大小
+    *log_file_len += *mmap_content_len_ptr; // 更新日志文件大小
     
-    /// 重置缓存MMAP相关信息
-    int ret = fdlog_insert_mmap_file_header();
-    if (ret == 0) { return 0; }
-    int ret1 = fdlog_update_cache_point_position();
-    if (ret1 == 0) { return 0; }
+    
+    // Reset mmap cahce file
+    if (!fdlog_insert_mmap_file_header()) {
+        printf("FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
+        return 0;
+    }
+    if (!fdlog_update_cache_point_position()) {
+        printf("FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
+        return 0;
+    }
     
     return 1;
 }
