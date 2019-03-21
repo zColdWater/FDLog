@@ -62,10 +62,13 @@
 
 typedef struct fd_core_model {
     
+    int is_bind_mmap; // 0 or 1
+    int is_ready_gzip; // 0 or 1
+    int is_init_global_vars; // 0 or 1
+    int is_zlibing; // 0 or 1 是否正在压缩状态
+    
     unsigned char aes_iv[16];
-    int is_ready_gzip;
     int zlib_type;
-    int is_bind_mmap;
     z_stream *strm;
     char cache_remain_data[16];
     int cache_remain_data_len;

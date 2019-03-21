@@ -9,7 +9,6 @@
 #ifndef fd_zlib_helper_h
 #define fd_zlib_helper_h
 
-#include <stdbool.h>
 #include "fd_core_model.h"
 
 #define LOGAN_CHUNK 16384 // 定义数据块大小 16KB
@@ -22,8 +21,8 @@
 #define FD_ZLIB_FAIL 4
 
 
-bool fd_init_zlib(FDLOGMODEL *model);
-bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type);
-void fd_zlib_end_compress(FDLOGMODEL *model);
+int fd_init_zlib(void);
+int fd_zlib_compress(char *data, int data_len, int type);
+void fd_zlib_end_compress(void);
 
 #endif /* fd_zlib_helper_h */

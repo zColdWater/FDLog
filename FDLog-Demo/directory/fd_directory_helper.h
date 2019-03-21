@@ -17,4 +17,11 @@ int fd_makedir(const char *path);
  */
 int fd_is_file_exist(const char *path);
 
+long getmaximum(long a[], int numberOfElements);
+char* get_current_date(void);
+
+char* look_for_last_logfile(void);
+int create_new_logfile(void);
+
+
 #endif

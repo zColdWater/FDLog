@@ -21,22 +21,20 @@ extern int *mmap_header_content_len_ptr;
 extern char *mmap_header_content_ptr;
 
 
-
-
-bool fd_init_zlib(FDLOGMODEL *model) {
+int fd_init_zlib() {
     
-    model->is_ready_gzip = false;
+    model->is_ready_gzip = 0;
     model->zlib_type = FD_ZLIB_FAIL;
 
     if (model->strm != NULL) {
-//        free(model->strm);
+        free(model->strm);
         model->strm = NULL;
     }
     
     model->strm = (z_stream *)malloc(sizeof(z_stream));
     if (model == NULL) {
         printf("m->strm = (z_stream *) malloc(sizeof(z_stream)) failture \n");
-        return false;
+        return 0;
     }
     memset(model->strm, 0, sizeof(z_stream));
 
@@ -49,22 +47,29 @@ bool fd_init_zlib(FDLOGMODEL *model) {
                             Z_DEFAULT_STRATEGY);
     
     if (ret1 == Z_OK) {
-        model->is_ready_gzip = true;
+        model->is_ready_gzip = 1;
         model->zlib_type = FD_ZLIB_INIT;
         printf("deflateInit2 success! \n");
-        return true;
+        return 1;
     }
     else {
         printf("deflateInit2 failture! \n");
-        return false;
+        return 0;
     }
 }
 
-bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
+int fd_zlib_compress(char *data, int data_len, int type) {
+    
+    if (model->is_zlibing) {
+        printf("FDLog fd_zlib_compress: fdlog writing cache, can't write again! \n");
+        return 0;
+    }
+    else {
+        model->is_zlibing = 1;
+    }
     
     int is_gzip = model->is_ready_gzip;
     int ret;
-    
     // 如果可以压缩成 gzip
     if (is_gzip) {
         unsigned int have;
@@ -124,19 +129,6 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
                                    (unsigned char *) model->aes_iv);
 
                     *mmap_current_log_len_ptr += handler_len;
-                    
-//                    *temp = len;
-//                    temp++;
-//                    *temp = len >> 8;
-//                    temp++;
-//                    *temp = len >> 16;
-//                    temp++;
-//                    *temp = len >> 24;
-                    
-                    printf("mmap_current_log_len_ptr >> 8");
-                    
-//                    (char *)mmap_current_log_len_ptr
-                    
                     mmap_tailer_ptr += handler_len;
                 }
                 
@@ -163,15 +155,15 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
                 model->cache_remain_data_len = remain_len;
             }
         } while (strm->avail_out == 0); // avail_out， next_out还有多少字节空间可以用来保存输出字节
-        return true;
+        return 1;
     } else {
-        return false;
+        model->is_zlibing = 0;
+        return 0;
     }
 }
 
-
-void fd_zlib_end_compress(FDLOGMODEL *model) {
-    fd_zlib_compress(model, NULL, 0, Z_FINISH);
+void fd_zlib_end_compress() {
+    fd_zlib_compress(NULL, 0, Z_FINISH);
     (void) deflateEnd(model->strm);
     
     int val = 16 - model->cache_remain_data_len;
@@ -196,5 +188,6 @@ void fd_zlib_end_compress(FDLOGMODEL *model) {
     model->cache_remain_data_len = 0;
     model->zlib_type = FD_ZLIB_END;
     model->is_ready_gzip = NOT_READY_GZIP;
+    model->is_zlibing = 0;
 }
 

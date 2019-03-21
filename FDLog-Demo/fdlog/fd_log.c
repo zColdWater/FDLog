@@ -6,7 +6,6 @@
 //  Copyright © 2019 NIO. All rights reserved.
 //
 
-#include <dirent.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
@@ -39,87 +38,35 @@ extern long *log_file_len;
 extern char *mmap_cache_file_path;
 extern char *log_file_path;
 
-
-
 /// 初始化成功标志 1成功 0失败
 static int is_init_ok = FD_INIT_FAILURE;
 
 
-
-
-long getmaximum(long a[], int numberOfElements)
-{
-    long mymaximum = 0;
-    for(int i = 0; i < numberOfElements; i++)
-    {
-        if(a[i] > mymaximum)
-        {
-            mymaximum = a[i];
-        }
-    }
-    return mymaximum;
-}
-
-
-/**
- 获取当前时间
- @return 时间 (使用完需要释放)
+/*
+ * Function: fdlog_init_dirs
+ * ----------------------------
+ *
+ *   Create fdlog relate folder
+ *
+ *   root_path: FDLog root path
+ *
+ *   Returns whether create folders was successful
+ *
+ *   returns: 1 or 0
  */
-char* get_current_date() {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    char time[18];
-    sprintf(time, "%d%d%d", (tm.tm_year + 1900),(tm.tm_mon + 1),(tm.tm_mday));
-    char* temp = (char *)malloc(sizeof(int)*3);
-    memcpy(temp, time, 18);
-    return temp;
-}
-
-
-//FDLOGMODEL* init_logmodel() {
-//
-//    FDLOGMODEL *m = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
-//
-//    if (m != NULL) {
-//        memset(m, 0, sizeof(FDLOGMODEL));
-//        m->is_ready_gzip = 0;
-//        m->zlib_type = 0;
-//        m->is_bind_mmap = 0;
-//        memset(m->cache_remain_data, 0, 16);
-//        m->cache_remain_data_len = 0;
-//
-//        m->strm = NULL;
-//
-//        return m;
-//    }
-//    else {
-//        // malloc 失败 一般由于系统问题。
-//        return NULL;
-//    }
-//}
-
-
-/**
- 初始化创建文件夹
- 
- @param root_path 日志根路径
- @return 1成功 0失败
- */
-int init_fdlog_dirs(const char *root_path, FDLOGMODEL *m) {
+int fdlog_init_dirs(const char *root_path) {
     
-    if ((log_folder_path == NULL) || (mmap_cache_file_path == NULL)) {
+    if (!model->is_init_global_vars) {
+        printf("FDLog init_fdlog_dirs: is_init_global_vars is 0 ! \n");
         return 0;
     }
     
-    /// 缓存文件夹路径
     char cache_folder_path[FD_MAX_PATH];
     memset(cache_folder_path, 0, FD_MAX_PATH);
     
-    /// 缓存文件路径
     char cache_file_path[FD_MAX_PATH];
     memset(cache_file_path, 0, FD_MAX_PATH);
     
-    /// 日志文件夹路径
     char log_folder_path1[FD_MAX_PATH];
     memset(log_folder_path1, 0, FD_MAX_PATH);
     
@@ -138,26 +85,34 @@ int init_fdlog_dirs(const char *root_path, FDLOGMODEL *m) {
     strcat(path, FD_LOG_CACHE_NAME);
     strcpy(cache_file_path, path);
     
-    int ret = fd_makedir(cache_folder_path);
-    
-    memcpy(mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
-    memcpy(log_folder_path, log_folder_path1, FD_MAX_PATH);
-    
-    // 失败
-    if (ret < 0) {
-        return 0;
-    }
-    else { // 成功
+    if (fd_makedir(cache_folder_path) == 0) {
+        memcpy(mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
+        memcpy(log_folder_path, log_folder_path1, FD_MAX_PATH);
         return 1;
     }
+    
+    return 0;
 }
 
 
 
-int insert_mmap_file_header() {
-    bool result = false;
+/*
+ * Function: insert_mmap_file_header
+ * ----------------------------
+ *
+ *   Assumble cache file header data format
+ *
+ *   Returns whether insert header into cache file was successful
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_insert_mmap_file_header() {
     
-    /// 组装MMAP文件头信息
+    if (!model->is_bind_mmap) {
+        printf("FDLog: mmap file not bind memory point! \n");
+        return 0;
+    }
+    
     cJSON *root = NULL;
     fd_json_map *map = NULL;
     root = cJSON_CreateObject();
@@ -175,7 +130,7 @@ int insert_mmap_file_header() {
         cJSON_Delete(root);
     }
     
-    /// 置空缓存文件
+    // reset mmap cache file content to '0'
     if (mmap_ptr != NULL) {
         memset(mmap_ptr, 0, FD_MMAP_LENGTH);
         int len = (int)strlen(back_data);
@@ -205,299 +160,15 @@ int insert_mmap_file_header() {
         *temp = FD_MMAP_FILE_CONTENT_TAILER;
         temp ++;
         
-        result = true;
-        
-    } else {
-        printf("mmap pointer not bind memory! \n");
-    }
-    
-    printf("back_data:%s \n",back_data);
-    return result;
-}
-
-
-
-/**
- 写入日志
- 
- @param data 日志内容
- @return 1成功 0失败
- */
-int fdlog_write_to_cache(FD_Construct_Data *data) {
-    
-    if (!is_init_ok) {
-        printf("fdlog init failture!\n");
-        return 0;
-    }
-    
-    if (!mmap_tailer_ptr) {
-        printf("mmap_tailer_ptr NULL!\n");
-        return 0;
-    }
-    
-    if (!model->is_ready_gzip) {
-        printf("model->is_ready_gzip NULL! \n");
-        int ret = fd_init_zlib(model);
-        if (ret == 0) {
-            printf("fd_init_zlib error! \n");
-            return 0;
-        }
-    }
-    
-    if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) || (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
-        *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
-        mmap_tailer_ptr += 1;
-        mmap_current_log_len_ptr = (int *)mmap_tailer_ptr; // 绑定指针
-        mmap_tailer_ptr += sizeof(int);
-        
-        int ret = fd_zlib_compress(model, data->data, data->data_len, Z_SYNC_FLUSH);
-        printf("fd_zlib1 success! ret %d \n",ret);
-        if (ret) {
-            fd_zlib_end_compress(model);
-            fd_aes_inflate_iv(model->aes_iv);
-            return 1;
-        }
-    }
-    else {
-        // 日志中断 删掉之前坏数据
-        printf("日志中断! \n");
-    }
-    
-    return 0;
-}
-
-
-/*
- * Function: reset_global_var
- * ----------------------------
- *   Returns whether the reset global var was successful
- *
- *   returns: 1 or 0
- */
-int reset_global_var() {
-    
-    if (model == NULL) {
-        model = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
-        memset(model, 0, sizeof(FDLOGMODEL));
-    }
-    else {
-        model->is_ready_gzip = 0;
-        model->zlib_type = 0;
-        model->is_bind_mmap = 0;
-        model->cache_remain_data_len = 0;
-        memset(model->aes_iv, 0, 16);
-        memset(model->cache_remain_data, 0, 16);
-        memset(model->strm, 0, sizeof(z_stream));
-    }
-    
-    if (!mmap_header_content_ptr) { mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN); }
-    else { memset(mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN); }
-    
-    if (!log_folder_path) { log_folder_path = (char*)calloc(1, FD_MAX_PATH); }
-    else { memset(log_folder_path, 0, FD_MAX_PATH); }
-    
-    if (!mmap_cache_file_path) { mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH); }
-    else { memset(mmap_cache_file_path,0,FD_MAX_PATH); }
-    
-    if (!log_file_len) { log_file_len = (long *)calloc(1, sizeof(long)); }
-    else { memset(log_file_len, 0, sizeof(long)); }
-    
-    if (!log_file_path) { log_file_path = (char *)calloc(1, FD_MAX_PATH); }
-    else { memset(log_file_path, 0, FD_MAX_PATH); }
-    
-    if ((model != NULL) &&
-        (log_folder_path != NULL) &&
-        (mmap_cache_file_path != NULL) &&
-        (log_file_path != NULL) &&
-        (log_file_len != NULL)) {
-        printf("FDLog: reset_global_var success! \n");
+        printf("FDLog: header insert content is :%s \n",back_data);
         return 1;
-    }
-    
-    printf("FDLog: reset_global_var failture! \n");
-    return 0;
-}
-
-
-
-/**
- 寻找到上一次写入的文件名
- @return 文件名
- */
-char* look_for_last_logfile() {
-    
-    // 获取当天的日期字符串
-    char* date = get_current_date();
-    char* current_file_folder_name = (char *)calloc(1, 1024);
-    strcat(current_file_folder_name,log_folder_path);
-    strcat(current_file_folder_name, "/");
-    strcat(current_file_folder_name, date);
-    
-    int folder_exist = fd_is_file_exist(current_file_folder_name);
-    if (!folder_exist) {
-        free(date);
-        free(current_file_folder_name);
-        date = NULL;
-        current_file_folder_name = NULL;
-        return NULL;
-    }
-    
-    strcat(current_file_folder_name, "/");
-    
-    char* files_name[1024] = {};
-    int i = 0;
-    DIR *dir;
-    struct dirent *ent;
-    if ((dir = opendir (current_file_folder_name)) != NULL) {
-        while ((ent = readdir (dir)) != NULL) {
-            if (strstr(ent->d_name, date) != NULL) {
-                files_name[i] = ent->d_name;
-                i++;
-            }
-        }
-        closedir (dir);
     } else {
-        perror ("");
-        free(date);
-        free(current_file_folder_name);
-        date = NULL;
-        current_file_folder_name = NULL;
-        return NULL;
+        printf("FDLog: occur serious bug that model->is_bind_mmap is ture but mmap_ptr is NULL! \n");
+        return 0;
     }
-    
-    long files_name_number[i];
-    for(int j=0;j<i;j++) {
-        const char *c = files_name[j];
-        long d = atol(c);
-        files_name_number[j] = d;
-        printf("%ld\n", d);
-    }
-    
-    long max_file_name_num = getmaximum(files_name_number, i);
-    if (max_file_name_num == 0) {
-        free(date);
-        free(current_file_folder_name);
-        date = NULL;
-        current_file_folder_name = NULL;
-        return NULL;
-    }
-    
-    char max_file_name[12];
-    sprintf(max_file_name, "%ld", max_file_name_num);
-    strcat(current_file_folder_name, max_file_name);
-    
-    char* maxfile_name = (char*)calloc(1, FD_MAX_PATH);
-    strcpy(maxfile_name, current_file_folder_name);
-    
-    free(date);
-    free(current_file_folder_name);
-    date = NULL;
-    current_file_folder_name = NULL;
-    return maxfile_name;
 }
 
-/**
- 创建日志文件
- 
- 1. 先找有没有当天文件夹
- 2. 没有创建文件夹，并且进入文件夹创建日志文件。
- 
- @return 1成功 0失败
- */
-int create_new_logfile() {
-    
-    // 获取当天的日期字符串
-    char* date = get_current_date();
-    char* current_file_folder_name = (char *)calloc(1, FD_MAX_PATH);
-    strcat(current_file_folder_name,log_folder_path);
-    strcat(current_file_folder_name, "/");
-    strcat(current_file_folder_name, date);
-    
-    int folder_exist = fd_is_file_exist(current_file_folder_name);
-    if (!folder_exist) {
-        int ret = fd_makedir(current_file_folder_name);
-        if (ret != 0) {
-            free(date);
-            free(current_file_folder_name);
-            date = NULL;
-            current_file_folder_name = NULL;
-            return 0;
-        }
-    }
-    strcat(current_file_folder_name, "/");
-    
-    int same = 1;
-    int additional = 1;
-    char file_name[FD_MAX_PATH+sizeof(int)] = {0};
-    while (same) {
-        
-        char additional_str[sizeof(int)];
-        sprintf(additional_str, "%d", additional);
-        
-        char logfile[FD_MAX_PATH+sizeof(int)] = {0};
-        strcat(logfile, date);
-        strcat(logfile, additional_str);
-        strcpy(file_name, logfile);
-        printf("logfile:%s \n",logfile);
-        
-        /// 遍历文件夹里面的文件名
-        int is_same_name = 0;
-        DIR *dir;
-        struct dirent *ent;
-        if ((dir = opendir (current_file_folder_name)) != NULL) {
-            while ((ent = readdir (dir)) != NULL) {
-                printf ("%s\n", ent->d_name);
-                if(strcmp(logfile,ent->d_name)==0) {
-                    printf("日志文件有重名\n");
-                    is_same_name = 1;
-                    break;
-                }
-            }
-            closedir (dir);
-        } else {
-            perror ("");
-            free(date);
-            free(current_file_folder_name);
-            date = NULL;
-            current_file_folder_name = NULL;
-            return 0;
-        }
-        
-        additional++;
-        same = is_same_name;
-    }
-    strcat(current_file_folder_name, file_name);
-    
-    int log_file_exist = fd_is_file_exist(current_file_folder_name);
-    if (!log_file_exist) {
-        FILE *file_temp = fopen(current_file_folder_name, "ab+");
-        if (NULL != file_temp) {  //初始化文件流开启
-            fseek(file_temp, 0, SEEK_END);
-            long longBytes = ftell(file_temp);
-            memcpy(log_file_len, &longBytes, sizeof(long));
-            if (log_file_path == NULL) {
-                log_file_path = (char *)calloc(1, FD_MAX_PATH);
-            } else {
-                memset(log_file_path, 0, FD_MAX_PATH);
-            }
-            memcpy(log_file_path, current_file_folder_name, FD_MAX_PATH);
-            fclose(file_temp);
-        } else {
-            printf("文件流打开失败!\n");
-            free(date);
-            free(current_file_folder_name);
-            date = NULL;
-            current_file_folder_name = NULL;
-            return 0;
-        }
-    }
-    
-    free(date);
-    free(current_file_folder_name);
-    date = NULL;
-    current_file_folder_name = NULL;
-    return 1;
-}
+
 
 /*
  * Function: fdlog_is_can_read_cache
@@ -551,6 +222,115 @@ int fdlog_is_valid_cache() {
     return 0;
 }
 
+
+
+/*
+ * Function: fdlog_write_to_cache
+ * ----------------------------
+ *   Returns whether the reset global var was successful
+ *
+ *   data: FD_Construct_Data data
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_write_to_cache(FD_Construct_Data *data) {
+    
+    if(!fdlog_is_valid_cache()) {
+        printf("FDLog fdlog_write_to_cache cache: file is invalid, can't read content! \n");
+        return 0;
+    }
+    
+    if (!is_init_ok) {
+        printf("FDLog fdlog_write_to_cache: log init failture, can't write to cache! \n");
+        return 0;
+    }
+    
+    if (!model->is_ready_gzip) {
+        printf("FDLog fdlog_write_to_cache: model->is_ready_gzip is NULL, can't write to cahce! \n");
+        if (!fd_init_zlib()) {
+            printf("FDLog fdlog_write_to_cache: fd_init_zlib failture! \n");
+            return 0;
+        }
+    }
+    
+    // Tailer must be point to write tailer or header tailer
+    // otherwise cache file struct not correct!
+    if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) ||
+        (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
+        
+        *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
+        mmap_tailer_ptr += 1;
+        mmap_current_log_len_ptr = (int *)mmap_tailer_ptr;
+        mmap_tailer_ptr += sizeof(int);
+        
+        if (fd_zlib_compress(data->data, data->data_len, Z_SYNC_FLUSH)) {
+            fd_zlib_end_compress();
+            fd_aes_inflate_iv(model->aes_iv);
+            printf("FDLog fdlog_write_to_cache: success! \n");
+            return 1;
+        }
+    }
+    
+    return 0;
+}
+
+
+
+/*
+ * Function: reset_global_var
+ * ----------------------------
+ *   Returns whether the reset global var was successful
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_reset_global_var() {
+    
+    if (model == NULL) {
+        model = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
+        memset(model, 0, sizeof(FDLOGMODEL));
+    }
+    else {
+        model->is_ready_gzip = 0;
+        model->zlib_type = 0;
+        model->is_bind_mmap = 0;
+        model->cache_remain_data_len = 0;
+        model->is_init_global_vars = 0;
+        memset(model->aes_iv, 0, 16);
+        memset(model->cache_remain_data, 0, 16);
+        memset(model->strm, 0, sizeof(z_stream));
+    }
+    
+    if (!mmap_header_content_ptr) { mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN); }
+    else { memset(mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN); }
+    
+    if (!log_folder_path) { log_folder_path = (char*)calloc(1, FD_MAX_PATH); }
+    else { memset(log_folder_path, 0, FD_MAX_PATH); }
+    
+    if (!mmap_cache_file_path) { mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH); }
+    else { memset(mmap_cache_file_path,0,FD_MAX_PATH); }
+    
+    if (!log_file_len) { log_file_len = (long *)calloc(1, sizeof(long)); }
+    else { memset(log_file_len, 0, sizeof(long)); }
+    
+    if (!log_file_path) { log_file_path = (char *)calloc(1, FD_MAX_PATH); }
+    else { memset(log_file_path, 0, FD_MAX_PATH); }
+    
+    if ((model != NULL) &&
+        (log_folder_path != NULL) &&
+        (mmap_cache_file_path != NULL) &&
+        (log_file_path != NULL) &&
+        (log_file_len != NULL)) {
+        model->is_init_global_vars = 1;
+        printf("FDLog: reset_global_var success! \n");
+        return 1;
+    }
+    
+    printf("FDLog: reset_global_var failture! \n");
+    return 0;
+}
+
+
+
 /*
  * Function: fdlog_update_cache_point_position
  * ----------------------------
@@ -559,8 +339,6 @@ int fdlog_is_valid_cache() {
  *   returns: the int value 0 is failture 1 is success.
  */
 int fdlog_update_cache_point_position() {
-    
-    // TODO: 不在写的时候操作
     
     if (!(fdlog_is_valid_cache())){ return 0; }
     unsigned char *temp = mmap_ptr;
@@ -591,10 +369,13 @@ int fdlog_update_cache_point_position() {
 }
 
 
-/**
- 同步缓存文件到本地日志文件
- 
- @return 1成功 0失败
+
+/*
+ * Function: fdlog_sync
+ * ----------------------------
+ *   Returns whether the sync cache to local log file was successful
+ *
+ *   returns: 1 or 0
  */
 int fdlog_sync() {
     
@@ -659,13 +440,14 @@ int fdlog_sync() {
     *log_file_len += *mmap_content_len_ptr; //修改文件大小
     
     /// 重置缓存MMAP相关信息
-    int ret = insert_mmap_file_header();
+    int ret = fdlog_insert_mmap_file_header();
     if (ret == 0) { return 0; }
     int ret1 = fdlog_update_cache_point_position();
     if (ret1 == 0) { return 0; }
     
     return 1;
 }
+
 
 
 /*
@@ -682,14 +464,14 @@ int fdlog_sync() {
 int fdlog_initialize(char* root, char* key, char* iv) {
     is_init_ok = FD_INIT_FAILURE;
     
-    if (!reset_global_var()) { return is_init_ok; }
-    if (!init_fdlog_dirs(root, model)) { return is_init_ok; }
+    if (!fdlog_reset_global_var()) { return is_init_ok; }
+    if (!fdlog_init_dirs(root)) { return is_init_ok; }
     if (!fd_open_mmap_file(model, mmap_cache_file_path, &mmap_ptr)) { return is_init_ok; }
     
     fd_aes_init_key_iv(key, iv);
     fd_aes_inflate_iv(model->aes_iv);
     
-    if (!fd_init_zlib(model)) { return is_init_ok; }
+    if (!fd_init_zlib()) { return is_init_ok; }
     if (fdlog_update_cache_point_position()) {
         
         // Read date on cache header as before date
@@ -712,7 +494,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
                 return is_init_ok;
             }
             
-            if (!insert_mmap_file_header()) {
+            if (!fdlog_insert_mmap_file_header()) {
                 printf("FDLog: insert_mmap_file_header failture! \n");
                 return is_init_ok;
             }
@@ -728,7 +510,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
     else {
         
-        if (!insert_mmap_file_header()) {
+        if (!fdlog_insert_mmap_file_header()) {
             printf("FDLog: insert_mmap_file_header failture! \n");
             return is_init_ok;
         }
@@ -759,6 +541,11 @@ int fdlog(FD_Construct_Data *data) {
     
     if (!is_init_ok) {
         printf("FDLog: init failture!\n");
+        return 0;
+    }
+    
+    if (model->is_zlibing) {
+        printf("FDLog: can't write because already zlibing \n");
         return 0;
     }
     
