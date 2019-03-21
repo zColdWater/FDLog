@@ -15,6 +15,35 @@
 #include "fd_log.h"
 #include "fd_aes_helper.h"
 
+
+// random string
+static char *rand_string(char *str, size_t size)
+{
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJK...";
+    if (size) {
+        --size;
+        for (size_t n = 0; n < size; n++) {
+            int key = rand() % (int) (sizeof charset - 1);
+            str[n] = charset[key];
+        }
+        str[size] = '\0';
+    }
+    return str;
+}
+
+// random string wrapper
+char* rand_string_alloc(size_t size)
+{
+    char *s = malloc(size + 1);
+    if (s) {
+        rand_string(s, size);
+    }
+    return s;
+}
+
+
+
+
 int main(int argc, const char * argv[]) {
     
     // 当前地址
@@ -27,13 +56,6 @@ int main(int argc, const char * argv[]) {
     }
 
     // 开始记录日志
-    char *log = "FDLog 日志记录！";
-    int flag = 5;
-    long long localtime = 123123;
-    char thread_name[] = "main";
-    int thread_id = 1;
-    int is_main = 1;
-    FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
     char KEY[] = "0123456789012345";
     char IV[] = "0123456789012345";
     int success = fdlog_initialize(cwd, KEY, IV);
@@ -42,7 +64,16 @@ int main(int argc, const char * argv[]) {
     }
     
     int i = 1;
-    while (i < 999999) {
+    while (i < 3) {
+        
+        char *log = rand_string_alloc(9999);
+        int flag = 5;
+        long long localtime = 123123;
+        char thread_name[] = "main";
+        int thread_id = 1;
+        int is_main = 1;
+        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
+        
         printf("i: %d\n",i);
         fdlog(data);
         i++;

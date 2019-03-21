@@ -8,15 +8,15 @@
 #include <stdlib.h>
 #include <errno.h>
 
-int fd_open_mmap_file1(FDLOGMODEL *model,char *_filepath, unsigned char **buffer) {
+
+int fd_open_mmap_file(FDLOGMODEL *model,char *mmap_file_path, unsigned char **buffer) {
     int back = FD_MMAP_FAIL;
     model->is_bind_mmap = 0;
     
     char filepath[1024] = {'0'};
-    strcpy(filepath, _filepath);
+    strcpy(filepath, mmap_file_path);
     
-    // 如果MMAP缓存文件不存在 使用内存缓存
-    if ( !(NULL == _filepath || 0 == strnlen(_filepath, 128)) ) {
+    if ( !(NULL == mmap_file_path || 0 == strnlen(mmap_file_path, 128)) ) {
 
         unsigned char *p_map = NULL;
         int size = FD_MMAP_LENGTH;
@@ -105,8 +105,7 @@ int fd_open_mmap_file1(FDLOGMODEL *model,char *_filepath, unsigned char **buffer
             // 关闭文件
             close(fd);
             
-            if (back == FD_MMAP_MMAP &&
-                access(filepath, F_OK) != -1) { //在返回mmap前,做最后一道判断，如果有mmap文件才用mmap
+            if (back == FD_MMAP_MMAP && access(filepath, F_OK) != -1) { //在返回mmap前,做最后一道判断，如果有mmap文件才用mmap
                 back = FD_MMAP_MMAP;
                 // 给外面buff 赋予 mmap文件操作指针
                 *buffer = p_map;

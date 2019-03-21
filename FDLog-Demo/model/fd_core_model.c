@@ -46,58 +46,6 @@ char *mmap_header_content_ptr = NULL;
 
 
 
-/**
- 读取缓存头文件信息
- 文件内容长度 & 头信息内容
- 
- @param mmap_buffer mmap 绑定指针 | 指向缓存文件开头
- @return 1成功 0失败
- */
-int adjust_mmap_tailer(unsigned char *mmap_buffer) {
-    
-    unsigned char *temp = mmap_buffer;
-    if (*temp == FD_MMAP_FILE_HEADER) {
-        temp += 1;
-        /// 读取头部信息长度
-        mmap_header_content_len_ptr = (int*)temp;
-        temp += sizeof(int);
-        
-        /// 读取头部内容
-        memcpy(mmap_header_content_ptr, temp, *mmap_header_content_len_ptr);
-        
-        temp += *mmap_header_content_len_ptr;
-        if (*temp == FD_MMAP_FILE_TAILER) {
-            printf("READ FD_MMAP_FILE_TAILER ✅\n");
-            temp += 1;
-            
-            // 判断是否是 文件内容的数据的头部
-            if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
-                temp += 1;
-                printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
-                mmap_content_len_ptr = (int*)temp;
-                printf("mmap_content_len_ptr:%d\n",*mmap_content_len_ptr);
-                temp += sizeof(int);
-                
-                if (*temp == FD_MMAP_FILE_CONTENT_TAILER) {
-                    printf("READ FD_MMAP_FILE_CONTENT_TAILER ✅\n");
-                    temp += 1;
-                    
-                    mmap_tailer_ptr = mmap_ptr;
-                    int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
-                    int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
-                    
-                    // 移动距离
-                    int move_len = mmap_header_len + mmap_content_len;
-                    printf("move_len:%d \n",move_len);
-                    mmap_tailer_ptr += move_len;
-                    return 1;
-                }
-            }
-        }
-    }
-    return 0;
-}
-
 
 int update_mmap_content_len(int increase_content_len) {
     if ((mmap_ptr != NULL) && (mmap_content_len_ptr != NULL) && (mmap_header_content_ptr != NULL) && (mmap_header_content_len_ptr != NULL) && (mmap_tailer_ptr != NULL)) {

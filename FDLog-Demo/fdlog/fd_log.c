@@ -20,12 +20,18 @@
 #include "fd_zlib_helper.h"
 #include "fd_json_helper.h"
 
+
+
+#define FD_INIT_SUCCESS 1; // FDLog init 成功
+#define FD_INIT_FAILURE 0; // FDLog init 失败
+
+
+
 extern FDLOGMODEL *model;
 extern unsigned char *mmap_ptr;
 extern unsigned char *mmap_tailer_ptr;
 extern int *mmap_content_len_ptr;
 extern int *mmap_current_log_len_ptr;
-extern int *mmap_header_content_len_ptr;
 extern int *mmap_header_content_len_ptr;
 extern char *mmap_header_content_ptr;
 extern char *log_folder_path;
@@ -35,9 +41,10 @@ extern char *log_file_path;
 
 
 
-
 /// 初始化成功标志 1成功 0失败
-static int is_init_ok = 0;
+static int is_init_ok = FD_INIT_FAILURE;
+
+
 
 
 long getmaximum(long a[], int numberOfElements)
@@ -68,32 +75,28 @@ char* get_current_date() {
     return temp;
 }
 
-/**
- 初始化 FDLOGMODEL
- 
- @return 1成功 0失败
- */
-FDLOGMODEL* init_logmodel() {
-    
-    FDLOGMODEL *m = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
-    
-    if (m != NULL) {
-        memset(m, 0, sizeof(FDLOGMODEL));
-        m->is_ready_gzip = 0;
-        m->zlib_type = 0;
-        m->is_bind_mmap = 0;
-        memset(m->cache_remain_data, 0, 16);
-        m->cache_remain_data_len = 0;
-        
-        m->strm = NULL;
-        
-        return m;
-    }
-    else {
-        // malloc 失败 一般由于系统问题。
-        return NULL;
-    }
-}
+
+//FDLOGMODEL* init_logmodel() {
+//
+//    FDLOGMODEL *m = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
+//
+//    if (m != NULL) {
+//        memset(m, 0, sizeof(FDLOGMODEL));
+//        m->is_ready_gzip = 0;
+//        m->zlib_type = 0;
+//        m->is_bind_mmap = 0;
+//        memset(m->cache_remain_data, 0, 16);
+//        m->cache_remain_data_len = 0;
+//
+//        m->strm = NULL;
+//
+//        return m;
+//    }
+//    else {
+//        // malloc 失败 一般由于系统问题。
+//        return NULL;
+//    }
+//}
 
 
 /**
@@ -151,15 +154,6 @@ int init_fdlog_dirs(const char *root_path, FDLOGMODEL *m) {
 
 
 
-/**
- 写入mmap头部
- 
- 0. 【剩余数据头部】 【剩余数据】 【剩余数据尾】
- 1. 【缓存文件头部】 【缓存文件头部信息】 【缓存文件尾】
- 2. 【日志总长度头部】 【日志总长度】 【日志总长度尾部】
- 
- @return 1成功 0失败
- */
 int insert_mmap_file_header() {
     bool result = false;
     
@@ -273,9 +267,19 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
 }
 
 
-int init_global_var() {
+/*
+ * Function: reset_global_var
+ * ----------------------------
+ *   Returns whether the reset global var was successful
+ *
+ *   returns: 1 or 0
+ */
+int reset_global_var() {
     
-    if (model == NULL) { model = init_logmodel(); }
+    if (model == NULL) {
+        model = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
+        memset(model, 0, sizeof(FDLOGMODEL));
+    }
     else {
         model->is_ready_gzip = 0;
         model->zlib_type = 0;
@@ -286,27 +290,32 @@ int init_global_var() {
         memset(model->strm, 0, sizeof(z_stream));
     }
     
-    if (mmap_header_content_ptr == NULL) { mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN); }
+    if (!mmap_header_content_ptr) { mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN); }
     else { memset(mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN); }
     
-    if (log_folder_path == NULL) { log_folder_path = (char*)calloc(1, FD_MAX_PATH); }
+    if (!log_folder_path) { log_folder_path = (char*)calloc(1, FD_MAX_PATH); }
     else { memset(log_folder_path, 0, FD_MAX_PATH); }
     
-    if (mmap_cache_file_path == NULL) { mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH); }
+    if (!mmap_cache_file_path) { mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH); }
     else { memset(mmap_cache_file_path,0,FD_MAX_PATH); }
     
-    if (log_file_len == NULL) { log_file_len = (long *)calloc(1, sizeof(long)); }
+    if (!log_file_len) { log_file_len = (long *)calloc(1, sizeof(long)); }
     else { memset(log_file_len, 0, sizeof(long)); }
     
-    if (log_file_path == NULL) { log_file_path = (char *)calloc(1, FD_MAX_PATH); }
+    if (!log_file_path) { log_file_path = (char *)calloc(1, FD_MAX_PATH); }
     else { memset(log_file_path, 0, FD_MAX_PATH); }
     
-    if ((model == NULL) ||  (log_folder_path == NULL) || (mmap_cache_file_path == NULL) || (log_file_path == NULL) || (log_file_len == NULL)) {
-        return 0;
-    }
-    else {
+    if ((model != NULL) &&
+        (log_folder_path != NULL) &&
+        (mmap_cache_file_path != NULL) &&
+        (log_file_path != NULL) &&
+        (log_file_len != NULL)) {
+        printf("FDLog: reset_global_var success! \n");
         return 1;
     }
+    
+    printf("FDLog: reset_global_var failture! \n");
+    return 0;
 }
 
 
@@ -319,7 +328,7 @@ char* look_for_last_logfile() {
     
     // 获取当天的日期字符串
     char* date = get_current_date();
-    char* current_file_folder_name = (char *)calloc(1, FD_MAX_PATH);
+    char* current_file_folder_name = (char *)calloc(1, 1024);
     strcat(current_file_folder_name,log_folder_path);
     strcat(current_file_folder_name, "/");
     strcat(current_file_folder_name, date);
@@ -386,8 +395,6 @@ char* look_for_last_logfile() {
     current_file_folder_name = NULL;
     return maxfile_name;
 }
-
-
 
 /**
  创建日志文件
@@ -492,6 +499,97 @@ int create_new_logfile() {
     return 1;
 }
 
+/*
+ * Function: fdlog_is_can_read_cache
+ * ----------------------------
+ *   Returns whether the is can read cache file was successful
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_is_valid_cache() {
+    if (!(model->is_bind_mmap)){
+        printf("FDLog: mmap file is bind failture! \n");
+        return 0;
+    }
+    unsigned char *temp = mmap_ptr;
+    if (*temp == FD_MMAP_FILE_HEADER) {
+        printf("READ FD_MMAP_FILE_HEADER ✅\n");
+        temp += 1;
+        int *temp_header_content_len = (int*)temp;
+        temp += sizeof(int);
+        temp += *temp_header_content_len;
+        if (*temp == FD_MMAP_FILE_TAILER) {
+            printf("READ FD_MMAP_FILE_TAILER ✅\n");
+            temp += 1;
+            if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
+                printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
+                temp += 1;
+                int *temp_content_len_ptr = (int *)temp;
+                temp += sizeof(int);
+                if (*temp == FD_MMAP_FILE_CONTENT_TAILER) {
+                    printf("READ FD_MMAP_FILE_CONTENT_TAILER ✅\n");
+                    temp += 1;
+                    int mmap_header_len = 2 + sizeof(int) + *temp_header_content_len;
+                    int mmap_content_len = 2 + sizeof(int) + *temp_content_len_ptr;
+                    
+                    unsigned char *temp_tailer_ptr = mmap_ptr;
+                    temp_tailer_ptr += (mmap_header_len + mmap_content_len);
+                    
+                    char tailer_c = *(temp_tailer_ptr - 1);
+                    if (tailer_c == FD_MMAP_FILE_CONTENT_TAILER || tailer_c == FD_MMAP_FILE_CONTENT_WRITE_TAILER) {
+                        printf("FDLog mmap_header_len: %d \n",mmap_header_len);
+                        printf("FDLog mmap_content_len: %d \n",mmap_content_len);
+                        printf("FDLog mmap_header_len+mmap_content_len: %d \n",mmap_header_len + mmap_content_len);
+                        printf("FDLog mmap cache file can read! \n");
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+    printf("FDLog: cache file is invalid! \n");
+    return 0;
+}
+
+/*
+ * Function: fdlog_update_cache_point_position
+ * ----------------------------
+ *   Returns update success or failture
+ *
+ *   returns: the int value 0 is failture 1 is success.
+ */
+int fdlog_update_cache_point_position() {
+    
+    // TODO: 不在写的时候操作
+    
+    if (!(fdlog_is_valid_cache())){ return 0; }
+    unsigned char *temp = mmap_ptr;
+    if (*temp == FD_MMAP_FILE_HEADER) {
+        temp += 1;
+        mmap_header_content_len_ptr = (int*)temp;
+        temp += sizeof(int);
+        memcpy(mmap_header_content_ptr, temp, *mmap_header_content_len_ptr);
+        temp += *mmap_header_content_len_ptr;
+        if (*temp == FD_MMAP_FILE_TAILER) {
+            temp += 1;
+            if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
+                temp += 1;
+                mmap_content_len_ptr = (int*)temp;
+                temp += sizeof(int);
+                if (*temp == FD_MMAP_FILE_CONTENT_TAILER) {
+                    temp += 1;
+                    mmap_tailer_ptr = mmap_ptr;
+                    int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
+                    int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
+                    mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 
 /**
  同步缓存文件到本地日志文件
@@ -537,7 +635,8 @@ int fdlog_sync() {
     }
     
     /// 重新创建文件绑定指针
-    if ((*mmap_content_len_ptr + *log_file_len) > FD_MAX_LOG_SIZE) {
+    if ((*log_file_len) > FD_MAX_LOG_SIZE) {
+        printf("log_file_len: %lu \n",*log_file_len);
         // 如果没创建新文件 创建新文件保存日志，因为日志长度大于设定最大长度。
         if (!is_new_logfile) {
             memset(log_file_path, 0, FD_MAX_PATH);
@@ -546,33 +645,12 @@ int fdlog_sync() {
         }
     }
     
-    int bind = adjust_mmap_tailer(mmap_ptr);
+    int bind = fdlog_update_cache_point_position();
     printf("bind result:%d\n",bind);
-    
-
-    /// 尾巴必须指向 FD_MMAP_FILE_CONTENT_WRITE_TAILER 文件尾巴
-    /// 没有结尾 先进行结尾
-    if (*(mmap_tailer_ptr - 1) != FD_MMAP_FILE_CONTENT_WRITE_TAILER) {
-        fd_zlib_end_compress(model);
-        adjust_mmap_tailer(mmap_ptr);
-        
-        // 临时添加 因为多了 16字节
-        mmap_tailer_ptr = mmap_tailer_ptr - 16;
-        printf("*(mmap_tailer_ptr - 1): %02X \n",*(mmap_tailer_ptr - 1));
-        // 加入写入结尾
-        *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
-        update_mmap_content_len(1);
-        adjust_mmap_tailer(mmap_ptr);
-        // 重新赋值IV
-        fd_aes_inflate_iv(model->aes_iv);
-    }
-    
     
     /// 开始写入日志到本地文件
     FILE* stream;
     stream = fopen(log_file_path, "ab+");
-    printf("*(mmap_tailer_ptr - 1): %02X \n",*(mmap_tailer_ptr - 1));
-    printf("*mmap_content_len_ptr: %02X \n",*mmap_content_len_ptr);
 
     unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
     fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);//写入到文件中
@@ -583,102 +661,122 @@ int fdlog_sync() {
     /// 重置缓存MMAP相关信息
     int ret = insert_mmap_file_header();
     if (ret == 0) { return 0; }
-    int ret1 = adjust_mmap_tailer(mmap_ptr);
+    int ret1 = fdlog_update_cache_point_position();
     if (ret1 == 0) { return 0; }
     
     return 1;
 }
 
 
-
+/*
+ * Function: fdlog_initialize
+ * ----------------------------
+ *   Returns whether the initialization was successful
+ *
+ *   root: FDLog Root Directory
+ *   key: AES128 KEY[16]
+ *   iv: AES128 IV[16]
+ *
+ *   returns: 1 or 0
+ */
 int fdlog_initialize(char* root, char* key, char* iv) {
-    is_init_ok = 0;
+    is_init_ok = FD_INIT_FAILURE;
     
-    int ret = init_global_var();
-    if (ret == 0) { return 0; }
-    int ret1 = init_fdlog_dirs(root, model);
-    if (ret1 == 0) { return 0; }
-    int ret2 = fd_open_mmap_file1(model, mmap_cache_file_path, &mmap_ptr);
-    if (ret2 == 0) { return 0; }
+    if (!reset_global_var()) { return is_init_ok; }
+    if (!init_fdlog_dirs(root, model)) { return is_init_ok; }
+    if (!fd_open_mmap_file(model, mmap_cache_file_path, &mmap_ptr)) { return is_init_ok; }
+    
     fd_aes_init_key_iv(key, iv);
     fd_aes_inflate_iv(model->aes_iv);
-    int ret3 = fd_init_zlib(model);
-    if (ret3 == 0) { return 0; }
     
-    // 读取缓存文件头部信息
-    int ret4 = adjust_mmap_tailer(mmap_ptr);
-    if (ret4) {
+    if (!fd_init_zlib(model)) { return is_init_ok; }
+    if (fdlog_update_cache_point_position()) {
+        
+        // Read date on cache header as before date
         cJSON* croot = cJSON_Parse(mmap_header_content_ptr);
         char* cache_date = (char*)calloc(1, 1024);
         strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
-        printf("mmap_header_content_ptr date:%s\n",cache_date);
         cJSON_Delete(croot);
+        
+        // Get current date as now
         char* current_date = get_current_date();
         
         long before = atol(cache_date);
         long now = atol(current_date);
         
+        printf("FDLog: before %ld  now %ld \n",before,now);
+        
         if (now > before) { // 缓存文件过期，不是当天的。
-            int ret1 = fdlog_sync();
-            if (ret1 == 0) { return 0; }
-            int ret2 = insert_mmap_file_header();
-            if (ret2 == 0) { return 0; }
-            int ret3 = adjust_mmap_tailer(mmap_ptr);
-            if (ret3 == 0) { return 0; }
+            if (!fdlog_sync()) {
+                printf("FDLog: cache write to local log file failture! \n");
+                return is_init_ok;
+            }
+            
+            if (!insert_mmap_file_header()) {
+                printf("FDLog: insert_mmap_file_header failture! \n");
+                return is_init_ok;
+            }
         }
-        else {
-            int ret0 = adjust_mmap_tailer(mmap_ptr);
-            if (ret0 == 0) { return 0; }
+        
+        // rebind cache point position
+        if (!fdlog_update_cache_point_position()) {
+            printf("FDLog: fdlog_update_cache_point_position failture! \n");
+            return is_init_ok;
         }
+        
     }
-    // 读取缓存文件头部信息失败
+    // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
     else {
-        int ret = insert_mmap_file_header();
-        if (ret == 0) { return 0; }
-        int ret1 = adjust_mmap_tailer(mmap_ptr);
-        if (ret1 == 0) { return 0; }
+        
+        if (!insert_mmap_file_header()) {
+            printf("FDLog: insert_mmap_file_header failture! \n");
+            return is_init_ok;
+        }
+        
+        // rebind cache point position
+        if (!fdlog_update_cache_point_position()) {
+            printf("FDLog: fdlog_update_cache_point_position failture! \n");
+            return is_init_ok;
+        }
     }
     
-    is_init_ok = 1;
-    return 1;
+    is_init_ok = FD_INIT_SUCCESS;
+    return is_init_ok;
 }
 
 
 
-/**
- FDLog: 日志写入
- 
- @param data 日志结构信息
- @return 1成功 0失败
+/*
+ * Function: fdlog
+ * ----------------------------
+ *   Returns whether the write log was successful
+ *
+ *   data: FD_Construct_Data object
+ *
+ *   returns: 1 or 0
  */
 int fdlog(FD_Construct_Data *data) {
     
     if (!is_init_ok) {
-        printf("fdlog init failture!\n");
+        printf("FDLog: init failture!\n");
         return 0;
     }
     
-    /// 缓存长度已经大于设置的最大值，同步到本地文件。
+    // When mmap cache file content length more than max_length scale
+    // then cache content sync to local log file
     if ((float)*mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
-        printf("cache length more large than max!\n");
-        int ret = fdlog_sync();
-        if (!ret) {
-            printf("sync cache to local failture!\n");
-            return 0;
-        }
-        int ret1 = fdlog_write_to_cache(data);
-        if (!ret1) {
-            printf("write to cache failture!\n");
+        printf("FDLog: cache content need sync to local log file %f \n",(float)*mmap_content_len_ptr);
+        if (!fdlog_sync()) {
+            printf("FDLog: sync cache to local failture! \n");
             return 0;
         }
     }
-    else {
-        int ret1 = fdlog_write_to_cache(data);
-        if (!ret1) {
-            printf("write to cache failture!\n");
-            return 0;
-        }
+
+    if (!fdlog_write_to_cache(data)) {
+        printf("FDLog: write to cache failture! \n");
+        return 0;
     }
+    
     return 1;
 }
 

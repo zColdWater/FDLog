@@ -25,13 +25,11 @@ extern char *mmap_header_content_ptr;
 
 bool fd_init_zlib(FDLOGMODEL *model) {
     
-    /// gzip 默认 false
     model->is_ready_gzip = false;
-    /// zlib 默认 false
     model->zlib_type = FD_ZLIB_FAIL;
 
     if (model->strm != NULL) {
-        free(model->strm);
+//        free(model->strm);
         model->strm = NULL;
     }
     
@@ -88,9 +86,7 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
             if (Z_STREAM_ERROR == ret) {
                 // 压缩完成以后,释放空间,但是注意,仅仅是释放deflateInit中申请的空间,自己申请的空间还是需要自己释放
                 deflateEnd(model->strm);
-                // 重新设置 ready_gzip 状态
                 model->is_ready_gzip = NOT_READY_GZIP;
-                // 重新设置 zlib_type 状态
                 model->zlib_type = FD_ZLIB_END;
             } else {
                 // 压缩字节长度
@@ -128,6 +124,19 @@ bool fd_zlib_compress(FDLOGMODEL *model, char *data, int data_len, int type) {
                                    (unsigned char *) model->aes_iv);
 
                     *mmap_current_log_len_ptr += handler_len;
+                    
+//                    *temp = len;
+//                    temp++;
+//                    *temp = len >> 8;
+//                    temp++;
+//                    *temp = len >> 16;
+//                    temp++;
+//                    *temp = len >> 24;
+                    
+                    printf("mmap_current_log_len_ptr >> 8");
+                    
+//                    (char *)mmap_current_log_len_ptr
+                    
                     mmap_tailer_ptr += handler_len;
                 }
                 
