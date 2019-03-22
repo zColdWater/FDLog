@@ -25,7 +25,6 @@
 #define FD_INIT_FAILURE 0; // FDLog init 失败
 
 
-
 extern FDLOGMODEL *model;
 extern unsigned char *mmap_ptr;
 extern unsigned char *mmap_tailer_ptr;
@@ -246,7 +245,7 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     }
     
     if (!model->is_ready_gzip) {
-        printf("FDLog fdlog_write_to_cache: model->is_ready_gzip is NULL, can't write to cahce! \n");
+        printf("FDLog fdlog_write_to_cache: model->is_ready_gzip is false, reinit zlib! \n");
         if (!fd_init_zlib()) {
             printf("FDLog fdlog_write_to_cache: fd_init_zlib failture! \n");
             return 0;

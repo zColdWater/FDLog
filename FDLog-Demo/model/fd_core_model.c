@@ -45,17 +45,3 @@ int *mmap_header_content_len_ptr = NULL;
 char *mmap_header_content_ptr = NULL;
 
 
-
-
-int update_mmap_content_len(int increase_content_len) {
-    if ((mmap_ptr != NULL) && (mmap_content_len_ptr != NULL) && (mmap_header_content_ptr != NULL) && (mmap_header_content_len_ptr != NULL) && (mmap_tailer_ptr != NULL)) {
-        /// 更新内容长度
-        int new_len = *mmap_content_len_ptr + increase_content_len;
-        memcpy(mmap_content_len_ptr,&(new_len),sizeof(int));
-        printf("mmap_content_len_ptr:%d \n",*mmap_content_len_ptr);
-        
-        return 1;
-    }
-    return 0;
-}
-

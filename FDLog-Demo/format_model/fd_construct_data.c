@@ -71,6 +71,7 @@ fd_construct_json_data(char *log, int flag, long long local_time, char *thread_n
             }
             
             free(back_data);
+            back_data = NULL;
         }
         cJSON_Delete(root);
     }
@@ -87,7 +88,9 @@ void fd_construct_data_delete(FD_Construct_Data *item) {
     if (NULL != item) {
         if (NULL != item->data) {
             free(item->data);
+            item->data = NULL;
         }
         free(item);
+        item = NULL;
     }
 }

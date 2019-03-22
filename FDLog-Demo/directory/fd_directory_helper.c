@@ -34,8 +34,8 @@ char* get_current_date() {
     struct tm tm = *localtime(&t);
     char time[18];
     sprintf(time, "%d%d%d", (tm.tm_year + 1900),(tm.tm_mon + 1),(tm.tm_mday));
-    char* temp = (char *)malloc(sizeof(int)*3);
-    memcpy(temp, time, 18);
+    char* temp = (char *)malloc(18);
+    strcpy(temp, time);
     return temp;
 }
 

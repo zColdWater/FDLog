@@ -22,22 +22,16 @@ extern char *mmap_header_content_ptr;
 
 
 int fd_init_zlib() {
+
+    if (!model->strm) {
+        model->strm = calloc(1, sizeof(z_stream));
+    }
     
     model->is_ready_gzip = 0;
     model->zlib_type = FD_ZLIB_FAIL;
+    model->is_zlibing = 0;
 
-    if (model->strm != NULL) {
-        free(model->strm);
-        model->strm = NULL;
-    }
-    
-    model->strm = (z_stream *)malloc(sizeof(z_stream));
-    if (model == NULL) {
-        printf("m->strm = (z_stream *) malloc(sizeof(z_stream)) failture \n");
-        return 0;
-    }
     memset(model->strm, 0, sizeof(z_stream));
-
     model->strm->zalloc = Z_NULL;
     model->strm->zfree = Z_NULL;
     model->strm->opaque = Z_NULL;

@@ -76,7 +76,5 @@ typedef struct fd_core_model {
 } FDLOGMODEL;
 
 
-int update_mmap_content_len(int increase_content_len);
-
 
 #endif /* fd_core_model_h */

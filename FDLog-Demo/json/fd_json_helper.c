@@ -90,6 +90,7 @@ void fd_delete_json_map(fd_json_map *map) {
         do {
             temp = item->nextItem;
             free(item);
+            item = NULL;
             item = temp;
         } while (NULL != item);
     }

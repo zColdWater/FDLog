@@ -9,8 +9,6 @@
 #ifndef fd_aes_helper_h
 #define fd_aes_helper_h
 
-#include <stdbool.h>
-
 
 /** DEMO
 unsigned char plain[] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p'};
@@ -34,9 +32,8 @@ printf("encrypt content: %s \n", cipher);
  @param out 输出的加密内容
  @param length 加密的数据长度(必须是16的整数倍)
  @param iv 加密向量
- @return 是否加密成功
  */
-bool fd_aes_encrypt(unsigned char *in, unsigned char *out, int length, unsigned char *iv);
+void fd_aes_encrypt(unsigned char *in, unsigned char *out, int length, unsigned char *iv);
 
 
 /**
