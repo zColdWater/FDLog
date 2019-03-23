@@ -18,9 +18,6 @@
 |缓存文件总内容长度头部|4字节存储总长度|缓存文件总内容长度尾部|
 |缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
 |缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
-|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
-|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
-|缓存日志写入头|4字节本条日志长度|日志内容|缓存日志写入尾|
 */
 
 #define FD_VERSION_KEY "fdlog_version"
@@ -29,35 +26,30 @@
 #define FD_LOG_FOLDER_NAME "fdlog_" FD_VERSION
 #define FD_LOG_CACHE_FOLDER_NAME "cache"
 #define FD_LOG_CACHE_NAME "cache.mmap"
-#define FD_MAX_PATH 1024 * 3
-#define FD_MMAP_HEADER_CONTENT_LEN 1024
-#define FD_MAX_MMAP_SCALE 0.3  // 缓存文件的百分比 开始写入 本地文件
-
 #define FD_DATE "fd_date"
 #define FD_SIZE "fd_mmap_size"
 
-//#define FD_MAX_GZIP_SIZE 1024*50
-#define FD_MAX_LOG_SIZE 300 * 1024 //1024*1024*2 // 最大日志文件尺寸
+#define FD_MAX_PATH 1024 * 3
+#define FD_MMAP_HEADER_CONTENT_LEN 1024
 
+/* 当缓存内容占整个文件到这个比例时 会输出到日志文件中 */
+#define FD_MAX_MMAP_SCALE 0.3
 
-/// 缓存文件的头部的头字符
+/* 设置日志文件最大Size  */
+#define FD_MAX_LOG_SIZE 300 * 1024
+
+/* CACHE LOG HEAD PROTOCOL  */
 #define FD_MMAP_FILE_HEADER '#'
-/// 缓存文件的头部的尾字符
 #define FD_MMAP_FILE_TAILER '$'
 
-/// 缓存文件的日志总内容长度头
-#define FD_MMAP_FILE_CONTENT_HEADER '%'
-/// 缓存文件的日志总内容长度尾
-#define FD_MMAP_FILE_CONTENT_TAILER '&'
+/* CACHE LOG TOTAL LEN PROTOCOL  */
+#define FD_MMAP_TOTAL_LOG_LEN_HEADER '%'
+#define FD_MMAP_TOTAL_LOG_LEN_TAILER '&'
 
-/// 缓存内容 写入头
-#define FD_MMAP_FILE_CONTENT_WRITE_HEADER '!'
-/// 缓存内容 写入尾
-#define FD_MMAP_FILE_CONTENT_WRITE_TAILER '@'
+/* CACHE SINGLE LOG PROTOCOL  */
+#define FD_MMAP_WRITE_CONTENT_HEADER '!'
+#define FD_MMAP_WRITE_CONTENT_TAILER '@'
 
-
-#define READY_GZIP 1 // 可以压缩GZIP [fd_logmodel.is_ready_gzip]
-#define NOT_READY_GZIP 0 // 不可以压缩GZIP [fd_logmodel.is_ready_gzip]
 
 
 typedef struct fd_core_model {
@@ -68,7 +60,6 @@ typedef struct fd_core_model {
     int is_zlibing; // 0 or 1 是否正在压缩状态
     
     unsigned char aes_iv[16];
-    int zlib_type;
     z_stream *strm;
     char cache_remain_data[16];
     int cache_remain_data_len;

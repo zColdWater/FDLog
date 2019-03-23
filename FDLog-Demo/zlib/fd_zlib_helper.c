@@ -28,7 +28,6 @@ int fd_init_zlib() {
     }
     
     model->is_ready_gzip = 0;
-    model->zlib_type = FD_ZLIB_FAIL;
     model->is_zlibing = 0;
 
     memset(model->strm, 0, sizeof(z_stream));
@@ -42,7 +41,6 @@ int fd_init_zlib() {
     
     if (ret1 == Z_OK) {
         model->is_ready_gzip = 1;
-        model->zlib_type = FD_ZLIB_INIT;
         printf("deflateInit2 success! \n");
         return 1;
     }
@@ -85,8 +83,7 @@ int fd_zlib_compress(char *data, int data_len, int type) {
             if (Z_STREAM_ERROR == ret) {
                 // 压缩完成以后,释放空间,但是注意,仅仅是释放deflateInit中申请的空间,自己申请的空间还是需要自己释放
                 deflateEnd(model->strm);
-                model->is_ready_gzip = NOT_READY_GZIP;
-                model->zlib_type = FD_ZLIB_END;
+                model->is_ready_gzip = 0;
             } else {
                 // 压缩字节长度
                 have = LOGAN_CHUNK - strm->avail_out;
@@ -172,7 +169,7 @@ void fd_zlib_end_compress() {
                    (unsigned char *) model->aes_iv);
     
     mmap_tailer_ptr += 16;
-    *(mmap_tailer_ptr) = FD_MMAP_FILE_CONTENT_WRITE_TAILER;
+    *(mmap_tailer_ptr) = FD_MMAP_WRITE_CONTENT_TAILER;
     mmap_tailer_ptr++;
     *mmap_current_log_len_ptr += 16;
     
@@ -180,8 +177,7 @@ void fd_zlib_end_compress() {
     *mmap_content_len_ptr += (*mmap_current_log_len_ptr + 2 + sizeof(int));
 
     model->cache_remain_data_len = 0;
-    model->zlib_type = FD_ZLIB_END;
-    model->is_ready_gzip = NOT_READY_GZIP;
+    model->is_ready_gzip = 0;
     model->is_zlibing = 0;
 }
 

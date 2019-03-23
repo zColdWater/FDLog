@@ -22,7 +22,6 @@ int fd_is_empty_json_map(fd_json_map *item) {
     return 0;
 }
 
-
 void fd_add_item_string(fd_json_map *map, const char *key, const char *value) {
     if (NULL != map && NULL != value && NULL != key && strnlen(key, 128) > 0) { // 关键变量不为空
         fd_json_map *item = map;
@@ -41,8 +40,6 @@ void fd_add_item_string(fd_json_map *map, const char *key, const char *value) {
         }
     }
 }
-
-
 
 void fd_add_item_number(fd_json_map *map, const char *key, double number) {
     if (NULL != map && NULL != key && strnlen(key, 128) > 0) {
@@ -81,7 +78,6 @@ void fd_add_item_bool(fd_json_map *map, const char *key, int boolValue) {
         }
     }
 }
-
 
 void fd_delete_json_map(fd_json_map *map) {
     if (NULL != map) {

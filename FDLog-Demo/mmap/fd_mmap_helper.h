@@ -22,9 +22,9 @@
  * ----------------------------
  *   Returns weather bind mmap file the result of success or failture
  *
- *   model: log state model
- *   _filepath: cache file path
- *   buffer: bind mmap file use unsigned char* type point
+ *   model: log model
+ *   mmap_file_path: need bind of file path
+ *   buffer: bind mmap file point
  *
  *   returns: the int value 0 is failture 1 is success.
  */

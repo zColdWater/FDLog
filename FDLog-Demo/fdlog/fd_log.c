@@ -153,10 +153,10 @@ int fdlog_insert_mmap_file_header() {
         
         
         /// ==== 写入缓存文件的总内容长度  ====
-        *temp = FD_MMAP_FILE_CONTENT_HEADER;
+        *temp = FD_MMAP_TOTAL_LOG_LEN_HEADER;
         temp++;
         temp += sizeof(int);
-        *temp = FD_MMAP_FILE_CONTENT_TAILER;
+        *temp = FD_MMAP_TOTAL_LOG_LEN_TAILER;
         temp ++;
         
         printf("FDLog: header insert content is :%s \n",back_data);
@@ -191,12 +191,12 @@ int fdlog_is_valid_cache() {
         if (*temp == FD_MMAP_FILE_TAILER) {
             printf("READ FD_MMAP_FILE_TAILER ✅\n");
             temp += 1;
-            if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
+            if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
                 printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
                 temp += 1;
                 int *temp_content_len_ptr = (int *)temp;
                 temp += sizeof(int);
-                if (*temp == FD_MMAP_FILE_CONTENT_TAILER) {
+                if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
                     printf("READ FD_MMAP_FILE_CONTENT_TAILER ✅\n");
                     temp += 1;
                     int mmap_header_len = 2 + sizeof(int) + *temp_header_content_len;
@@ -206,7 +206,7 @@ int fdlog_is_valid_cache() {
                     temp_tailer_ptr += (mmap_header_len + mmap_content_len);
                     
                     char tailer_c = *(temp_tailer_ptr - 1);
-                    if (tailer_c == FD_MMAP_FILE_CONTENT_TAILER || tailer_c == FD_MMAP_FILE_CONTENT_WRITE_TAILER) {
+                    if (tailer_c == FD_MMAP_TOTAL_LOG_LEN_TAILER || tailer_c == FD_MMAP_WRITE_CONTENT_TAILER) {
                         printf("FDLog mmap_header_len: %d \n",mmap_header_len);
                         printf("FDLog mmap_content_len: %d \n",mmap_content_len);
                         printf("FDLog mmap_header_len+mmap_content_len: %d \n",mmap_header_len + mmap_content_len);
@@ -254,10 +254,10 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     // Tailer must be point to write tailer or header tailer
     // otherwise cache file struct not correct!
-    if ((*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_WRITE_TAILER) ||
-        (*(mmap_tailer_ptr - 1) == FD_MMAP_FILE_CONTENT_TAILER)) {
+    if ((*(mmap_tailer_ptr - 1) == FD_MMAP_WRITE_CONTENT_TAILER) ||
+        (*(mmap_tailer_ptr - 1) == FD_MMAP_TOTAL_LOG_LEN_TAILER)) {
         
-        *mmap_tailer_ptr = FD_MMAP_FILE_CONTENT_WRITE_HEADER;
+        *mmap_tailer_ptr = FD_MMAP_WRITE_CONTENT_HEADER;
         mmap_tailer_ptr += 1;
         mmap_current_log_len_ptr = (int *)mmap_tailer_ptr;
         mmap_tailer_ptr += sizeof(int);
@@ -290,7 +290,6 @@ int fdlog_reset_global_var() {
     }
     else {
         model->is_ready_gzip = 0;
-        model->zlib_type = 0;
         model->is_bind_mmap = 0;
         model->cache_remain_data_len = 0;
         model->is_init_global_vars = 0;
@@ -349,11 +348,11 @@ int fdlog_update_cache_point_position() {
         temp += *mmap_header_content_len_ptr;
         if (*temp == FD_MMAP_FILE_TAILER) {
             temp += 1;
-            if (*temp == FD_MMAP_FILE_CONTENT_HEADER) {
+            if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
                 temp += 1;
                 mmap_content_len_ptr = (int*)temp;
                 temp += sizeof(int);
-                if (*temp == FD_MMAP_FILE_CONTENT_TAILER) {
+                if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
                     temp += 1;
                     mmap_tailer_ptr = mmap_ptr;
                     int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;

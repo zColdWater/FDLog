@@ -97,13 +97,7 @@ int fd_makedir(const char *path) {
 
 
 
-/*
- * Function: look_for_last_logfile
- * ----------------------------
- *   Returns last time file name
- *
- *   returns: char* file name
- */
+
 char* look_for_last_logfile() {
     
     // 获取当天的日期字符串
@@ -177,13 +171,6 @@ char* look_for_last_logfile() {
 }
 
 
-/*
- * Function: create_new_logfile
- * ----------------------------
- *   Returns whether the create new logfile was successful
- *
- *   returns: 0 or 1
- */
 int create_new_logfile() {
     
     // 获取当天的日期字符串

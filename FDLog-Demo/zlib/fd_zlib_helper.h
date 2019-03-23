@@ -13,16 +13,36 @@
 
 #define LOGAN_CHUNK 16384 // 定义数据块大小 16KB
 
-/// Compress State
-#define FD_ZLIB_NONE 0
-#define FD_ZLIB_INIT 1
-#define FD_ZLIB_ING  2
-#define FD_ZLIB_END  3
-#define FD_ZLIB_FAIL 4
 
-
+/*
+ * Function: fd_init_zlib
+ * ----------------------------
+ *   Returns whether the init zlib relate property was successful
+ *
+ *
+ *   returns: 1 or 0
+ */
 int fd_init_zlib(void);
+
+/*
+ * Function: fd_zlib_compress
+ * ----------------------------
+ *   Returns whether the compress data was successful
+ *
+ *   data: Prepare the compressed data
+ *   data_len: data length
+ *   type: Z_SYNC_FLUSH or Z_FINISH
+ *
+ *   returns: 1 or 0
+ */
 int fd_zlib_compress(char *data, int data_len, int type);
+
+/*
+ * Function: fd_zlib_end_compress
+ * ----------------------------
+ *
+ *   returns: 1 or 0
+ */
 void fd_zlib_end_compress(void);
 
 #endif /* fd_zlib_helper_h */

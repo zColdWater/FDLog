@@ -272,7 +272,7 @@
 		4FC3AAA32224E34400B0FE77 /* fd_json_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_json_helper.c; sourceTree = "<group>"; };
 		4FC3AAA922251C6300B0FE77 /* fd_base_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_base_helper.h; sourceTree = "<group>"; };
 		4FC3AAAA22251C6300B0FE77 /* fd_base_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_base_helper.c; sourceTree = "<group>"; };
-		4FC3AAB4222621B100B0FE77 /* fd_status.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_status.h; sourceTree = "<group>"; };
+		4FC3AAB4222621B100B0FE77 /* fd_log_status.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_log_status.h; sourceTree = "<group>"; };
 		4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_construct_data.c; sourceTree = "<group>"; };
 		4FC3AABA222622A100B0FE77 /* fd_construct_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_construct_data.h; sourceTree = "<group>"; };
 		4FC3AABC22262E5B00B0FE77 /* fd_log.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_log.h; sourceTree = "<group>"; };
@@ -314,7 +314,7 @@
 				4FC3AAA522251BF200B0FE77 /* utils */,
 				4FC3AA9B2224E30700B0FE77 /* json */,
 				4FC3AA972224DFE300B0FE77 /* directory */,
-				4FC3AA7422241BE100B0FE77 /* log */,
+				4FC3AA7422241BE100B0FE77 /* print */,
 				4FC3AA4A222387AF00B0FE77 /* aes */,
 				4FC3AA50222387AF00B0FE77 /* mmap */,
 				4FC3AA48222387AF00B0FE77 /* model */,
@@ -538,13 +538,13 @@
 			path = mmap;
 			sourceTree = "<group>";
 		};
-		4FC3AA7422241BE100B0FE77 /* log */ = {
+		4FC3AA7422241BE100B0FE77 /* print */ = {
 			isa = PBXGroup;
 			children = (
 				4FC3AA7522241BE100B0FE77 /* fd_console_helper.h */,
 				4FC3AA7622241BE100B0FE77 /* fd_console_helper.c */,
 			);
-			path = log;
+			path = print;
 			sourceTree = "<group>";
 		};
 		4FC3AA972224DFE300B0FE77 /* directory */ = {
@@ -579,7 +579,7 @@
 		4FC3AAB22226218000B0FE77 /* fdlog */ = {
 			isa = PBXGroup;
 			children = (
-				4FC3AAB4222621B100B0FE77 /* fd_status.h */,
+				4FC3AAB4222621B100B0FE77 /* fd_log_status.h */,
 				4FC3AABC22262E5B00B0FE77 /* fd_log.h */,
 				4FC3AABD22262E5B00B0FE77 /* fd_log.c */,
 			);
