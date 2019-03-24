@@ -7,6 +7,16 @@
 #define FD_BYTEORDER_HIGH 1
 #define FD_BYTEORDER_LOW 2
 
+void ReverseArray(char arr[], long size)
+{
+    for (int i = 0; i < size/2; ++i)
+    {
+        char temp = arr[i];
+        arr[i] = arr[size - 1 - i];
+        arr[size - 1 - i] = temp;
+    }
+}
+
 //获取毫秒时间戳
 long long fd_get_system_current(void) {
     struct timeval tv;

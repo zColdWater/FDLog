@@ -43,13 +43,9 @@ char* rand_string_alloc(size_t size)
 }
 
 
-
-
 int main(int argc, const char * argv[]) {
     
-    // 1.写入缓存文件时 如果存在内容日志时，并且开头不是 写入尾巴，需要删除上一次无效的日志
-    // 2.写入日志文件时 如果存在不是写入尾巴时，也需要删除上一次无效的日志
-    // 3.之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。
+    // 3.之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。 需要将之前日期的文件存储在那天的文件夹下。
     
     // 当前地址
     char cwd[1024];
@@ -67,14 +63,14 @@ int main(int argc, const char * argv[]) {
     if (!success) {
          printf("fd_initialize_log failture! \n");
     }
-    
+
     // 是否开启Debug模式
     fdlog_open_debug(0);
     // 保存最近几天的日志
     fdlog_save_recent_days(7);
     // 日志最大尺寸
     fdlog_set_logfile_max_size(1024*1024*1); // 10MB
-    
+
     // 存储日志的文件夹路径
     char *temp = (char *)calloc(1, 1024);
     fdlog_log_folder_path(temp);
@@ -82,9 +78,7 @@ int main(int argc, const char * argv[]) {
     printf("temp: %s \n",temp);
     free(temp);
     temp = NULL;
-    
-    
-    
+
     // 写入日志
     int i = 1;
     while (i < 999999) {
@@ -100,6 +94,7 @@ int main(int argc, const char * argv[]) {
         i++;
     }
     
+//    fdlog_sync();
     
     return 0;
 }

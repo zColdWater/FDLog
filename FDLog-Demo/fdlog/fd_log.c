@@ -19,6 +19,7 @@
 #include "fd_zlib_helper.h"
 #include "fd_json_helper.h"
 #include "fd_console_helper.h"
+#include "fd_base_helper.h"
 
 extern FDLOGMODEL *model;
 extern unsigned char *mmap_ptr;
@@ -37,6 +38,116 @@ extern int fd_is_debug;
 #define FD_INIT_SUCCESS 1; // log init success
 #define FD_INIT_FAILURE 0; // log init failture
 static int is_init_ok = FD_INIT_FAILURE;
+
+
+/*
+ * Function: fix_cache_file_struct
+ * ----------------------------
+ *
+ *   Fix cache file point of mmap_tailer_ptr and mmap_content_len_ptr value
+ *
+ *   Return: 0 or 1
+ *
+ */
+int fix_cache_file_struct() {
+    
+    if (!mmap_content_len_ptr || !mmap_content_len_ptr) {
+        fd_printf("FDLog fix_cache_file_struct: no init");
+        return 0;
+    }
+    
+    int i = 1;
+    int total_len = *mmap_content_len_ptr;
+    printf("total_len: %d \n",total_len);
+    while (i < total_len) {
+        if ((*mmap_tailer_ptr) == FD_MMAP_WRITE_CONTENT_HEADER) {
+            mmap_tailer_ptr -= 1;
+            if ((*mmap_tailer_ptr) == FD_MMAP_WRITE_CONTENT_TAILER) {
+                mmap_tailer_ptr += 1;
+                memset(mmap_tailer_ptr, 0, i);
+                // exit
+                return 1;
+            }
+            else {
+                mmap_tailer_ptr += 1;
+            }
+        }
+        // next time
+        mmap_tailer_ptr -= 1;
+        *mmap_content_len_ptr -= 1;
+        printf("mmap_content_len_ptr: %d \n", *mmap_content_len_ptr);
+        i += 1;
+    }
+    
+    return 0;
+}
+
+
+
+/*
+ * Function: fix_log_file_struct
+ * ----------------------------
+ *
+ *   Remove invalid log section
+ *
+ *   Return: 0 or 1
+ *
+ */
+int fix_log_file_struct(char *log_path) {
+    
+    FILE * fp = fopen(log_path, "ab+");
+    if (fp == NULL)
+    {
+        perror("Could not open file");
+        return 0;
+    }
+    else {
+        fseek(fp, 0, SEEK_END);
+        long longBytes = ftell(fp); // len
+        fseek(fp, 0, SEEK_SET);
+        char logs[longBytes];
+        fread(logs, 1, longBytes, fp);
+        fclose(fp);
+
+        ReverseArray(logs, longBytes);
+        
+        if (logs[0] == FD_MMAP_WRITE_CONTENT_TAILER) {
+            return 1;
+        }
+        
+        int i = 0;
+        while (i < longBytes) {
+            char temp = logs[i];
+            if (temp == FD_MMAP_WRITE_CONTENT_HEADER) {
+                temp = logs[i + 1];
+                if (temp == FD_MMAP_WRITE_CONTENT_TAILER) {
+
+                    // clear file content
+                    FILE *file = fopen(log_path, "w");
+                    if (!file) { perror("Could not open file"); }
+                    fclose(file);
+
+                    ReverseArray(logs, longBytes);
+                    int remove_len = i + 1;
+                    char logs_temp[longBytes - remove_len];
+                    memcpy(logs_temp, logs, longBytes - remove_len);
+
+                    FILE * fp = fopen(log_path, "ab+");
+                    if (fp != NULL) {
+                        fwrite(logs_temp, sizeof(char), longBytes - remove_len, fp);
+                    }
+                    else { perror("Could not open file"); }
+                    fclose(fp);
+                    return 1;
+                }
+            }
+            i++;
+        }
+    }
+    
+    return 0;
+}
+
 
 
 /*
@@ -293,6 +404,46 @@ int fdlog_is_valid_cache() {
 }
 
 
+/*
+ * Function: fdlog_update_cache_point_position
+ * ----------------------------
+ *   Returns update success or failture
+ *
+ *   returns: the int value 0 is failture 1 is success.
+ */
+int fdlog_update_cache_point_position() {
+    
+    unsigned char *temp = mmap_ptr;
+    if (*temp == FD_MMAP_FILE_HEADER) {
+        temp += 1;
+        mmap_header_content_len_ptr = (int*)temp;
+        temp += sizeof(int);
+        memcpy(mmap_header_content_ptr, temp, *mmap_header_content_len_ptr);
+        temp += *mmap_header_content_len_ptr;
+        if (*temp == FD_MMAP_FILE_TAILER) {
+            temp += 1;
+            if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
+                temp += 1;
+                mmap_content_len_ptr = (int*)temp;
+                temp += sizeof(int);
+                if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
+                    temp += 1;
+                    mmap_tailer_ptr = mmap_ptr;
+                    int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
+                    int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
+                    mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
+                    
+                    if (!(fdlog_is_valid_cache())){ return 0; }
+                    
+                    return 1;
+                }
+            }
+        }
+    }
+    
+    return 0;
+}
+
 
 /*
  * Function: fdlog_write_to_cache
@@ -306,15 +457,13 @@ int fdlog_is_valid_cache() {
 int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     if(!fdlog_is_valid_cache()) {
-        fd_printf("FDLog fdlog_write_to_cache cache: file is invalid, can't read content! \n");
+        fd_printf("FDLog fdlog_write_to_cache: file is invalid, can't read content! \n");
         return 0;
     }
-    
     if (!is_init_ok) {
         fd_printf("FDLog fdlog_write_to_cache: log init failture, can't write to cache! \n");
         return 0;
     }
-    
     if (!model->is_ready_gzip) {
         fd_printf("FDLog fdlog_write_to_cache: model->is_ready_gzip is false, reinit zlib! \n");
         if (!fd_init_zlib()) {
@@ -341,9 +490,29 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         }
     }
     
+    // Cache file struct wrong, look for last integrated log and then
+    // restore mmap_tailer_ptr and mmap_content_len_ptr value.
+    // very small probability.
+    else {
+        if(fix_cache_file_struct()) {
+            fdlog_write_to_cache(data);
+        }
+        // reset cache file
+        else {
+            if (!fdlog_insert_mmap_file_header()) {
+                fd_printf("FDLog: fdlog_write_to_cache: fdlog_insert_mmap_file_header failture! \n");
+                return 0;
+            }
+            // rebind cache point position
+            if (!fdlog_update_cache_point_position()) {
+                fd_printf("FDLog: fdlog_write_to_cache: fdlog_update_cache_point_position failture! \n");
+                return 0;
+            }
+            return 1;
+        }
+    }
     return 0;
 }
-
 
 
 /*
@@ -399,45 +568,6 @@ int fdlog_reset_global_var() {
     }
     
     fd_printf("FDLog: reset_global_var failture! \n");
-    return 0;
-}
-
-
-
-/*
- * Function: fdlog_update_cache_point_position
- * ----------------------------
- *   Returns update success or failture
- *
- *   returns: the int value 0 is failture 1 is success.
- */
-int fdlog_update_cache_point_position() {
-    
-    if (!(fdlog_is_valid_cache())){ return 0; }
-    unsigned char *temp = mmap_ptr;
-    if (*temp == FD_MMAP_FILE_HEADER) {
-        temp += 1;
-        mmap_header_content_len_ptr = (int*)temp;
-        temp += sizeof(int);
-        memcpy(mmap_header_content_ptr, temp, *mmap_header_content_len_ptr);
-        temp += *mmap_header_content_len_ptr;
-        if (*temp == FD_MMAP_FILE_TAILER) {
-            temp += 1;
-            if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
-                temp += 1;
-                mmap_content_len_ptr = (int*)temp;
-                temp += sizeof(int);
-                if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
-                    temp += 1;
-                    mmap_tailer_ptr = mmap_ptr;
-                    int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
-                    int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
-                    mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
-                    return 1;
-                }
-            }
-        }
-    }
     return 0;
 }
 
@@ -508,14 +638,22 @@ int fdlog_sync() {
         }
     }
     
+    fix_log_file_struct(log_file_path);
+    
     FILE* stream;
     stream = fopen(log_file_path, "ab+");
-    unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
-    fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);
-    fflush(stream);
-    fclose(stream);
-    *log_file_len += *mmap_content_len_ptr; // 更新日志文件大小
-    
+    if (stream == NULL)
+    {
+        perror("Could not open file");
+        return 0;
+    }
+    else {
+        unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
+        fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);
+        fflush(stream);
+        fclose(stream);
+        *log_file_len += *mmap_content_len_ptr; // 更新日志文件大小
+    }
     
     // Reset mmap cahce file
     if (!fdlog_insert_mmap_file_header()) {
@@ -598,15 +736,19 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
     else {
         
-        if (!fdlog_insert_mmap_file_header()) {
-            fd_printf("FDLog: insert_mmap_file_header failture! \n");
-            return is_init_ok;
-        }
-        
-        // rebind cache point position
-        if (!fdlog_update_cache_point_position()) {
-            fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
-            return is_init_ok;
+        if (!fix_cache_file_struct()) {
+         
+            if (!fdlog_insert_mmap_file_header()) {
+                fd_printf("FDLog: insert_mmap_file_header failture! \n");
+                return is_init_ok;
+            }
+            
+            // rebind cache point position
+            if (!fdlog_update_cache_point_position()) {
+                fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
+                return is_init_ok;
+            }
+            
         }
     }
     

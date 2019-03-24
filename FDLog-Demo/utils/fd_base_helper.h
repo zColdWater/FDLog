@@ -33,4 +33,7 @@ int fd_cpu_byteorder(void);
  */
 void fd_adjust_byteorder(char item[4]);
 
+
+void ReverseArray(char arr[], long size);
+
 #endif
