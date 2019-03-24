@@ -64,5 +64,23 @@ char* look_for_last_logfile(void);
  */
 int create_new_logfile(void);
 
+/*
+ * Function: remove_log_file
+ * ----------------------------
+ *
+ *   save_recent_days_num: save recent days
+ *
+ */
+void remove_log_file(int save_recent_days_num, char* root_path);
+
+/*
+ * Function: remove_file
+ * ----------------------------
+ *
+ *   path: file path
+ *
+ */
+void remove_file(char* path);
+
 
 #endif

@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-static int fd_is_debug = 0;
+int fd_is_debug = 0;
 
 int fd_printf(char *fmt, ...) {
     int cnt = 0;

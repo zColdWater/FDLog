@@ -25,6 +25,8 @@
 #define FD_VERSION "v1"
 #define FD_LOG_FOLDER_NAME "fdlog_" FD_VERSION
 #define FD_LOG_CACHE_FOLDER_NAME "cache"
+#define FD_LOG_FILE_FOLDER_NAME "logs"
+
 #define FD_LOG_CACHE_NAME "cache.mmap"
 #define FD_DATE "fd_date"
 #define FD_SIZE "fd_mmap_size"
@@ -37,6 +39,9 @@
 
 /* 设置日志文件最大Size  */
 #define FD_MAX_LOG_SIZE 300 * 1024
+
+/* 设置默认上传最近7天的日志 */
+#define FD_SAVE_RECENT_DAYS 7
 
 /* CACHE LOG HEAD PROTOCOL  */
 #define FD_MMAP_FILE_HEADER '#'
@@ -58,6 +63,8 @@ typedef struct fd_core_model {
     int is_ready_gzip; // 0 or 1
     int is_init_global_vars; // 0 or 1
     int is_zlibing; // 0 or 1 是否正在压缩状态
+    
+    int save_recent_days_num; // 保存最近多少天的日志
     
     unsigned char aes_iv[16];
     z_stream *strm;

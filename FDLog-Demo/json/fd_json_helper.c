@@ -10,12 +10,8 @@ fd_json_map *fd_create_json_map(void) {
 }
 
 int fd_is_empty_json_map(fd_json_map *item) {
-    
-    // 创建 fd_json_map 空内存
     fd_json_map temp;
     memset(&temp, 0, sizeof(fd_json_map));
-    
-    // 让传入的参数 与 空内存比较，如果结果 = 0，证明内存相同
     if (memcmp(item, &temp, sizeof(fd_json_map)) == 0) {
         return 1;
     }

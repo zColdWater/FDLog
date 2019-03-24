@@ -33,7 +33,7 @@ char* get_current_date() {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     char time[18];
-    sprintf(time, "%d%d%d", (tm.tm_year + 1900),(tm.tm_mon + 1),(tm.tm_mday));
+    sprintf(time, "%04d%02d%02d", (tm.tm_year + 1900),(tm.tm_mon + 1),(tm.tm_mday));
     char* temp = (char *)malloc(18);
     strcpy(temp, time);
     return temp;
@@ -95,9 +95,6 @@ int fd_makedir(const char *path) {
     return 0;
 }
 
-
-
-
 char* look_for_last_logfile() {
     
     // 获取当天的日期字符串
@@ -144,7 +141,7 @@ char* look_for_last_logfile() {
         const char *c = files_name[j];
         long d = atol(c);
         files_name_number[j] = d;
-        printf("%ld\n", d);
+        fd_printf("%ld\n", d);
     }
     
     long max_file_name_num = getmaximum(files_name_number, i);
@@ -205,7 +202,7 @@ int create_new_logfile() {
         strcat(logfile, date);
         strcat(logfile, additional_str);
         strcpy(file_name, logfile);
-        printf("logfile:%s \n",logfile);
+        fd_printf("logfile:%s \n",logfile);
         
         /// 遍历文件夹里面的文件名
         int is_same_name = 0;
@@ -213,9 +210,9 @@ int create_new_logfile() {
         struct dirent *ent;
         if ((dir = opendir (current_file_folder_name)) != NULL) {
             while ((ent = readdir (dir)) != NULL) {
-                printf ("%s\n", ent->d_name);
+                fd_printf ("%s\n", ent->d_name);
                 if(strcmp(logfile,ent->d_name)==0) {
-                    printf("日志文件有重名\n");
+                    fd_printf("日志文件有重名\n");
                     is_same_name = 1;
                     break;
                 }
@@ -250,7 +247,7 @@ int create_new_logfile() {
             memcpy(log_file_path, current_file_folder_name, FD_MAX_PATH);
             fclose(file_temp);
         } else {
-            printf("文件流打开失败!\n");
+            fd_printf("文件流打开失败!\n");
             free(date);
             free(current_file_folder_name);
             date = NULL;
@@ -265,3 +262,68 @@ int create_new_logfile() {
     current_file_folder_name = NULL;
     return 1;
 }
+
+
+void remove_log_file(int save_recent_days_num, char* root_path) {
+    
+    if (save_recent_days_num < 0) {
+        fd_printf("remove_log_file: save_recent_days_num can't less than zero or equal zero! \n");
+        return;
+    }
+    
+    char Dt[9];
+    time_t now = time(NULL);
+    now = now - (24*60*60*save_recent_days_num);
+    struct tm *t = localtime(&now);
+    sprintf(Dt,"%04d%02d%02d", t->tm_year+1900,t->tm_mon+1,t->tm_mday);
+    free(t);
+    t = NULL;
+    
+    long target_Dt = atol(Dt);
+    
+    
+    char path[FD_MAX_PATH];
+    strcpy(path, root_path);
+    strcat(path, "/");
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir (path)) != NULL) {
+        while ((ent = readdir (dir)) != NULL) {
+            long d = atol(ent->d_name);
+            if ( d == 0 ) {
+                printf("remove_log_file: is invalid file! \n");
+                continue;
+            }
+            if (d < target_Dt) {
+                // remove this folder
+                char remove_path[FD_MAX_PATH];
+                strcpy(remove_path, path);
+                strcat(remove_path, ent->d_name);
+                if (fd_is_file_exist(remove_path)) {
+                    if(remove(remove_path) == 0) {
+                        printf("remove path: %s \n",remove_path);
+                    }
+                    else {
+                        perror("remove_log_file remove");
+                    }
+                }
+            }
+        }
+        closedir (dir);
+    } else {
+        perror ("remove_log_file:");
+    }
+    
+}
+
+void remove_file(char* path) {
+    if (fd_is_file_exist(path)) {
+        if(remove(path) == 0) {
+            printf("remove path: %s \n",path);
+        }
+        else {
+            perror("remove");
+        }
+    }
+}
+
