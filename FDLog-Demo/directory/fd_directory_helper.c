@@ -271,17 +271,14 @@ void remove_log_file(int save_recent_days_num, char* root_path) {
         return;
     }
     
-    char Dt[9];
+    char Dt[50];
     time_t now = time(NULL);
     now = now - (24*60*60*save_recent_days_num);
     struct tm *t = localtime(&now);
     sprintf(Dt,"%04d%02d%02d", t->tm_year+1900,t->tm_mon+1,t->tm_mday);
-    free(t);
-    t = NULL;
     
     long target_Dt = atol(Dt);
-    
-    
+
     char path[FD_MAX_PATH];
     strcpy(path, root_path);
     strcat(path, "/");
@@ -310,6 +307,8 @@ void remove_log_file(int save_recent_days_num, char* root_path) {
             }
         }
         closedir (dir);
+        dir = NULL;
+        ent = NULL;
     } else {
         perror ("remove_log_file:");
     }

@@ -69,7 +69,7 @@ int main(int argc, const char * argv[]) {
     }
     
     // 是否开启Debug模式
-    fdlog_console_output(0);
+    fdlog_open_debug(0);
     // 保存最近几天的日志
     fdlog_save_recent_days(7);
     // 日志最大尺寸
@@ -78,7 +78,7 @@ int main(int argc, const char * argv[]) {
     // 存储日志的文件夹路径
     char *temp = (char *)calloc(1, 1024);
     fdlog_log_folder_path(temp);
-    
+
     printf("temp: %s \n",temp);
     free(temp);
     temp = NULL;
