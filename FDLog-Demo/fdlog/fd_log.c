@@ -103,7 +103,7 @@ int fix_log_file_struct(char *log_path) {
     }
     else {
         fseek(fp, 0, SEEK_END);
-        long longBytes = ftell(fp); // len
+        long long longBytes = ftell(fp); // len
         fseek(fp, 0, SEEK_SET);
         char logs[longBytes];
         fread(logs, 1, longBytes, fp);
@@ -158,7 +158,7 @@ int fix_log_file_struct(char *log_path) {
  *
  */
 void fdlog_set_logfile_max_size(int maxsize) {
-    if (is_init_ok) {
+    if (is_init_ok && (maxsize < 1024*1024*5)) {
         model->max_logfix_size = maxsize;
     }
 }

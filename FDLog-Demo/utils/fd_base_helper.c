@@ -7,7 +7,7 @@
 #define FD_BYTEORDER_HIGH 1
 #define FD_BYTEORDER_LOW 2
 
-void ReverseArray(char arr[], long size)
+void ReverseArray(char arr[], long long size)
 {
     for (int i = 0; i < size/2; ++i)
     {

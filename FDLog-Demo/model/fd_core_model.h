@@ -37,8 +37,8 @@
 /* 当缓存内容占整个文件到这个比例时 会输出到日志文件中 */
 #define FD_MAX_MMAP_SCALE 0.3
 
-/* 设置日志文件最大Size  */
-#define FD_MAX_LOG_SIZE 300 * 1024
+/* 设置日志文件最大Size */
+#define FD_MAX_LOG_SIZE 400 * 1024 // 1024*1024*5 最大5M，否则8M以上会导致越界。 默认400KB大小 1份日志文件
 
 /* 设置默认上传最近7天的日志 */
 #define FD_SAVE_RECENT_DAYS 7

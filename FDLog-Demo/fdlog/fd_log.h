@@ -74,6 +74,7 @@ void fdlog_save_recent_days(int num);
  * Function: fdlog_set_logfile_max_size
  * ----------------------------
  *
+ *  Notes: maxsize value Maximum set to 5*1024*1024 5M. Invalid for more than 5M
  *  Max size of logfile
  *
  */

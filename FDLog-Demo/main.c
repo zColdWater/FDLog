@@ -13,8 +13,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "fd_log.h"
-#include "fd_aes_helper.h"
-#include "fd_directory_helper.h"
 
 
 // random string
@@ -45,6 +43,9 @@ char* rand_string_alloc(size_t size)
 
 int main(int argc, const char * argv[]) {
     
+    // 1.版本规则
+    // 2.非对称加密
+    // 4.对外是大端还是小端
     // 3.之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。 需要将之前日期的文件存储在那天的文件夹下。
     
     // 当前地址
@@ -69,7 +70,7 @@ int main(int argc, const char * argv[]) {
     // 保存最近几天的日志
     fdlog_save_recent_days(7);
     // 日志最大尺寸
-    fdlog_set_logfile_max_size(1024*1024*1); // 10MB
+    fdlog_set_logfile_max_size(1024*1024); // 1MB
 
     // 存储日志的文件夹路径
     char *temp = (char *)calloc(1, 1024);
@@ -94,7 +95,7 @@ int main(int argc, const char * argv[]) {
         i++;
     }
     
-//    fdlog_sync();
+    fdlog_sync();
     
     return 0;
 }
