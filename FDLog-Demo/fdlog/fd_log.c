@@ -39,6 +39,19 @@ extern int fd_is_debug;
 static int is_init_ok = FD_INIT_FAILURE;
 
 
+/*
+ * Function: fdlog_set_logfile_max_size
+ * ----------------------------
+ *
+ *  Max size of logfile
+ *
+ */
+void fdlog_set_logfile_max_size(int maxsize) {
+    if (is_init_ok) {
+        model->max_logfix_size = maxsize;
+    }
+}
+
 
 
 /*
@@ -80,7 +93,7 @@ void fdlog_save_recent_days(int num) {
  *   is_open: 0 or 1 ,close or open
  *
  */
-void fdlog_console_output(int is_open) {
+void fdlog_open_debug(int is_open) {
     if (is_open) {
         fd_is_debug = 1;
     }
@@ -352,6 +365,7 @@ int fdlog_reset_global_var() {
         model->cache_remain_data_len = 0;
         model->is_init_global_vars = 0;
         model->save_recent_days_num = FD_SAVE_RECENT_DAYS;
+        model->max_logfix_size = FD_MAX_LOG_SIZE;
         memset(model->aes_iv, 0, 16);
         memset(model->cache_remain_data, 0, 16);
         memset(model->strm, 0, sizeof(z_stream));
@@ -379,6 +393,7 @@ int fdlog_reset_global_var() {
         (log_file_len != NULL)) {
         model->is_init_global_vars = 1;
         model->save_recent_days_num = FD_SAVE_RECENT_DAYS;
+        model->max_logfix_size = FD_MAX_LOG_SIZE;
         fd_printf("FDLog: reset_global_var success! \n");
         return 1;
     }
@@ -480,9 +495,8 @@ int fdlog_sync() {
     }
     
     // 如果当前日志文件大小大于日志设定最大大小，重新创建新日志文件。
-    if ((*log_file_len) > FD_MAX_LOG_SIZE) {
+    if ((*log_file_len) > model->max_logfix_size) {
         fd_printf("FDLog fdlog_sync: current log file size:%lu \n",*log_file_len);
-        
         if (!is_new_logfile) {
             memset(log_file_path, 0, FD_MAX_PATH);
             memset(log_file_len, 0, sizeof(long));

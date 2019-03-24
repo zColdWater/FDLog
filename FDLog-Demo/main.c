@@ -50,8 +50,6 @@ int main(int argc, const char * argv[]) {
     // 1.写入缓存文件时 如果存在内容日志时，并且开头不是 写入尾巴，需要删除上一次无效的日志
     // 2.写入日志文件时 如果存在不是写入尾巴时，也需要删除上一次无效的日志
     // 3.之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。
-    // 4.内存清理 + 属性挪进model
-    // 5.格式
     
     // 当前地址
     char cwd[1024];
@@ -70,9 +68,14 @@ int main(int argc, const char * argv[]) {
          printf("fd_initialize_log failture! \n");
     }
     
+    // 是否开启Debug模式
     fdlog_console_output(0);
+    // 保存最近几天的日志
     fdlog_save_recent_days(7);
+    // 日志最大尺寸
+    fdlog_set_logfile_max_size(1024*1024*1); // 10MB
     
+    // 存储日志的文件夹路径
     char *temp = (char *)calloc(1, 1024);
     fdlog_log_folder_path(temp);
     
@@ -82,22 +85,20 @@ int main(int argc, const char * argv[]) {
     
     
     
-    
-//    int i = 1;
-//    while (i < 999999) {
-//        char *log = rand_string_alloc(30);
-//        int flag = 5;
-//        long long localtime = 123123;
-//        char thread_name[] = "main";
-//        int thread_id = 1;
-//        int is_main = 1;
-//        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
-//        printf("i: %d\n",i);
-//        fdlog(data);
-//        i++;
-//    }
-    
-    
+    // 写入日志
+    int i = 1;
+    while (i < 999999) {
+        char *log = rand_string_alloc(30);
+        int flag = 5;
+        long long localtime = 123123;
+        char thread_name[] = "main";
+        int thread_id = 1;
+        int is_main = 1;
+        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
+        printf("i: %d\n",i);
+        fdlog(data);
+        i++;
+    }
     
     
     return 0;

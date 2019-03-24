@@ -48,15 +48,15 @@ int fdlog(FD_Construct_Data *data);
 int fdlog_sync(void);
 
 /*
- * Function: fdlog_console_output
+ * Function: fdlog_open_debug
  * ----------------------------
  *
- *   Console output
+ *   Open debug mode
  *
  *   is_open: 0 or 1 ,close or open
  *
  */
-void fdlog_console_output(int is_open);
+void fdlog_open_debug(int is_open);
 
 /*
  * Function: fdlog_save_recent_days
@@ -68,6 +68,17 @@ void fdlog_console_output(int is_open);
  *
  */
 void fdlog_save_recent_days(int num);
+
+
+/*
+ * Function: fdlog_set_logfile_max_size
+ * ----------------------------
+ *
+ *  Max size of logfile
+ *
+ */
+void fdlog_set_logfile_max_size(int maxsize);
+
 
 /*
  * Function: fdlog_log_folder_path

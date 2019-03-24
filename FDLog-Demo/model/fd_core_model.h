@@ -65,7 +65,8 @@ typedef struct fd_core_model {
     int is_zlibing; // 0 or 1 是否正在压缩状态
     
     int save_recent_days_num; // 保存最近多少天的日志
-    
+    int max_logfix_size; // 日志文件最大尺寸
+
     unsigned char aes_iv[16];
     z_stream *strm;
     char cache_remain_data[16];
