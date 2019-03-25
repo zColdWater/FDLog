@@ -631,6 +631,7 @@ int fdlog_sync() {
             memset(log_file_path, 0, FD_MAX_PATH);
             memset(log_file_len, 0, sizeof(long));
             create_new_logfile();
+            is_new_logfile = 1;
         }
         else {
             fd_printf("FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
@@ -638,7 +639,16 @@ int fdlog_sync() {
         }
     }
     
-    fix_log_file_struct(log_file_path);
+    // 全新日志文件没有内容
+    if (is_new_logfile) {
+        // 插入版本
+        
+    }
+    
+    // 之前有内容的日志文件
+    else {
+        fix_log_file_struct(log_file_path);
+    }
     
     FILE* stream;
     stream = fopen(log_file_path, "ab+");
