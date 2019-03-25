@@ -7,14 +7,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include "fd_core_model.h"
 
-#define FD_MAX_PATH 1024 //路径最大长度
-
-extern char *log_folder_path;
-extern long *log_file_len;
-extern char *mmap_cache_file_path;
-extern char *log_file_path;
-
+extern FDLOGMODEL *model;
 
 long getmaximum(long a[], int numberOfElements)
 {
@@ -100,7 +95,7 @@ char* look_for_last_logfile() {
     // 获取当天的日期字符串
     char* date = get_current_date();
     char* current_file_folder_name = (char *)calloc(1, 1024);
-    strcat(current_file_folder_name,log_folder_path);
+    strcat(current_file_folder_name,model->log_folder_path);
     strcat(current_file_folder_name, "/");
     strcat(current_file_folder_name, date);
     
@@ -173,7 +168,7 @@ int create_new_logfile() {
     // 获取当天的日期字符串
     char* date = get_current_date();
     char* current_file_folder_name = (char *)calloc(1, FD_MAX_PATH);
-    strcat(current_file_folder_name,log_folder_path);
+    strcat(current_file_folder_name,model->log_folder_path);
     strcat(current_file_folder_name, "/");
     strcat(current_file_folder_name, date);
     
@@ -238,13 +233,13 @@ int create_new_logfile() {
         if (NULL != file_temp) {  //初始化文件流开启
             fseek(file_temp, 0, SEEK_END);
             long longBytes = ftell(file_temp);
-            memcpy(log_file_len, &longBytes, sizeof(long));
-            if (log_file_path == NULL) {
-                log_file_path = (char *)calloc(1, FD_MAX_PATH);
+            memcpy(model->log_file_len, &longBytes, sizeof(long));
+            if (model->log_file_path == NULL) {
+                model->log_file_path = (char *)calloc(1, FD_MAX_PATH);
             } else {
-                memset(log_file_path, 0, FD_MAX_PATH);
+                memset(model->log_file_path, 0, FD_MAX_PATH);
             }
-            memcpy(log_file_path, current_file_folder_name, FD_MAX_PATH);
+            memcpy(model->log_file_path, current_file_folder_name, FD_MAX_PATH);
             fclose(file_temp);
         } else {
             fd_printf("文件流打开失败!\n");

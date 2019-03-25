@@ -14,13 +14,6 @@
 #include <string.h>
 
 extern FDLOGMODEL *model;
-extern unsigned char *mmap_ptr;
-extern unsigned char *mmap_tailer_ptr;
-extern int *mmap_content_len_ptr;
-extern int *mmap_current_log_len_ptr;
-extern int *mmap_header_content_len_ptr;
-extern char *mmap_header_content_ptr;
-
 
 int fd_init_zlib() {
     if (!model->strm) {
@@ -91,11 +84,11 @@ int fd_zlib_compress(char *data, int data_len, int type) {
                     
                     memcpy(temp, out, copy_data_len);
                     
-                    fd_aes_encrypt((unsigned char *) gzip_data, mmap_tailer_ptr, handler_len,
+                    fd_aes_encrypt((unsigned char *) gzip_data, model->mmap_tailer_ptr, handler_len,
                                    (unsigned char *) model->aes_iv);
 
-                    *mmap_current_log_len_ptr += handler_len;
-                    mmap_tailer_ptr += handler_len;
+                    *model->mmap_current_log_len_ptr += handler_len;
+                    model->mmap_tailer_ptr += handler_len;
                 }
                 if (remain_len) {
                     if (handler_len) {
@@ -131,15 +124,15 @@ void fd_zlib_end_compress() {
         memcpy(data, model->cache_remain_data, model->cache_remain_data_len);
     }
     
-    fd_aes_encrypt((unsigned char *) data, mmap_tailer_ptr, 16,
+    fd_aes_encrypt((unsigned char *) data, model->mmap_tailer_ptr, 16,
                    (unsigned char *) model->aes_iv);
     
-    mmap_tailer_ptr += 16;
-    *(mmap_tailer_ptr) = FD_MMAP_WRITE_CONTENT_TAILER;
-    mmap_tailer_ptr++;
-    *mmap_current_log_len_ptr += 16;
+    model->mmap_tailer_ptr += 16;
+    *(model->mmap_tailer_ptr) = FD_MMAP_WRITE_CONTENT_TAILER;
+    model->mmap_tailer_ptr++;
+    *model->mmap_current_log_len_ptr += 16;
     
-    *mmap_content_len_ptr += (*mmap_current_log_len_ptr + 2 + sizeof(int));
+    *model->mmap_content_len_ptr += (*model->mmap_current_log_len_ptr + 2 + sizeof(int));
 
     model->cache_remain_data_len = 0;
     model->is_ready_gzip = 0;

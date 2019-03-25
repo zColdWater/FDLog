@@ -72,8 +72,19 @@ typedef struct fd_core_model {
     char cache_remain_data[16];
     int cache_remain_data_len;
     
+    unsigned char *mmap_ptr; // 指向缓存文件头 位置不变
+    unsigned char *mmap_tailer_ptr; // 指向缓存文件尾 位置不断变化随着写入而变化
+    int *mmap_content_len_ptr; // 缓存文件里日志总量长度 位置不变
+    int *mmap_current_log_len_ptr; // 最后一条日志的长度 位置不断变化随着写入而变化
+    int *mmap_header_content_len_ptr; // 缓存文件 头部 内容长度 位置不变
+    char *mmap_header_content_ptr; // 存储 缓存文件 头部内容 (malloc)
+    
+    char *log_folder_path; // 日志文件夹地址
+    long *log_file_len; // 日志文件字节长度
+    char *log_file_path; // 日志文件地址
+    char *mmap_cache_file_path; // 缓存文件路径
+    
 } FDLOGMODEL;
-
 
 
 #endif /* fd_core_model_h */

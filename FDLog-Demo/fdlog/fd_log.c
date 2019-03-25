@@ -22,18 +22,7 @@
 #include "fd_base_helper.h"
 
 extern FDLOGMODEL *model;
-extern unsigned char *mmap_ptr;
-extern unsigned char *mmap_tailer_ptr;
-extern int *mmap_content_len_ptr;
-extern int *mmap_current_log_len_ptr;
-extern int *mmap_header_content_len_ptr;
-extern char *mmap_header_content_ptr;
-extern char *log_folder_path;
-extern long *log_file_len;
-extern char *mmap_cache_file_path;
-extern char *log_file_path;
 extern int fd_is_debug;
-
 
 #define FD_INIT_SUCCESS 1; // log init success
 #define FD_INIT_FAILURE 0; // log init failture
@@ -51,31 +40,31 @@ static int is_init_ok = FD_INIT_FAILURE;
  */
 int fix_cache_file_struct() {
     
-    if (!mmap_content_len_ptr || !mmap_content_len_ptr) {
+    if (!model->mmap_content_len_ptr || !model->mmap_content_len_ptr) {
         fd_printf("FDLog fix_cache_file_struct: no init");
         return 0;
     }
     
     int i = 1;
-    int total_len = *mmap_content_len_ptr;
+    int total_len = *model->mmap_content_len_ptr;
     printf("total_len: %d \n",total_len);
     while (i < total_len) {
-        if ((*mmap_tailer_ptr) == FD_MMAP_WRITE_CONTENT_HEADER) {
-            mmap_tailer_ptr -= 1;
-            if ((*mmap_tailer_ptr) == FD_MMAP_WRITE_CONTENT_TAILER) {
-                mmap_tailer_ptr += 1;
-                memset(mmap_tailer_ptr, 0, i);
+        if ((*model->mmap_tailer_ptr) == FD_MMAP_WRITE_CONTENT_HEADER) {
+           model-> mmap_tailer_ptr -= 1;
+            if ((*model->mmap_tailer_ptr) == FD_MMAP_WRITE_CONTENT_TAILER) {
+                model->mmap_tailer_ptr += 1;
+                memset(model->mmap_tailer_ptr, 0, i);
                 // exit
                 return 1;
             }
             else {
-                mmap_tailer_ptr += 1;
+                model->mmap_tailer_ptr += 1;
             }
         }
         // next time
-        mmap_tailer_ptr -= 1;
-        *mmap_content_len_ptr -= 1;
-        printf("mmap_content_len_ptr: %d \n", *mmap_content_len_ptr);
+        model->mmap_tailer_ptr -= 1;
+        *model->mmap_content_len_ptr -= 1;
+        printf("mmap_content_len_ptr: %d \n", *model->mmap_content_len_ptr);
         i += 1;
     }
     
@@ -144,7 +133,6 @@ int fix_log_file_struct(char *log_path) {
             i++;
         }
     }
-    
     return 0;
 }
 
@@ -173,7 +161,7 @@ void fdlog_set_logfile_max_size(int maxsize) {
  *
  */
 void fdlog_log_folder_path(char* path) {
-    strcpy(path, log_folder_path);
+    strcpy(path, model->log_folder_path);
 }
 
 
@@ -262,8 +250,8 @@ int fdlog_init_dirs(const char *root_path) {
     strcpy(cache_file_path, path);
     
     if (fd_makedir(cache_folder_path) == 0) {
-        memcpy(mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
-        memcpy(log_folder_path, log_folder_path1, FD_MAX_PATH);
+        memcpy(model->mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
+        memcpy(model->log_folder_path, log_folder_path1, FD_MAX_PATH);
         return 1;
     }
     
@@ -312,10 +300,10 @@ int fdlog_insert_mmap_file_header() {
     }
     
     // reset mmap cache file content to '0'
-    if (mmap_ptr != NULL) {
-        memset(mmap_ptr, 0, FD_MMAP_LENGTH);
+    if (model->mmap_ptr != NULL) {
+        memset(model->mmap_ptr, 0, FD_MMAP_LENGTH);
         int len = (int)strlen(back_data);
-        unsigned char *temp = mmap_ptr;
+        unsigned char *temp = model->mmap_ptr;
         /// ==== 写入缓存文件的头部内容  ====
         *temp = FD_MMAP_FILE_HEADER;
         temp++;
@@ -363,7 +351,7 @@ int fdlog_is_valid_cache() {
         fd_printf("FDLog: mmap file is bind failture! \n");
         return 0;
     }
-    unsigned char *temp = mmap_ptr;
+    unsigned char *temp = model->mmap_ptr;
     if (*temp == FD_MMAP_FILE_HEADER) {
         fd_printf("READ FD_MMAP_FILE_HEADER ✅\n");
         temp += 1;
@@ -384,7 +372,7 @@ int fdlog_is_valid_cache() {
                     int mmap_header_len = 2 + sizeof(int) + *temp_header_content_len;
                     int mmap_content_len = 2 + sizeof(int) + *temp_content_len_ptr;
                     
-                    unsigned char *temp_tailer_ptr = mmap_ptr;
+                    unsigned char *temp_tailer_ptr = model->mmap_ptr;
                     temp_tailer_ptr += (mmap_header_len + mmap_content_len);
                     
                     char tailer_c = *(temp_tailer_ptr - 1);
@@ -413,25 +401,25 @@ int fdlog_is_valid_cache() {
  */
 int fdlog_update_cache_point_position() {
     
-    unsigned char *temp = mmap_ptr;
+    unsigned char *temp = model->mmap_ptr;
     if (*temp == FD_MMAP_FILE_HEADER) {
         temp += 1;
-        mmap_header_content_len_ptr = (int*)temp;
+        model->mmap_header_content_len_ptr = (int*)temp;
         temp += sizeof(int);
-        memcpy(mmap_header_content_ptr, temp, *mmap_header_content_len_ptr);
-        temp += *mmap_header_content_len_ptr;
+        memcpy(model->mmap_header_content_ptr, temp, *model->mmap_header_content_len_ptr);
+        temp += *model->mmap_header_content_len_ptr;
         if (*temp == FD_MMAP_FILE_TAILER) {
             temp += 1;
             if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
                 temp += 1;
-                mmap_content_len_ptr = (int*)temp;
+                model->mmap_content_len_ptr = (int*)temp;
                 temp += sizeof(int);
                 if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
                     temp += 1;
-                    mmap_tailer_ptr = mmap_ptr;
-                    int mmap_header_len = 2 + sizeof(int) + *mmap_header_content_len_ptr;
-                    int mmap_content_len = 2 + sizeof(int) + *mmap_content_len_ptr;
-                    mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
+                    model->mmap_tailer_ptr = model->mmap_ptr;
+                    int mmap_header_len = 2 + sizeof(int) + *model->mmap_header_content_len_ptr;
+                    int mmap_content_len = 2 + sizeof(int) + *model->mmap_content_len_ptr;
+                    model->mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
                     
                     if (!(fdlog_is_valid_cache())){ return 0; }
                     
@@ -474,13 +462,13 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     // Tailer must be point to write tailer or header tailer
     // otherwise cache file struct not correct!
-    if ((*(mmap_tailer_ptr - 1) == FD_MMAP_WRITE_CONTENT_TAILER) ||
-        (*(mmap_tailer_ptr - 1) == FD_MMAP_TOTAL_LOG_LEN_TAILER)) {
+    if ((*(model->mmap_tailer_ptr - 1) == FD_MMAP_WRITE_CONTENT_TAILER) ||
+        (*(model->mmap_tailer_ptr - 1) == FD_MMAP_TOTAL_LOG_LEN_TAILER)) {
         
-        *mmap_tailer_ptr = FD_MMAP_WRITE_CONTENT_HEADER;
-        mmap_tailer_ptr += 1;
-        mmap_current_log_len_ptr = (int *)mmap_tailer_ptr;
-        mmap_tailer_ptr += sizeof(int);
+        *model->mmap_tailer_ptr = FD_MMAP_WRITE_CONTENT_HEADER;
+        model->mmap_tailer_ptr += 1;
+        model->mmap_current_log_len_ptr = (int *)model->mmap_tailer_ptr;
+        model->mmap_tailer_ptr += sizeof(int);
         
         if (fd_zlib_compress(data->data, data->data_len, Z_SYNC_FLUSH)) {
             fd_zlib_end_compress();
@@ -527,6 +515,11 @@ int fdlog_reset_global_var() {
     if (model == NULL) {
         model = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
         memset(model, 0, sizeof(FDLOGMODEL));
+        model->mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN);
+        model->log_folder_path = (char*)calloc(1, FD_MAX_PATH);
+        model->mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH);
+        model->log_file_len = (long *)calloc(1, sizeof(long));
+        model->log_file_path = (char *)calloc(1, FD_MAX_PATH);
     }
     else {
         model->is_ready_gzip = 0;
@@ -535,31 +528,30 @@ int fdlog_reset_global_var() {
         model->is_init_global_vars = 0;
         model->save_recent_days_num = FD_SAVE_RECENT_DAYS;
         model->max_logfix_size = FD_MAX_LOG_SIZE;
+        
         memset(model->aes_iv, 0, 16);
         memset(model->cache_remain_data, 0, 16);
         memset(model->strm, 0, sizeof(z_stream));
+        
+        model->mmap_ptr = NULL;
+        model->mmap_tailer_ptr = NULL;
+        model->mmap_content_len_ptr = NULL;
+        model->mmap_current_log_len_ptr = NULL;
+        model->mmap_header_content_len_ptr = NULL;
+        model->mmap_header_content_ptr = NULL;
+        memset(model->mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN);
+        
+        memset(model->log_folder_path, 0, FD_MAX_PATH);
+        memset(model->mmap_cache_file_path,0,FD_MAX_PATH);
+        memset(model->log_file_len, 0, sizeof(long));
+        memset(model->log_file_path, 0, FD_MAX_PATH);
     }
     
-    if (!mmap_header_content_ptr) { mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN); }
-    else { memset(mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN); }
-    
-    if (!log_folder_path) { log_folder_path = (char*)calloc(1, FD_MAX_PATH); }
-    else { memset(log_folder_path, 0, FD_MAX_PATH); }
-    
-    if (!mmap_cache_file_path) { mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH); }
-    else { memset(mmap_cache_file_path,0,FD_MAX_PATH); }
-    
-    if (!log_file_len) { log_file_len = (long *)calloc(1, sizeof(long)); }
-    else { memset(log_file_len, 0, sizeof(long)); }
-    
-    if (!log_file_path) { log_file_path = (char *)calloc(1, FD_MAX_PATH); }
-    else { memset(log_file_path, 0, FD_MAX_PATH); }
-    
     if ((model != NULL) &&
-        (log_folder_path != NULL) &&
-        (mmap_cache_file_path != NULL) &&
-        (log_file_path != NULL) &&
-        (log_file_len != NULL)) {
+        (model->log_folder_path != NULL) &&
+        (model->mmap_cache_file_path != NULL) &&
+        (model->log_file_path != NULL) &&
+        (model->log_file_len != NULL)) {
         model->is_init_global_vars = 1;
         model->save_recent_days_num = FD_SAVE_RECENT_DAYS;
         model->max_logfix_size = FD_MAX_LOG_SIZE;
@@ -605,16 +597,16 @@ int fdlog_sync() {
     else {
         
         // Save last_file_name path to log_file_path
-        memset(log_file_path, 0, FD_MAX_PATH);
-        memcpy(log_file_path, last_file_name, FD_MAX_PATH);
+        memset(model->log_file_path, 0, FD_MAX_PATH);
+        memcpy(model->log_file_path, last_file_name, FD_MAX_PATH);
         
         // open file stream use `ab+`
-        FILE *file_temp = fopen(log_file_path, "ab+");
+        FILE *file_temp = fopen(model->log_file_path, "ab+");
         if (NULL != file_temp) {
             fseek(file_temp, 0, SEEK_END);
             long longBytes = ftell(file_temp);
             // get log file length
-            memcpy(log_file_len, &longBytes, sizeof(long));
+            memcpy(model->log_file_len, &longBytes, sizeof(long));
             fclose(file_temp);
         } else {
             fd_printf("FDLog fdlog_sync: fopen log file failture! \n");
@@ -625,11 +617,11 @@ int fdlog_sync() {
     }
     
     // 如果当前日志文件大小大于日志设定最大大小，重新创建新日志文件。
-    if ((*log_file_len) > model->max_logfix_size) {
-        fd_printf("FDLog fdlog_sync: current log file size:%lu \n",*log_file_len);
+    if ((*model->log_file_len) > model->max_logfix_size) {
+        fd_printf("FDLog fdlog_sync: current log file size:%lu \n",*model->log_file_len);
         if (!is_new_logfile) {
-            memset(log_file_path, 0, FD_MAX_PATH);
-            memset(log_file_len, 0, sizeof(long));
+            memset(model->log_file_path, 0, FD_MAX_PATH);
+            memset(model->log_file_len, 0, sizeof(long));
             create_new_logfile();
             is_new_logfile = 1;
         }
@@ -647,22 +639,22 @@ int fdlog_sync() {
     
     // 之前有内容的日志文件
     else {
-        fix_log_file_struct(log_file_path);
+        fix_log_file_struct(model->log_file_path);
     }
     
     FILE* stream;
-    stream = fopen(log_file_path, "ab+");
+    stream = fopen(model->log_file_path, "ab+");
     if (stream == NULL)
     {
         perror("Could not open file");
         return 0;
     }
     else {
-        unsigned char* temp = mmap_tailer_ptr - *mmap_content_len_ptr;
-        fwrite(temp, sizeof(char), *mmap_content_len_ptr, stream);
+        unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
+        fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream);
         fflush(stream);
         fclose(stream);
-        *log_file_len += *mmap_content_len_ptr; // 更新日志文件大小
+        *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
     }
     
     // Reset mmap cahce file
@@ -696,7 +688,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     
     if (!fdlog_reset_global_var()) { return is_init_ok; }
     if (!fdlog_init_dirs(root)) { return is_init_ok; }
-    if (!fd_open_mmap_file(model, mmap_cache_file_path, &mmap_ptr)) { return is_init_ok; }
+    if (!fd_open_mmap_file(model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }
     
     fd_aes_init_key_iv(key, iv);
     fd_aes_inflate_iv(model->aes_iv);
@@ -705,7 +697,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     if (fdlog_update_cache_point_position()) {
         
         // Read date on cache header as before date
-        cJSON* croot = cJSON_Parse(mmap_header_content_ptr);
+        cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
         char* cache_date = (char*)calloc(1, 1024);
         strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
         cJSON_Delete(croot);
@@ -762,7 +754,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
         }
     }
     
-    remove_log_file(model->save_recent_days_num,log_folder_path);
+    remove_log_file(model->save_recent_days_num,model->log_folder_path);
     is_init_ok = FD_INIT_SUCCESS;
     return is_init_ok;
 }
@@ -792,8 +784,8 @@ int fdlog(FD_Construct_Data *data) {
     
     // When mmap cache file content length more than max_length scale
     // then cache content sync to local log file
-    if ((float)*mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
-        fd_printf("FDLog: cache content need sync to local log file %f \n",(float)*mmap_content_len_ptr);
+    if ((float)*model->mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
+        fd_printf("FDLog: cache content need sync to local log file %f \n",(float)*model->mmap_content_len_ptr);
         if (!fdlog_sync()) {
             fd_printf("FDLog: sync cache to local failture! \n");
             return 0;
