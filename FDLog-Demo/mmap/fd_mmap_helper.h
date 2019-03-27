@@ -28,7 +28,7 @@
  *
  *   returns: the int value 0 is failture 1 is success.
  */
-int fd_open_mmap_file(FDLOGMODEL *model,char *mmap_file_path, unsigned char **buffer);
+int fd_open_mmap_file(FDLOGMODEL **model,char *mmap_file_path, unsigned char **buffer);
 
 
 #endif

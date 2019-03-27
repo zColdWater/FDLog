@@ -9,9 +9,17 @@
 #include <errno.h>
 
 
-int fd_open_mmap_file(FDLOGMODEL *model,char *mmap_file_path, unsigned char **buffer) {
+int fd_open_mmap_file(FDLOGMODEL **model,char *mmap_file_path, unsigned char **buffer) {
+    
+    FDLOGMODEL* model1 = *model;
+    
+    if (model1 == NULL) {
+        fd_printf("FDLog fd_open_mmap_file: FDLOGMODEL model is NULL ");
+        return 0;
+    }
+    
     int back = FD_MMAP_FAIL;
-    model->is_bind_mmap = 0;
+    model1->is_bind_mmap = 0;
     
     char filepath[1024] = {'0'};
     strcpy(filepath, mmap_file_path);
@@ -73,7 +81,7 @@ int fd_open_mmap_file(FDLOGMODEL *model,char *mmap_file_path, unsigned char **bu
             
             if (p_map != MAP_FAILED && NULL != p_map && isFileOk) { // MMAP绑定成功
                 back = FD_MMAP_MMAP;
-                model->is_bind_mmap = 1;
+                model1->is_bind_mmap = 1;
             } else { // MMAP绑定失败
                 fd_printf("open mmap fail , reason : %s \n", strerror(errno));
             }
@@ -81,7 +89,7 @@ int fd_open_mmap_file(FDLOGMODEL *model,char *mmap_file_path, unsigned char **bu
             if (back == FD_MMAP_MMAP && access(filepath, F_OK) != -1) {
                 back = FD_MMAP_MMAP;
                 *buffer = p_map;
-                model->is_bind_mmap = 1;
+                model1->is_bind_mmap = 1;
             } else {
                 if (NULL != p_map)
                     munmap(p_map, size);
@@ -90,5 +98,7 @@ int fd_open_mmap_file(FDLOGMODEL *model,char *mmap_file_path, unsigned char **bu
             fd_printf("open(%s) fail: %s\n", filepath, strerror(errno));
         }
     }
+    
+    *model = model1;
     return back;
 }

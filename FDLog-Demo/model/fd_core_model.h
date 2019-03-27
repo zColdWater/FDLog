@@ -32,6 +32,7 @@
 #define FD_SIZE "fd_mmap_size"
 
 #define FD_MAX_PATH 1024 * 3
+#define FD_MAX_FILE_COUNT 1024 * 2 // 当天最多日志个数 2048个
 #define FD_MMAP_HEADER_CONTENT_LEN 1024
 
 /* 当缓存内容占整个文件到这个比例时 会输出到日志文件中 */
@@ -54,7 +55,6 @@
 /* CACHE SINGLE LOG PROTOCOL  */
 #define FD_MMAP_WRITE_CONTENT_HEADER '!'
 #define FD_MMAP_WRITE_CONTENT_TAILER '@'
-
 
 
 typedef struct fd_core_model {

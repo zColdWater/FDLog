@@ -47,6 +47,8 @@ int main(int argc, const char * argv[]) {
     // 2.非对称加密
     // 4.对外是大端还是小端
     // 3.之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。 需要将之前日期的文件存储在那天的文件夹下。
+    // 5.日志内容格式
+    
     
     // 当前地址
     char cwd[1024];
@@ -62,7 +64,8 @@ int main(int argc, const char * argv[]) {
     char IV[] = "0123456789012345";
     int success = fdlog_initialize(cwd, KEY, IV);
     if (!success) {
-         printf("fd_initialize_log failture! \n");
+        printf("fd_initialize_log failture! \n");
+        return 0;
     }
 
     // 是否开启Debug模式
@@ -70,7 +73,7 @@ int main(int argc, const char * argv[]) {
     // 保存最近几天的日志
     fdlog_save_recent_days(7);
     // 日志最大尺寸
-    fdlog_set_logfile_max_size(1024*300); // 1MB
+    fdlog_set_logfile_max_size(1024*500); // 1MB
 
     // 存储日志的文件夹路径
     char *temp = (char *)calloc(1, 1024);
@@ -82,7 +85,7 @@ int main(int argc, const char * argv[]) {
 
     // 写入日志
     int i = 1;
-    while (i < 999999) {
+    while (i < 9999999) {
         char *log = rand_string_alloc(30);
         int flag = 5;
         long long localtime = 123123;
@@ -94,8 +97,6 @@ int main(int argc, const char * argv[]) {
         fdlog(data);
         i++;
     }
-    
-//    fdlog_sync();
-    
+        
     return 0;
 }

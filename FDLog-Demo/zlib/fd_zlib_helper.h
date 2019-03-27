@@ -22,7 +22,7 @@
  *
  *   returns: 1 or 0
  */
-int fd_init_zlib(void);
+int fd_init_zlib(FDLOGMODEL **model);
 
 /*
  * Function: fd_zlib_compress
@@ -35,7 +35,7 @@ int fd_init_zlib(void);
  *
  *   returns: 1 or 0
  */
-int fd_zlib_compress(char *data, int data_len, int type);
+int fd_zlib_compress(FDLOGMODEL **model, char *data, int data_len, int type);
 
 /*
  * Function: fd_zlib_end_compress
@@ -43,6 +43,6 @@ int fd_zlib_compress(char *data, int data_len, int type);
  *
  *   returns: 1 or 0
  */
-void fd_zlib_end_compress(void);
+void fd_zlib_end_compress(FDLOGMODEL **model);
 
 #endif /* fd_zlib_helper_h */

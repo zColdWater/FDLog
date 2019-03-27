@@ -215,9 +215,11 @@ void fdlog_open_debug(int is_open) {
  *
  *   returns: 1 or 0
  */
-int fdlog_init_dirs(const char *root_path) {
+int fdlog_init_dirs(const char *root_path, FDLOGMODEL **model) {
     
-    if (!model->is_init_global_vars) {
+    FDLOGMODEL* model1 = *model;
+    
+    if (!model1->is_init_global_vars) {
         fd_printf("FDLog init_fdlog_dirs: is_init_global_vars is 0 ! \n");
         return 0;
     }
@@ -250,8 +252,9 @@ int fdlog_init_dirs(const char *root_path) {
     strcpy(cache_file_path, path);
     
     if (fd_makedir(cache_folder_path) == 0) {
-        memcpy(model->mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
-        memcpy(model->log_folder_path, log_folder_path1, FD_MAX_PATH);
+        memcpy(model1->mmap_cache_file_path, cache_file_path, FD_MAX_PATH);
+        memcpy(model1->log_folder_path, log_folder_path1, FD_MAX_PATH);
+        *model = model1;
         return 1;
     }
     
@@ -454,7 +457,7 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
     }
     if (!model->is_ready_gzip) {
         fd_printf("FDLog fdlog_write_to_cache: model->is_ready_gzip is false, reinit zlib! \n");
-        if (!fd_init_zlib()) {
+        if (!fd_init_zlib(&model)) {
             fd_printf("FDLog fdlog_write_to_cache: fd_init_zlib failture! \n");
             return 0;
         }
@@ -470,8 +473,8 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         model->mmap_current_log_len_ptr = (int *)model->mmap_tailer_ptr;
         model->mmap_tailer_ptr += sizeof(int);
         
-        if (fd_zlib_compress(data->data, data->data_len, Z_SYNC_FLUSH)) {
-            fd_zlib_end_compress();
+        if (fd_zlib_compress(&model,data->data, data->data_len, Z_SYNC_FLUSH)) {
+            fd_zlib_end_compress(&model);
             fd_aes_inflate_iv(model->aes_iv);
             fd_printf("FDLog fdlog_write_to_cache: success! \n");
             return 1;
@@ -510,55 +513,60 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
  *
  *   returns: 1 or 0
  */
-int fdlog_reset_global_var() {
+int fdlog_reset_global_var(FDLOGMODEL** model) {
     
-    if (model == NULL) {
-        model = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
-        memset(model, 0, sizeof(FDLOGMODEL));
-        model->mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN);
-        model->log_folder_path = (char*)calloc(1, FD_MAX_PATH);
-        model->mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH);
-        model->log_file_len = (long *)calloc(1, sizeof(long));
-        model->log_file_path = (char *)calloc(1, FD_MAX_PATH);
+    FDLOGMODEL* model1 = *model;
+    
+    if (model1 == NULL) {
+        model1 = (FDLOGMODEL *)malloc(sizeof(FDLOGMODEL));
+        memset(model1, 0, sizeof(FDLOGMODEL));
+        model1->mmap_header_content_ptr = (char*)calloc(1, FD_MMAP_HEADER_CONTENT_LEN);
+        model1->log_folder_path = (char*)calloc(1, FD_MAX_PATH);
+        model1->mmap_cache_file_path = (char*)calloc(1, FD_MAX_PATH);
+        model1->log_file_len = (long *)calloc(1, sizeof(long));
+        model1->log_file_path = (char *)calloc(1, FD_MAX_PATH);
     }
     else {
-        model->is_ready_gzip = 0;
-        model->is_bind_mmap = 0;
-        model->cache_remain_data_len = 0;
-        model->is_init_global_vars = 0;
-        model->save_recent_days_num = FD_SAVE_RECENT_DAYS;
-        model->max_logfix_size = FD_MAX_LOG_SIZE;
+        model1->is_ready_gzip = 0;
+        model1->is_bind_mmap = 0;
+        model1->cache_remain_data_len = 0;
+        model1->is_init_global_vars = 0;
+        model1->save_recent_days_num = FD_SAVE_RECENT_DAYS;
+        model1->max_logfix_size = FD_MAX_LOG_SIZE;
         
-        memset(model->aes_iv, 0, 16);
-        memset(model->cache_remain_data, 0, 16);
-        memset(model->strm, 0, sizeof(z_stream));
+        memset(model1->aes_iv, 0, 16);
+        memset(model1->cache_remain_data, 0, 16);
+        memset(model1->strm, 0, sizeof(z_stream));
         
-        model->mmap_ptr = NULL;
-        model->mmap_tailer_ptr = NULL;
-        model->mmap_content_len_ptr = NULL;
-        model->mmap_current_log_len_ptr = NULL;
-        model->mmap_header_content_len_ptr = NULL;
-        model->mmap_header_content_ptr = NULL;
-        memset(model->mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN);
+        model1->mmap_ptr = NULL;
+        model1->mmap_tailer_ptr = NULL;
+        model1->mmap_content_len_ptr = NULL;
+        model1->mmap_current_log_len_ptr = NULL;
+        model1->mmap_header_content_len_ptr = NULL;
+        model1->mmap_header_content_ptr = NULL;
+        memset(model1->mmap_header_content_ptr, 0, FD_MMAP_HEADER_CONTENT_LEN);
         
-        memset(model->log_folder_path, 0, FD_MAX_PATH);
-        memset(model->mmap_cache_file_path,0,FD_MAX_PATH);
-        memset(model->log_file_len, 0, sizeof(long));
-        memset(model->log_file_path, 0, FD_MAX_PATH);
+        memset(model1->log_folder_path, 0, FD_MAX_PATH);
+        memset(model1->mmap_cache_file_path,0,FD_MAX_PATH);
+        memset(model1->log_file_len, 0, sizeof(long));
+        memset(model1->log_file_path, 0, FD_MAX_PATH);
     }
     
-    if ((model != NULL) &&
-        (model->log_folder_path != NULL) &&
-        (model->mmap_cache_file_path != NULL) &&
-        (model->log_file_path != NULL) &&
-        (model->log_file_len != NULL)) {
-        model->is_init_global_vars = 1;
-        model->save_recent_days_num = FD_SAVE_RECENT_DAYS;
-        model->max_logfix_size = FD_MAX_LOG_SIZE;
+    if ((model1 != NULL) &&
+        (model1->log_folder_path != NULL) &&
+        (model1->mmap_cache_file_path != NULL) &&
+        (model1->log_file_path != NULL) &&
+        (model1->log_file_len != NULL)) {
+        model1->is_init_global_vars = 1;
+        model1->save_recent_days_num = FD_SAVE_RECENT_DAYS;
+        model1->max_logfix_size = FD_MAX_LOG_SIZE;
         fd_printf("FDLog: reset_global_var success! \n");
+        
+        *model = model1;
         return 1;
     }
     
+    *model = model1;
     fd_printf("FDLog: reset_global_var failture! \n");
     return 0;
 }
@@ -671,6 +679,108 @@ int fdlog_sync() {
 }
 
 
+/*
+ * Function: fdlog_sync_no_init
+ * ----------------------------
+ *   Returns whether the sync cache to local log file was successful
+ *
+ *   Don't need to init before invoke fdlog_sync_no_init
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_sync_no_init() {
+    
+    if (model->is_zlibing) {
+        fd_printf("FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
+        return 0;
+    }
+    
+    int is_new_logfile = 0;
+    char* last_file_name = look_for_last_logfile();
+    // 如果 找不到上一次的日志文件
+    if (last_file_name == NULL) {
+        if (create_new_logfile()) {
+            is_new_logfile = 1;
+        }
+    }
+    
+    // 如果 找到上一次打开文件 读取数据
+    else {
+        
+        // Save last_file_name path to log_file_path
+        memset(model->log_file_path, 0, FD_MAX_PATH);
+        memcpy(model->log_file_path, last_file_name, FD_MAX_PATH);
+        
+        // open file stream use `ab+`
+        FILE *file_temp = fopen(model->log_file_path, "ab+");
+        if (NULL != file_temp) {
+            fseek(file_temp, 0, SEEK_END);
+            long longBytes = ftell(file_temp);
+            // get log file length
+            memcpy(model->log_file_len, &longBytes, sizeof(long));
+            fclose(file_temp);
+        } else {
+            fd_printf("FDLog fdlog_sync: fopen log file failture! \n");
+            free(last_file_name);
+            last_file_name = NULL;
+            return 0;
+        }
+    }
+    
+    // 如果当前日志文件大小大于日志设定最大大小，重新创建新日志文件。
+    if ((*model->log_file_len) > model->max_logfix_size) {
+        fd_printf("FDLog fdlog_sync: current log file size:%lu \n",*model->log_file_len);
+        if (!is_new_logfile) {
+            memset(model->log_file_path, 0, FD_MAX_PATH);
+            memset(model->log_file_len, 0, sizeof(long));
+            create_new_logfile();
+            is_new_logfile = 1;
+        }
+        else {
+            fd_printf("FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
+            return 0;
+        }
+    }
+    
+    // 全新日志文件没有内容
+    if (is_new_logfile) {
+        // 插入版本
+        
+    }
+    
+    // 之前有内容的日志文件
+    else {
+        fix_log_file_struct(model->log_file_path);
+    }
+    
+    FILE* stream;
+    stream = fopen(model->log_file_path, "ab+");
+    if (stream == NULL)
+    {
+        perror("Could not open file");
+        return 0;
+    }
+    else {
+        unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
+        fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream);
+        fflush(stream);
+        fclose(stream);
+        *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+    }
+    
+    // Reset mmap cahce file
+    if (!fdlog_insert_mmap_file_header()) {
+        fd_printf("FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
+        return 0;
+    }
+    if (!fdlog_update_cache_point_position()) {
+        fd_printf("FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
+        return 0;
+    }
+    
+    return 1;
+}
+
 
 /*
  * Function: fdlog_initialize
@@ -685,15 +795,15 @@ int fdlog_sync() {
  */
 int fdlog_initialize(char* root, char* key, char* iv) {
     is_init_ok = FD_INIT_FAILURE;
-    
-    if (!fdlog_reset_global_var()) { return is_init_ok; }
-    if (!fdlog_init_dirs(root)) { return is_init_ok; }
-    if (!fd_open_mmap_file(model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }
+
+    if (!fdlog_reset_global_var(&model)) { return is_init_ok; }
+    if (!fdlog_init_dirs(root,&model)) { return is_init_ok; }
+    if (!fd_open_mmap_file(&model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }
     
     fd_aes_init_key_iv(key, iv);
     fd_aes_inflate_iv(model->aes_iv);
     
-    if (!fd_init_zlib()) { return is_init_ok; }
+    if (!fd_init_zlib(&model)) { return is_init_ok; }
     if (fdlog_update_cache_point_position()) {
         
         // Read date on cache header as before date
@@ -717,7 +827,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
         fd_printf("FDLog: before %ld  now %ld \n",before,now);
         
         if (now > before) { // 缓存文件过期，不是当天的。
-            if (!fdlog_sync()) {
+            if (!fdlog_sync_no_init()) {
                 fd_printf("FDLog: cache write to local log file failture! \n");
                 return is_init_ok;
             }

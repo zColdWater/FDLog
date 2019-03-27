@@ -110,14 +110,15 @@ char* look_for_last_logfile() {
     
     strcat(current_file_folder_name, "/");
     
-    char* files_name[1024] = {};
+    char* files_name[FD_MAX_FILE_COUNT];
     int i = 0;
     DIR *dir;
     struct dirent *ent;
     if ((dir = opendir (current_file_folder_name)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
             if (strstr(ent->d_name, date) != NULL) {
-                files_name[i] = ent->d_name;
+                files_name[i] = (char*)calloc(1, 50);
+                strcpy(files_name[i], ent->d_name);
                 i++;
             }
         }
@@ -137,6 +138,12 @@ char* look_for_last_logfile() {
         long d = atol(c);
         files_name_number[j] = d;
         fd_printf("%ld\n", d);
+    }
+    
+    for (int n=0; n < i; n++) {
+        char *s = files_name[n];
+        free(s);
+        s = NULL;
     }
     
     long max_file_name_num = getmaximum(files_name_number, i);
