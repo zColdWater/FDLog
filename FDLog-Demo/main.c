@@ -43,11 +43,19 @@ char* rand_string_alloc(size_t size)
 
 int main(int argc, const char * argv[]) {
     
-    // 1.版本规则 需要缓存的版本 输出到日志文件
-    // 2.非对称加密
-    // 4.对外是大端还是小端
-    // 3.之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。 需要将之前日期的文件存储在那天的文件夹下。
-    // 5.日志内容格式
+    // 非对称加密
+    // 1. 在日志写入之前 要先发起 请求服务器 server_version/key/iv
+    // 2. 拿到 key iv 进行加密处理 拿到 server_version 写入在日志文件 头部4个字节 int
+    // 3. 当请求不到 key iv and server_version 使用默认 key 和 iv
+    // 4. 不同的 server_version 的日志文件 独立 (当写入本地文件之前，先读取本地文件server_version，如果不同 则令起文件开始写入)
+    // 5. 可以控制是否开启RSA服务器下发 AES128 Key和IV的方案。
+    
+    // 对外是大端还是小端
+    
+    // 之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。 需要将之前日期的文件存储在那天的文件夹下。
+    // 1. 第一种情况: 每次执行init方法的时候，检查一下缓存文件头部 比较时间，如果时间已经过期，将日志保存到当天的文件夹下
+    // 2. 第二种情况: 已经初始化了，每次写入的时候 都会再次检查，如果存在旧日志，保存到那天的日志，新日期开始的日志保存到新的文件夹下
+    
     
     
     // 当前地址
@@ -92,7 +100,8 @@ int main(int argc, const char * argv[]) {
         char thread_name[] = "main";
         int thread_id = 1;
         int is_main = 1;
-        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main);
+        int level = 0;
+        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
         printf("i: %d\n",i);
         fdlog(data);
         i++;

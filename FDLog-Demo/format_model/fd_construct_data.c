@@ -4,17 +4,22 @@
 #include "fd_construct_data.h"
 #include "fd_json_helper.h"
 #include "fd_console_helper.h"
+#include "fd_core_model.h"
 
-static const char *log_key = "c";
-static const char *flag_key = "f";
-static const char *localtime_key = "l";
-static const char *threadname_key = "n";
-static const char *threadid_key = "i";
-static const char *ismain_key = "m";
+static const char *log_key = "c"; // log content
+static const char *flag_key = "f"; // log flag module
+static const char *log_level = "lv"; // log level
+static const char *localtime_key = "l"; // local time
+static const char *threadname_key = "n"; // thread name
+static const char *threadid_key = "i"; // thread id
+static const char *ismain_key = "m"; // main thread ?
+static const char *log_version = "v"; // version
+
+
 
 FD_Construct_Data *
 fd_construct_json_data(char *log, int flag, long long local_time, char *thread_name,
-                           long long thread_id, int is_main) {
+                           long long thread_id, int is_main, int level) {
     
     FD_Construct_Data *construct_data = NULL;
     cJSON *root = NULL;
@@ -32,6 +37,10 @@ fd_construct_json_data(char *log, int flag, long long local_time, char *thread_n
             fd_add_item_string(map, threadname_key, thread_name);
             fd_add_item_number(map, threadid_key, (double) thread_id);
             fd_add_item_bool(map, ismain_key, is_main);
+            fd_add_item_string(map, log_version, FD_VERSION_NUMBER);
+            fd_add_item_number(map, log_level, level);
+
+            
             
             
             fd_inflate_json_by_map(root, map);

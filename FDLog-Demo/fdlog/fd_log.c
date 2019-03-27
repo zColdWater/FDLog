@@ -288,7 +288,7 @@ int fdlog_insert_mmap_file_header() {
     if (NULL != root) {
         if (NULL != map) {
             char* date = get_current_date();
-            fd_add_item_number(map, FD_VERSION_KEY, FD_VERSION_NUMBER);
+            fd_add_item_string(map, FD_VERSION_KEY, FD_VERSION_NUMBER);
             fd_add_item_string(map, FD_DATE, date);
             fd_add_item_number(map, FD_SIZE, FD_MMAP_LENGTH);
             fd_inflate_json_by_map(root, map);
@@ -402,27 +402,29 @@ int fdlog_is_valid_cache() {
  *
  *   returns: the int value 0 is failture 1 is success.
  */
-int fdlog_update_cache_point_position() {
+int fdlog_update_cache_point_position(FDLOGMODEL **model) {
     
-    unsigned char *temp = model->mmap_ptr;
+    FDLOGMODEL* model1 = *model;
+    
+    unsigned char *temp = model1->mmap_ptr;
     if (*temp == FD_MMAP_FILE_HEADER) {
         temp += 1;
-        model->mmap_header_content_len_ptr = (int*)temp;
+        model1->mmap_header_content_len_ptr = (int*)temp;
         temp += sizeof(int);
-        memcpy(model->mmap_header_content_ptr, temp, *model->mmap_header_content_len_ptr);
-        temp += *model->mmap_header_content_len_ptr;
+        memcpy(model1->mmap_header_content_ptr, temp, *model1->mmap_header_content_len_ptr);
+        temp += *model1->mmap_header_content_len_ptr;
         if (*temp == FD_MMAP_FILE_TAILER) {
             temp += 1;
             if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
                 temp += 1;
-                model->mmap_content_len_ptr = (int*)temp;
+                model1->mmap_content_len_ptr = (int*)temp;
                 temp += sizeof(int);
                 if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
                     temp += 1;
-                    model->mmap_tailer_ptr = model->mmap_ptr;
-                    int mmap_header_len = 2 + sizeof(int) + *model->mmap_header_content_len_ptr;
-                    int mmap_content_len = 2 + sizeof(int) + *model->mmap_content_len_ptr;
-                    model->mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
+                    model1->mmap_tailer_ptr = model1->mmap_ptr;
+                    int mmap_header_len = 2 + sizeof(int) + *model1->mmap_header_content_len_ptr;
+                    int mmap_content_len = 2 + sizeof(int) + *model1->mmap_content_len_ptr;
+                    model1->mmap_tailer_ptr += (mmap_header_len + mmap_content_len);
                     
                     if (!(fdlog_is_valid_cache())){ return 0; }
                     
@@ -495,7 +497,7 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
                 return 0;
             }
             // rebind cache point position
-            if (!fdlog_update_cache_point_position()) {
+            if (!fdlog_update_cache_point_position(&model)) {
                 fd_printf("FDLog: fdlog_write_to_cache: fdlog_update_cache_point_position failture! \n");
                 return 0;
             }
@@ -596,7 +598,7 @@ int fdlog_sync() {
     char* last_file_name = look_for_last_logfile();
     // 如果 找不到上一次的日志文件
     if (last_file_name == NULL) {
-        if (create_new_logfile()) {
+        if (create_new_current_date_logfile()) {
             is_new_logfile = 1;
         }
     }
@@ -630,7 +632,7 @@ int fdlog_sync() {
         if (!is_new_logfile) {
             memset(model->log_file_path, 0, FD_MAX_PATH);
             memset(model->log_file_len, 0, sizeof(long));
-            create_new_logfile();
+            create_new_current_date_logfile();
             is_new_logfile = 1;
         }
         else {
@@ -639,14 +641,8 @@ int fdlog_sync() {
         }
     }
     
-    // 全新日志文件没有内容
-    if (is_new_logfile) {
-        // 插入版本
-        
-    }
-    
-    // 之前有内容的日志文件
-    else {
+    if (!is_new_logfile) {
+        // if not new file , need auto correct file format.
         fix_log_file_struct(model->log_file_path);
     }
     
@@ -670,7 +666,7 @@ int fdlog_sync() {
         fd_printf("FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
         return 0;
     }
-    if (!fdlog_update_cache_point_position()) {
+    if (!fdlog_update_cache_point_position(&model)) {
         fd_printf("FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
         return 0;
     }
@@ -699,7 +695,7 @@ int fdlog_sync_no_init() {
     char* last_file_name = look_for_last_logfile();
     // 如果 找不到上一次的日志文件
     if (last_file_name == NULL) {
-        if (create_new_logfile()) {
+        if (create_new_current_date_logfile()) {
             is_new_logfile = 1;
         }
     }
@@ -733,7 +729,7 @@ int fdlog_sync_no_init() {
         if (!is_new_logfile) {
             memset(model->log_file_path, 0, FD_MAX_PATH);
             memset(model->log_file_len, 0, sizeof(long));
-            create_new_logfile();
+            create_new_current_date_logfile();
             is_new_logfile = 1;
         }
         else {
@@ -773,7 +769,7 @@ int fdlog_sync_no_init() {
         fd_printf("FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
         return 0;
     }
-    if (!fdlog_update_cache_point_position()) {
+    if (!fdlog_update_cache_point_position(&model)) {
         fd_printf("FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
         return 0;
     }
@@ -804,7 +800,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
     fd_aes_inflate_iv(model->aes_iv);
     
     if (!fd_init_zlib(&model)) { return is_init_ok; }
-    if (fdlog_update_cache_point_position()) {
+    if (fdlog_update_cache_point_position(&model)) {
         
         // Read date on cache header as before date
         cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
@@ -839,7 +835,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
         }
         
         // rebind cache point position
-        if (!fdlog_update_cache_point_position()) {
+        if (!fdlog_update_cache_point_position(&model)) {
             fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
             return is_init_ok;
         }
@@ -856,7 +852,7 @@ int fdlog_initialize(char* root, char* key, char* iv) {
             }
             
             // rebind cache point position
-            if (!fdlog_update_cache_point_position()) {
+            if (!fdlog_update_cache_point_position(&model)) {
                 fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
                 return is_init_ok;
             }

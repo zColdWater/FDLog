@@ -170,7 +170,7 @@ char* look_for_last_logfile() {
 }
 
 
-int create_new_logfile() {
+int create_new_current_date_logfile() {
     
     // 获取当天的日期字符串
     char* date = get_current_date();
@@ -262,6 +262,95 @@ int create_new_logfile() {
     free(current_file_folder_name);
     date = NULL;
     current_file_folder_name = NULL;
+    return 1;
+}
+
+
+
+/*
+ * Function: create_date_logfile
+ * ----------------------------
+ *
+ *   Create special name logfile
+ *
+ *   folder_path: folder path
+ *   name: file name
+ *
+ *   return: 0 or 1
+ *
+ */
+int create_date_logfile(char *folder_path, char* name) {
+    
+    char *path = (char *)calloc(1, FD_MAX_PATH);
+    
+    // 文件夹是否存在 不存在创建一个
+    int folder_exist = fd_is_file_exist(folder_path);
+    if (!folder_exist) {
+        int ret = fd_makedir(folder_path);
+        if (ret != 0) {
+            printf("fdlog mkdir failture! \n");
+            return 0;
+        }
+    }
+    
+    strcpy(path, folder_path);
+    strcat(path, "/");
+    
+    int same = 1;
+    int additional = 1;
+    char file_name[FD_MAX_PATH+sizeof(int)] = {0};
+    while (same) {
+        
+        char additional_str[sizeof(int)];
+        sprintf(additional_str, "%d", additional);
+        
+        char logfile[FD_MAX_PATH+sizeof(int)] = {0};
+        strcat(logfile, name);
+        strcat(logfile, additional_str);
+        strcpy(file_name, logfile);
+        fd_printf("logfile:%s \n",logfile);
+        
+        /// 遍历文件夹里面的文件名
+        int is_same_name = 0;
+        DIR *dir;
+        struct dirent *ent;
+        if ((dir = opendir (path)) != NULL) {
+            while ((ent = readdir (dir)) != NULL) {
+                fd_printf ("%s\n", ent->d_name);
+                if(strcmp(logfile,ent->d_name)==0) {
+                    fd_printf("FDLog create_date_logfile: filelog same name \n");
+                    is_same_name = 1;
+                    break;
+                }
+            }
+            closedir (dir);
+        } else {
+            perror ("");
+            free(path);
+            path = NULL;
+            return 0;
+        }
+        
+        additional++;
+        same = is_same_name;
+    }
+    strcat(path, file_name);
+    
+    int log_file_exist = fd_is_file_exist(path);
+    if (!log_file_exist) {
+        FILE *file_temp = fopen(path, "ab+");
+        if (NULL != file_temp) {  //初始化文件流开启
+            fclose(file_temp);
+        } else {
+            fd_printf("FDLog create_date_logfile: create log file failture! \n");
+            free(path);
+            path = NULL;
+            return 0;
+        }
+    }
+    
+    free(path);
+    path = NULL;
     return 1;
 }
 

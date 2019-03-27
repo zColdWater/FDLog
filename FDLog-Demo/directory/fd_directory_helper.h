@@ -56,13 +56,13 @@ char* get_current_date(void);
 char* look_for_last_logfile(void);
 
 /*
- * Function: create_new_logfile
+ * Function: create_new_current_date_logfile
  * ----------------------------
  *
  *   returns: 0 or 1
  *
  */
-int create_new_logfile(void);
+int create_new_current_date_logfile(void);
 
 /*
  * Function: remove_log_file

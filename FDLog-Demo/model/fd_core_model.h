@@ -21,9 +21,8 @@
 */
 
 #define FD_VERSION_KEY "fdlog_version"
-#define FD_VERSION_NUMBER 1 // FDLog 版本号
-#define FD_VERSION "v1"
-#define FD_LOG_FOLDER_NAME "fdlog_" FD_VERSION
+#define FD_VERSION_NUMBER "1" // FDLog 版本号 (每条日志都带有FDLog版本)
+#define FD_LOG_FOLDER_NAME "fdlog_v" FD_VERSION_NUMBER
 #define FD_LOG_CACHE_FOLDER_NAME "cache"
 #define FD_LOG_FILE_FOLDER_NAME "logs"
 
@@ -33,7 +32,7 @@
 
 #define FD_MAX_PATH 1024 * 3
 #define FD_MAX_FILE_COUNT 1024 * 2 // 当天最多日志个数 2048个
-#define FD_MMAP_HEADER_CONTENT_LEN 1024
+#define FD_MMAP_HEADER_CONTENT_LEN 1024 // 缓存MMAP文件头部信息 存储大小，目前1024完全够用，如果修改插入头部内容多少需要修改此处值。
 
 /* 当缓存内容占整个文件到这个比例时 会输出到日志文件中 */
 #define FD_MAX_MMAP_SCALE 0.3
