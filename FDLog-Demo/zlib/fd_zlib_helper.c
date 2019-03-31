@@ -126,7 +126,7 @@ void fd_zlib_end_compress(FDLOGMODEL **model) {
     
     FDLOGMODEL* model1 = *model;
     
-    fd_zlib_compress(&model1,NULL, 0, Z_FINISH);
+    fd_zlib_compress(model,NULL, 0, Z_FINISH);
     (void) deflateEnd(model1->strm);
     
     int val = 16 - model1->cache_remain_data_len;

@@ -93,7 +93,7 @@ int main(int argc, const char * argv[]) {
 
     // 写入日志
     int i = 1;
-    while (i < 9999999) {
+    while (i < 99999) {
         char *log = rand_string_alloc(30);
         int flag = 5;
         long long localtime = 123123;
@@ -106,6 +106,8 @@ int main(int argc, const char * argv[]) {
         fdlog(data);
         i++;
     }
+    
+    fdlog_sync();
         
     return 0;
 }
