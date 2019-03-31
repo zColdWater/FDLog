@@ -107,7 +107,7 @@ int main(int argc, const char * argv[]) {
         i++;
     }
     
-    fdlog_sync();
-        
+//    fdlog_sync();
+    
     return 0;
 }

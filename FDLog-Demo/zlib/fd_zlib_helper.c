@@ -113,6 +113,7 @@ int fd_zlib_compress(FDLOGMODEL **model,char *data, int data_len, int type) {
                 model1->cache_remain_data_len = remain_len;
             }
         } while (strm->avail_out == 0);
+        model1->is_zlibing = 0;
         *model = model1;
         return 1;
     } else {
