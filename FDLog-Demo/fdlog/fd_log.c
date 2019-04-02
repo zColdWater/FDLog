@@ -290,6 +290,7 @@ int fdlog_insert_mmap_file_header() {
             char* date = get_current_date();
             fd_add_item_string(map, FD_VERSION_KEY, FD_VERSION_NUMBER);
             fd_add_item_string(map, FD_DATE, date);
+            fd_add_item_number(map, FD_SERVER_VER, model->server_ver);
             fd_add_item_number(map, FD_SIZE, FD_MMAP_LENGTH);
             fd_inflate_json_by_map(root, map);
             back_data = cJSON_PrintUnformatted(root);
@@ -515,7 +516,7 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
  *
  *   returns: 1 or 0
  */
-int fdlog_reset_global_var(FDLOGMODEL** model) {
+int fdlog_reset_global_var(FDLOGMODEL** model, int server_ver) {
     
     FDLOGMODEL* model1 = *model;
     
@@ -562,6 +563,7 @@ int fdlog_reset_global_var(FDLOGMODEL** model) {
         model1->is_init_global_vars = 1;
         model1->save_recent_days_num = FD_SAVE_RECENT_DAYS;
         model1->max_logfix_size = FD_MAX_LOG_SIZE;
+        model1->server_ver = server_ver;
         fd_printf("FDLog: reset_global_var success! \n");
         
         *model = model1;
@@ -789,10 +791,15 @@ int fdlog_sync_no_init() {
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize(char* root, char* key, char* iv) {
+int fdlog_initialize(char* root, char* key, char* iv, int server_ver) {
     is_init_ok = FD_INIT_FAILURE;
-
-    if (!fdlog_reset_global_var(&model)) { return is_init_ok; }
+    
+    if (server_ver < 0) {
+        fd_printf("FDLog fdlog_initialize: server_ver is %d，less than 0 \n", server_ver);
+        return is_init_ok;
+    }
+    
+    if (!fdlog_reset_global_var(&model,server_ver)) { return is_init_ok; }
     if (!fdlog_init_dirs(root,&model)) { return is_init_ok; }
     if (!fd_open_mmap_file(&model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }
     

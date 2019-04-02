@@ -28,6 +28,7 @@
 
 #define FD_LOG_CACHE_NAME "cache.mmap"
 #define FD_DATE "fd_date"
+#define FD_SERVER_VER "fd_server_ver" // 服务器版本
 #define FD_SIZE "fd_mmap_size"
 
 #define FD_MAX_PATH 1024 * 3
@@ -62,6 +63,7 @@ typedef struct fd_core_model {
     int is_ready_gzip; // 0 or 1
     int is_init_global_vars; // 0 or 1
     int is_zlibing; // 0 or 1 是否正在压缩状态
+    int server_ver; // 服务器的版本号
     
     int save_recent_days_num; // 保存最近多少天的日志
     int max_logfix_size; // 日志文件最大尺寸

@@ -65,6 +65,17 @@ char* look_for_last_logfile(void);
 int create_new_current_date_logfile(void);
 
 /*
+ * Function: create_new_logfile
+ * ----------------------------
+ *
+ *   date: create date file
+ *
+ *   returns: 0 or 1
+ *
+ */
+//int create_new_logfile(char* date);
+
+/*
  * Function: remove_log_file
  * ----------------------------
  *

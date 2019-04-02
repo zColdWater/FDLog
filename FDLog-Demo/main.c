@@ -52,11 +52,6 @@ int main(int argc, const char * argv[]) {
     
     // 对外是大端还是小端
     
-    // 之前有缓存文件 再次进入 会不会 将上一次的 也一起输出。 需要将之前日期的文件存储在那天的文件夹下。
-    // 1. 第一种情况: 每次执行init方法的时候，检查一下缓存文件头部 比较时间，如果时间已经过期，将日志保存到当天的文件夹下
-    // 2. 第二种情况: 已经初始化了，每次写入的时候 都会再次检查，如果存在旧日志，保存到那天的日志，新日期开始的日志保存到新的文件夹下
-    
-    
     
     // 当前地址
     char cwd[1024];
@@ -70,7 +65,7 @@ int main(int argc, const char * argv[]) {
     // 开始记录日志
     char KEY[] = "0123456789012345";
     char IV[] = "0123456789012345";
-    int success = fdlog_initialize(cwd, KEY, IV);
+    int success = fdlog_initialize(cwd, KEY, IV, 1);
     if (!success) {
         printf("fd_initialize_log failture! \n");
         return 0;
@@ -93,7 +88,7 @@ int main(int argc, const char * argv[]) {
 
     // 写入日志
     int i = 1;
-    while (i < 99999) {
+    while (i < 9999999) {
         char *log = rand_string_alloc(30);
         int flag = 5;
         long long localtime = 123123;
@@ -107,7 +102,7 @@ int main(int argc, const char * argv[]) {
         i++;
     }
     
-//    fdlog_sync();
+    // 使用RSA
     
     return 0;
 }

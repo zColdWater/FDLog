@@ -266,6 +266,91 @@ int create_new_current_date_logfile() {
 }
 
 
+//int create_new_logfile(char* date) {
+//
+//    char* current_file_folder_name = (char *)calloc(1, FD_MAX_PATH);
+//    strcat(current_file_folder_name,model->log_folder_path);
+//    strcat(current_file_folder_name, "/");
+//    strcat(current_file_folder_name, date);
+//
+//    int folder_exist = fd_is_file_exist(current_file_folder_name);
+//    if (!folder_exist) {
+//        int ret = fd_makedir(current_file_folder_name);
+//        if (ret != 0) {
+//            free(current_file_folder_name);
+//            current_file_folder_name = NULL;
+//            return 0;
+//        }
+//    }
+//    strcat(current_file_folder_name, "/");
+//
+//    int same = 1;
+//    int additional = 1;
+//    char file_name[FD_MAX_PATH+sizeof(int)] = {0};
+//    while (same) {
+//
+//        char additional_str[sizeof(int)];
+//        sprintf(additional_str, "%d", additional);
+//
+//        char logfile[FD_MAX_PATH+sizeof(int)] = {0};
+//        strcat(logfile, date);
+//        strcat(logfile, additional_str);
+//        strcpy(file_name, logfile);
+//        fd_printf("logfile:%s \n",logfile);
+//
+//        /// 遍历文件夹里面的文件名
+//        int is_same_name = 0;
+//        DIR *dir;
+//        struct dirent *ent;
+//        if ((dir = opendir (current_file_folder_name)) != NULL) {
+//            while ((ent = readdir (dir)) != NULL) {
+//                fd_printf ("%s\n", ent->d_name);
+//                if(strcmp(logfile,ent->d_name)==0) {
+//                    fd_printf("日志文件有重名\n");
+//                    is_same_name = 1;
+//                    break;
+//                }
+//            }
+//            closedir (dir);
+//        } else {
+//            perror ("");
+//            free(current_file_folder_name);
+//            current_file_folder_name = NULL;
+//            return 0;
+//        }
+//
+//        additional++;
+//        same = is_same_name;
+//    }
+//    strcat(current_file_folder_name, file_name);
+//
+//    int log_file_exist = fd_is_file_exist(current_file_folder_name);
+//    if (!log_file_exist) {
+//        FILE *file_temp = fopen(current_file_folder_name, "ab+");
+//        if (NULL != file_temp) {  //初始化文件流开启
+//            fseek(file_temp, 0, SEEK_END);
+//            long longBytes = ftell(file_temp);
+//            memcpy(model->log_file_len, &longBytes, sizeof(long));
+//            if (model->log_file_path == NULL) {
+//                model->log_file_path = (char *)calloc(1, FD_MAX_PATH);
+//            } else {
+//                memset(model->log_file_path, 0, FD_MAX_PATH);
+//            }
+//            memcpy(model->log_file_path, current_file_folder_name, FD_MAX_PATH);
+//            fclose(file_temp);
+//        } else {
+//            fd_printf("文件流打开失败!\n");
+//            free(current_file_folder_name);
+//            current_file_folder_name = NULL;
+//            return 0;
+//        }
+//    }
+//
+//    free(current_file_folder_name);
+//    current_file_folder_name = NULL;
+//    return 1;
+//}
+
 
 /*
  * Function: create_date_logfile

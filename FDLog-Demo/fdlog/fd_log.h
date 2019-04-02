@@ -25,7 +25,7 @@
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize(char* root, char* key, char* iv);
+int fdlog_initialize(char* root, char* key, char* iv, int server_ver);
 
 /*
  * Function: fdlog
