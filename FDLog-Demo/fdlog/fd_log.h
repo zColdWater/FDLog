@@ -15,9 +15,11 @@
 /////////////////////////////////////////////
 
 /*
- * Function: fdlog_initialize
+ * Function: fdlog_initialize_dynamic
  * ----------------------------
  *   Returns whether the initialization was successful
+ *
+ *   parameter from server
  *
  *   root: FDLog Root Directory
  *   key: AES128 KEY[16]
@@ -25,7 +27,20 @@
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize(char* root, char* key, char* iv, int server_ver);
+int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver);
+
+/*
+ * Function: fdlog_initialize_static
+ * ----------------------------
+ *   Returns whether the initialization was successful
+ *
+ *   parameter from local
+ *
+ *   root: FDLog Root Directory
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_initialize_static(char* root);
 
 /*
  * Function: fdlog

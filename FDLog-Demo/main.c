@@ -65,7 +65,7 @@ int main(int argc, const char * argv[]) {
     // 开始记录日志
     char KEY[] = "0123456789012345";
     char IV[] = "0123456789012345";
-    int success = fdlog_initialize(cwd, KEY, IV, 1);
+    int success = fdlog_initialize_dynamic(cwd, KEY, IV, 1);
     if (!success) {
         printf("fd_initialize_log failture! \n");
         return 0;
@@ -87,22 +87,57 @@ int main(int argc, const char * argv[]) {
     temp = NULL;
 
     // 写入日志
-    int i = 1;
-    while (i < 9999999) {
-        char *log = rand_string_alloc(30);
-        int flag = 5;
-        long long localtime = 123123;
-        char thread_name[] = "main";
-        int thread_id = 1;
-        int is_main = 1;
-        int level = 0;
-        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
-        printf("i: %d\n",i);
-        fdlog(data);
-        i++;
-    }
+//    int i = 1;
+//    while (i < 999999999) {
+//        char *log = rand_string_alloc(30);
+//        int flag = 5;
+//        long long localtime = 123123;
+//        char thread_name[] = "main";
+//        int thread_id = 1;
+//        int is_main = 1;
+//        int level = 0;
+//        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
+//        printf("i: %d\n",i);
+//        fdlog(data);
+//        i++;
+//    }
+
     
-    // 使用RSA
+    // WRITE
+//    FILE *fp;
+//    char filename[100] = "server_version";
+//    char writestr[100] = "1";
+//
+//    fp = fopen(filename,"w+");
+//    if ( fp )
+//    {
+//        fputs(writestr,fp);
+//    }
+//    else
+//    {
+//        printf("Failed to open the file\n");
+//    }
+//    fclose(fp);
+    
+    
+    // READ
+//    char file_name[100] = "server_version";
+//    char ch;
+//    FILE *fp1;
+//
+//
+//    fp1 = fopen(file_name, "r"); // read mode
+//
+//    if (fp1 == NULL)
+//    {
+//        perror("Error while opening the file.\n");
+//        exit(EXIT_FAILURE);
+//    }
+//
+//    while((ch = fgetc(fp1)) != EOF)
+//        printf("%c \n", ch);
+//    fclose(fp1);
+    
     
     return 0;
 }

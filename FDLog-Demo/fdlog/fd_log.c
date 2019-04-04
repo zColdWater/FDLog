@@ -294,7 +294,6 @@ int fdlog_insert_mmap_file_header() {
             fd_add_item_number(map, FD_SIZE, FD_MMAP_LENGTH);
             fd_inflate_json_by_map(root, map);
             back_data = cJSON_PrintUnformatted(root);
-            
             free(date);
             date = NULL;
         }
@@ -615,6 +614,9 @@ int fdlog_sync() {
         // open file stream use `ab+`
         FILE *file_temp = fopen(model->log_file_path, "ab+");
         if (NULL != file_temp) {
+            // read server_ver
+            
+            
             fseek(file_temp, 0, SEEK_END);
             long longBytes = ftell(file_temp);
             // get log file length
@@ -791,7 +793,105 @@ int fdlog_sync_no_init() {
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize(char* root, char* key, char* iv, int server_ver) {
+int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver) {
+    is_init_ok = FD_INIT_FAILURE;
+    
+    if (server_ver < 0) {
+        fd_printf("FDLog fdlog_initialize: server_ver is %d，less than 0 \n", server_ver);
+        return is_init_ok;
+    }
+    
+    if (!fdlog_reset_global_var(&model,server_ver)) { return is_init_ok; }
+    if (!fdlog_init_dirs(root,&model)) { return is_init_ok; }
+    if (!fd_open_mmap_file(&model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }
+    
+    fd_aes_init_key_iv(key, iv);
+    fd_aes_inflate_iv(model->aes_iv);
+    
+    if (!fd_init_zlib(&model)) { return is_init_ok; }
+    if (!fdlog_update_cache_point_position(&model))
+    // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
+    {
+        if (!fix_cache_file_struct()) { // 修复日志缓存文件失败 放弃错误的缓存日志，造成一部分日志丢失 因为结构错乱。
+         
+            if (!fdlog_insert_mmap_file_header()) {
+                fd_printf("FDLog: insert_mmap_file_header failture! \n");
+                return is_init_ok;
+            }
+            
+        }
+        
+        else {  // 修复日志缓存文件成功
+            
+            // Read date on cache header as before date
+            cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
+            char* cache_date = (char*)calloc(1, 1024);
+            
+            // Cache file store server version
+            int cache_server_ver = cJSON_GetObjectItem(croot,FD_SERVER_VER)->valueint;
+            
+            strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
+            cJSON_Delete(croot);
+            
+            // Get current date as now
+            char* current_date = get_current_date();
+            
+            long before = atol(cache_date);
+            long now = atol(current_date);
+            
+            free(cache_date);
+            cache_date = NULL;
+            
+            free(current_date);
+            current_date = NULL;
+            
+            fd_printf("FDLog: before %ld  now %ld \n",before,now);
+            
+            if ((now > before) || (cache_server_ver != server_ver)) { // 缓存文件过期，不是当天的。 或者 服务器版本 不一致 意味着 key iv 不同
+                if (!fdlog_sync_no_init()) {
+                    fd_printf("FDLog: cache write to local log file failture! \n");
+                    return is_init_ok;
+                }
+                
+                if (!fdlog_insert_mmap_file_header()) {
+                    fd_printf("FDLog: insert_mmap_file_header failture! \n");
+                    return is_init_ok;
+                }
+            }
+        }
+        
+        // rebind cache point position
+        if (!fdlog_update_cache_point_position(&model)) {
+            fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
+            return is_init_ok;
+        }
+        
+    }
+    
+    
+    remove_log_file(model->save_recent_days_num,model->log_folder_path);
+    is_init_ok = FD_INIT_SUCCESS;
+    return is_init_ok;
+}
+
+
+/*
+ * Function: fdlog_initialize
+ * ----------------------------
+ *   Returns whether the initialization was successful
+ *
+ *   root: FDLog Root Directory
+ *   key: AES128 KEY[16]
+ *   iv: AES128 IV[16]
+ *
+ *   returns: 1 or 0
+ */
+int fdlog_initialize_static(char* root) {
+    
+    char key[16] = "0123456789012345";
+    char iv[16] = "0123456789012345";
+    int server_ver = 0;
+    
     is_init_ok = FD_INIT_FAILURE;
     
     if (server_ver < 0) {
@@ -852,7 +952,7 @@ int fdlog_initialize(char* root, char* key, char* iv, int server_ver) {
     else {
         
         if (!fix_cache_file_struct()) {
-         
+            
             if (!fdlog_insert_mmap_file_header()) {
                 fd_printf("FDLog: insert_mmap_file_header failture! \n");
                 return is_init_ok;
@@ -871,7 +971,6 @@ int fdlog_initialize(char* root, char* key, char* iv, int server_ver) {
     is_init_ok = FD_INIT_SUCCESS;
     return is_init_ok;
 }
-
 
 
 /*
@@ -895,7 +994,7 @@ int fdlog(FD_Construct_Data *data) {
         return 0;
     }
     
-    // When mmap cache file content length more than max_length scale
+    // when mmap cache file content length more than max_length scale
     // then cache content sync to local log file
     if ((float)*model->mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
         fd_printf("FDLog: cache content need sync to local log file %f \n",(float)*model->mmap_content_len_ptr);
