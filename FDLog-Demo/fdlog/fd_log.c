@@ -94,6 +94,10 @@ int fix_log_file_struct(char *log_path) {
         fseek(fp, 0, SEEK_END);
         long long longBytes = ftell(fp); // len
         fseek(fp, 0, SEEK_SET);
+        int* file_server_ver = (int*)calloc(1, 4);
+        fread(file_server_ver, 1, sizeof(int), fp);
+        
+        fseek(fp, 4, SEEK_SET); // 从第4个字节开始读取，因为前4个字节保存服务器版本 Int值。
         char logs[longBytes];
         fread(logs, 1, longBytes, fp);
         fclose(fp);
@@ -123,6 +127,7 @@ int fix_log_file_struct(char *log_path) {
 
                     FILE * fp = fopen(log_path, "ab+");
                     if (fp != NULL) {
+                        fwrite(file_server_ver, 1, 4, fp); // 写入server版本
                         fwrite(logs_temp, sizeof(char), longBytes - remove_len, fp);
                     }
                     else { perror("Could not open file"); }
@@ -702,6 +707,10 @@ int fdlog_sync_no_init(int server_id) {
         if (create_new_current_date_logfile()) {
             is_new_logfile = 1;
         }
+        else {
+            fd_printf("FDLog fdlog_sync: create new file failture! \n");
+            return 0;
+        }
     }
     
     // 如果 找到上一次打开文件 读取数据
@@ -747,8 +756,12 @@ int fdlog_sync_no_init(int server_id) {
     
     // 全新日志文件没有内容
     if (is_new_logfile) {
-        // 插入版本
-        
+        if (stream == NULL) {
+            fd_printf("FDLog fdlog_sync: open file failture! \n");
+            return 0;
+        }
+        // 插入 server 版本号
+        fwrite((const void*) & server_id,sizeof(int),1,stream);
     }
     
     // 之前有内容的日志文件
@@ -763,11 +776,37 @@ int fdlog_sync_no_init(int server_id) {
         return 0;
     }
     else {
-        unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
-        fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream);
-        fflush(stream);
-        fclose(stream);
-        *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+        
+        // read logfile server version
+        int* logfile_server_ver = (int *)calloc(4, 1);
+        fread(logfile_server_ver, 1, 4, stream);
+        
+        if (server_id != *logfile_server_ver) { // 日志文件里的服务器版本 与 初始化服务器版本不一致
+            fclose(stream);
+
+            // create new logfile
+            if (!create_new_current_date_logfile()) {
+                fd_printf("FDLog fdlog_sync: create new file failture! \n");
+                return 0;
+            }
+            
+            FILE* stream1;
+            stream1 = fopen(model->log_file_path, "ab+");
+            // 插入 server 版本号
+            fwrite((const void*) & server_id,sizeof(int),1,stream1);
+            unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
+            fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream1);
+            fflush(stream1);
+            fclose(stream1);
+            *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+        }
+        else { // 日志文件服务器版本 与 初始化服务器版本一致
+            unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
+            fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream);
+            fflush(stream);
+            fclose(stream);
+            *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+        }
     }
     
     // Reset mmap cahce file
