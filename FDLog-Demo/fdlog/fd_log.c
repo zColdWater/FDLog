@@ -688,7 +688,7 @@ int fdlog_sync() {
  *
  *   returns: 1 or 0
  */
-int fdlog_sync_no_init() {
+int fdlog_sync_no_init(int server_id) {
     
     if (model->is_zlibing) {
         fd_printf("FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
@@ -742,6 +742,9 @@ int fdlog_sync_no_init() {
         }
     }
     
+    FILE* stream;
+    stream = fopen(model->log_file_path, "ab+");
+    
     // 全新日志文件没有内容
     if (is_new_logfile) {
         // 插入版本
@@ -753,8 +756,7 @@ int fdlog_sync_no_init() {
         fix_log_file_struct(model->log_file_path);
     }
     
-    FILE* stream;
-    stream = fopen(model->log_file_path, "ab+");
+
     if (stream == NULL)
     {
         perror("Could not open file");
@@ -848,7 +850,7 @@ int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver) {
             fd_printf("FDLog: before %ld  now %ld \n",before,now);
             
             if ((now > before) || (cache_server_ver != server_ver)) { // 缓存文件过期，不是当天的。 或者 服务器版本 不一致 意味着 key iv 不同
-                if (!fdlog_sync_no_init()) {
+                if (!fdlog_sync_no_init(cache_server_ver)) {
                     fd_printf("FDLog: cache write to local log file failture! \n");
                     return is_init_ok;
                 }
@@ -907,37 +909,54 @@ int fdlog_initialize_static(char* root) {
     fd_aes_inflate_iv(model->aes_iv);
     
     if (!fd_init_zlib(&model)) { return is_init_ok; }
-    if (fdlog_update_cache_point_position(&model)) {
-        
-        // Read date on cache header as before date
-        cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
-        char* cache_date = (char*)calloc(1, 1024);
-        strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
-        cJSON_Delete(croot);
-        
-        // Get current date as now
-        char* current_date = get_current_date();
-        
-        long before = atol(cache_date);
-        long now = atol(current_date);
-        
-        free(cache_date);
-        cache_date = NULL;
-        
-        free(current_date);
-        current_date = NULL;
-        
-        fd_printf("FDLog: before %ld  now %ld \n",before,now);
-        
-        if (now > before) { // 缓存文件过期，不是当天的。
-            if (!fdlog_sync_no_init()) {
-                fd_printf("FDLog: cache write to local log file failture! \n");
-                return is_init_ok;
-            }
+    if (!fdlog_update_cache_point_position(&model))
+        // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
+    {
+        if (!fix_cache_file_struct()) { // 修复日志缓存文件失败 放弃错误的缓存日志，造成一部分日志丢失 因为结构错乱。
             
             if (!fdlog_insert_mmap_file_header()) {
                 fd_printf("FDLog: insert_mmap_file_header failture! \n");
                 return is_init_ok;
+            }
+            
+        }
+        
+        else {  // 修复日志缓存文件成功
+            
+            // Read date on cache header as before date
+            cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
+            char* cache_date = (char*)calloc(1, 1024);
+            
+            // Cache file store server version
+            int cache_server_ver = cJSON_GetObjectItem(croot,FD_SERVER_VER)->valueint;
+            
+            strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
+            cJSON_Delete(croot);
+            
+            // Get current date as now
+            char* current_date = get_current_date();
+            
+            long before = atol(cache_date);
+            long now = atol(current_date);
+            
+            free(cache_date);
+            cache_date = NULL;
+            
+            free(current_date);
+            current_date = NULL;
+            
+            fd_printf("FDLog: before %ld  now %ld \n",before,now);
+            
+            if ((now > before) || (cache_server_ver != server_ver)) { // 缓存文件过期，不是当天的。 或者 服务器版本 不一致 意味着 key iv 不同
+                if (!fdlog_sync_no_init(cache_server_ver)) {
+                    fd_printf("FDLog: cache write to local log file failture! \n");
+                    return is_init_ok;
+                }
+                
+                if (!fdlog_insert_mmap_file_header()) {
+                    fd_printf("FDLog: insert_mmap_file_header failture! \n");
+                    return is_init_ok;
+                }
             }
         }
         
@@ -948,24 +967,7 @@ int fdlog_initialize_static(char* root) {
         }
         
     }
-    // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
-    else {
-        
-        if (!fix_cache_file_struct()) {
-            
-            if (!fdlog_insert_mmap_file_header()) {
-                fd_printf("FDLog: insert_mmap_file_header failture! \n");
-                return is_init_ok;
-            }
-            
-            // rebind cache point position
-            if (!fdlog_update_cache_point_position(&model)) {
-                fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
-                return is_init_ok;
-            }
-            
-        }
-    }
+    
     
     remove_log_file(model->save_recent_days_num,model->log_folder_path);
     is_init_ok = FD_INIT_SUCCESS;
