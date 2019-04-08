@@ -678,27 +678,27 @@ int fdlog_sync() {
     else {
         
         // read logfile server version
-        int* logfile_server_ver = (int *)calloc(4, 1);
-        fread(logfile_server_ver, 1, 4, stream);
+        int logfile_server_ver;
+        fseek(stream, 0, SEEK_SET);
+        fread(&logfile_server_ver, sizeof(int), 1, stream);
+        fseek(stream, 0, SEEK_END);
         
-        if (model->server_ver != *logfile_server_ver) { // 日志文件里的服务器版本 与 初始化服务器版本不一致
+        // 日志文件里的服务器版本 与 初始化服务器版本不一致
+        if (model->server_ver != logfile_server_ver) {
             fclose(stream);
             
+            FILE* stream1;
             if (!is_new_logfile) { // 存在日志文件
                 // create new logfile
                 if (!create_new_current_date_logfile()) {
                     fd_printf("FDLog fdlog_sync: create new file failture! \n");
                     return 0;
                 }
-            }
-            
-            
-            FILE* stream1;
-            stream1 = fopen(model->log_file_path, "ab+");
-            
-            if (!is_new_logfile) { // 新文件 上面已经插入了 服务器版本
-                // 插入 server 版本号
+                stream1 = fopen(model->log_file_path, "ab+");
                 fwrite((const void*) & model->server_ver,sizeof(int),1,stream1);
+            }
+            else {
+                stream1 = fopen(model->log_file_path, "ab+");
             }
             
             unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
@@ -825,29 +825,29 @@ int fdlog_sync_no_init(int server_id) {
     else {
         
         // read logfile server version
-        int* logfile_server_ver = (int *)calloc(4, 1);
-        fread(logfile_server_ver, 1, 4, stream);
+        int logfile_server_ver;
+        fseek(stream, 0, SEEK_SET);
+        fread(&logfile_server_ver, sizeof(int), 1, stream);
+        fseek(stream, 0, SEEK_END);
         
-        if (server_id != *logfile_server_ver) { // 日志文件里的服务器版本 与 初始化服务器版本不一致
+        // 日志文件里的服务器版本 与 初始化服务器版本不一致
+        if (server_id != logfile_server_ver) {
             fclose(stream);
             
+            FILE* stream1;
             if (!is_new_logfile) { // 存在日志文件
                 // create new logfile
                 if (!create_new_current_date_logfile()) {
                     fd_printf("FDLog fdlog_sync: create new file failture! \n");
                     return 0;
                 }
-            }
-
-            
-            FILE* stream1;
-            stream1 = fopen(model->log_file_path, "ab+");
-            
-            if (!is_new_logfile) { // 新文件 上面已经插入了 服务器版本
-                // 插入 server 版本号
+                stream1 = fopen(model->log_file_path, "ab+");
                 fwrite((const void*) & server_id,sizeof(int),1,stream1);
             }
-
+            else {
+                stream1 = fopen(model->log_file_path, "ab+");
+            }
+            
             unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
             fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream1);
             fflush(stream1);

@@ -43,15 +43,7 @@ char* rand_string_alloc(size_t size)
 
 int main(int argc, const char * argv[]) {
     
-    // 非对称加密
-    // 1. 在日志写入之前 要先发起 请求服务器 server_version/key/iv
-    // 2. 拿到 key iv 进行加密处理 拿到 server_version 写入在日志文件 头部4个字节 int
-    // 3. 当请求不到 key iv and server_version 使用默认 key 和 iv
-    // 4. 不同的 server_version 的日志文件 独立 (当写入本地文件之前，先读取本地文件server_version，如果不同 则令起文件开始写入)
-    // 5. 可以控制是否开启RSA服务器下发 AES128 Key和IV的方案。
-    
     // 对外是大端还是小端
-    
     
     // 当前地址
     char cwd[1024];
@@ -81,14 +73,13 @@ int main(int argc, const char * argv[]) {
     // 存储日志的文件夹路径
     char *temp = (char *)calloc(1, 1024);
     fdlog_log_folder_path(temp);
-
     printf("temp: %s \n",temp);
     free(temp);
     temp = NULL;
 
     // 写入日志
     int i = 1;
-    while (i < 3) {
+    while (i < 99999) {
         char *log = rand_string_alloc(30);
         int flag = 5;
         long long localtime = 123123;
