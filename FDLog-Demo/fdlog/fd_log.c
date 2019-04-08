@@ -684,16 +684,23 @@ int fdlog_sync() {
         if (model->server_ver != *logfile_server_ver) { // 日志文件里的服务器版本 与 初始化服务器版本不一致
             fclose(stream);
             
-            // create new logfile
-            if (!create_new_current_date_logfile()) {
-                fd_printf("FDLog fdlog_sync: create new file failture! \n");
-                return 0;
+            if (!is_new_logfile) { // 存在日志文件
+                // create new logfile
+                if (!create_new_current_date_logfile()) {
+                    fd_printf("FDLog fdlog_sync: create new file failture! \n");
+                    return 0;
+                }
             }
+            
             
             FILE* stream1;
             stream1 = fopen(model->log_file_path, "ab+");
-            // 插入 server 版本号
-            fwrite((const void*) & model->server_ver,sizeof(int),1,stream1);
+            
+            if (!is_new_logfile) { // 新文件 上面已经插入了 服务器版本
+                // 插入 server 版本号
+                fwrite((const void*) & model->server_ver,sizeof(int),1,stream1);
+            }
+            
             unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
             fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream1);
             fflush(stream1);
@@ -720,8 +727,6 @@ int fdlog_sync() {
     }
     
     return 1;
-    
-    
 }
 
 
