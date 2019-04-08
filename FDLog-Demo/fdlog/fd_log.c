@@ -599,13 +599,17 @@ int fdlog_sync() {
         fd_printf("FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
         return 0;
     }
-    
+
     int is_new_logfile = 0;
     char* last_file_name = look_for_last_logfile();
     // 如果 找不到上一次的日志文件
     if (last_file_name == NULL) {
         if (create_new_current_date_logfile()) {
             is_new_logfile = 1;
+        }
+        else {
+            fd_printf("FDLog fdlog_sync: create new file failture! \n");
+            return 0;
         }
     }
     
@@ -619,9 +623,6 @@ int fdlog_sync() {
         // open file stream use `ab+`
         FILE *file_temp = fopen(model->log_file_path, "ab+");
         if (NULL != file_temp) {
-            // read server_ver
-            
-            
             fseek(file_temp, 0, SEEK_END);
             long longBytes = ftell(file_temp);
             // get log file length
@@ -650,24 +651,62 @@ int fdlog_sync() {
         }
     }
     
-    if (!is_new_logfile) {
-        // if not new file , need auto correct file format.
+    FILE* stream;
+    stream = fopen(model->log_file_path, "ab+");
+    
+    // 全新日志文件没有内容
+    if (is_new_logfile) {
+        if (stream == NULL) {
+            fd_printf("FDLog fdlog_sync: open file failture! \n");
+            return 0;
+        }
+        // 插入 server 版本号
+        fwrite((const void*) & model->server_ver,sizeof(int),1,stream);
+    }
+    
+    // 之前有内容的日志文件
+    else {
         fix_log_file_struct(model->log_file_path);
     }
     
-    FILE* stream;
-    stream = fopen(model->log_file_path, "ab+");
+    
     if (stream == NULL)
     {
         perror("Could not open file");
         return 0;
     }
     else {
-        unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
-        fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream);
-        fflush(stream);
-        fclose(stream);
-        *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+        
+        // read logfile server version
+        int* logfile_server_ver = (int *)calloc(4, 1);
+        fread(logfile_server_ver, 1, 4, stream);
+        
+        if (model->server_ver != *logfile_server_ver) { // 日志文件里的服务器版本 与 初始化服务器版本不一致
+            fclose(stream);
+            
+            // create new logfile
+            if (!create_new_current_date_logfile()) {
+                fd_printf("FDLog fdlog_sync: create new file failture! \n");
+                return 0;
+            }
+            
+            FILE* stream1;
+            stream1 = fopen(model->log_file_path, "ab+");
+            // 插入 server 版本号
+            fwrite((const void*) & model->server_ver,sizeof(int),1,stream1);
+            unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
+            fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream1);
+            fflush(stream1);
+            fclose(stream1);
+            *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+        }
+        else { // 日志文件服务器版本 与 初始化服务器版本一致
+            unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
+            fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream);
+            fflush(stream);
+            fclose(stream);
+            *model->log_file_len += *model->mmap_content_len_ptr; // 更新日志文件大小
+        }
     }
     
     // Reset mmap cahce file
@@ -681,6 +720,8 @@ int fdlog_sync() {
     }
     
     return 1;
+    
+    
 }
 
 
@@ -761,6 +802,7 @@ int fdlog_sync_no_init(int server_id) {
             return 0;
         }
         // 插入 server 版本号
+        printf("server_ver: %d \n",server_id);
         fwrite((const void*) & server_id,sizeof(int),1,stream);
     }
     
@@ -783,17 +825,24 @@ int fdlog_sync_no_init(int server_id) {
         
         if (server_id != *logfile_server_ver) { // 日志文件里的服务器版本 与 初始化服务器版本不一致
             fclose(stream);
-
-            // create new logfile
-            if (!create_new_current_date_logfile()) {
-                fd_printf("FDLog fdlog_sync: create new file failture! \n");
-                return 0;
+            
+            if (!is_new_logfile) { // 存在日志文件
+                // create new logfile
+                if (!create_new_current_date_logfile()) {
+                    fd_printf("FDLog fdlog_sync: create new file failture! \n");
+                    return 0;
+                }
             }
+
             
             FILE* stream1;
             stream1 = fopen(model->log_file_path, "ab+");
-            // 插入 server 版本号
-            fwrite((const void*) & server_id,sizeof(int),1,stream1);
+            
+            if (!is_new_logfile) { // 新文件 上面已经插入了 服务器版本
+                // 插入 server 版本号
+                fwrite((const void*) & server_id,sizeof(int),1,stream1);
+            }
+
             unsigned char* temp = model->mmap_tailer_ptr - *model->mmap_content_len_ptr;
             fwrite(temp, sizeof(char), *model->mmap_content_len_ptr, stream1);
             fflush(stream1);
@@ -909,6 +958,50 @@ int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver) {
         
     }
     
+    else {
+        
+        // Read date on cache header as before date
+        cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
+        char* cache_date = (char*)calloc(1, 1024);
+        
+        // Cache file store server version
+        int cache_server_ver = cJSON_GetObjectItem(croot,FD_SERVER_VER)->valueint;
+        
+        strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
+        cJSON_Delete(croot);
+        
+        // Get current date as now
+        char* current_date = get_current_date();
+        
+        long before = atol(cache_date);
+        long now = atol(current_date);
+        
+        free(cache_date);
+        cache_date = NULL;
+        
+        free(current_date);
+        current_date = NULL;
+        
+        fd_printf("FDLog: before %ld  now %ld \n",before,now);
+        
+        if ((now > before) || (cache_server_ver != server_ver)) { // 缓存文件过期，不是当天的。 或者 服务器版本 不一致 意味着 key iv 不同
+            if (!fdlog_sync_no_init(cache_server_ver)) {
+                fd_printf("FDLog: cache write to local log file failture! \n");
+                return is_init_ok;
+            }
+            
+            if (!fdlog_insert_mmap_file_header()) {
+                fd_printf("FDLog: insert_mmap_file_header failture! \n");
+                return is_init_ok;
+            }
+        }
+        
+        // rebind cache point position
+        if (!fdlog_update_cache_point_position(&model)) {
+            fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
+            return is_init_ok;
+        }
+    }
     
     remove_log_file(model->save_recent_days_num,model->log_folder_path);
     is_init_ok = FD_INIT_SUCCESS;
