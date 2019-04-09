@@ -15,7 +15,7 @@
 /////////////////////////////////////////////
 
 /*
- * Function: fdlog_initialize_dynamic
+ * Function: fdlog_initialize_by_rsa
  * ----------------------------
  *   Returns whether the initialization was successful
  *
@@ -27,20 +27,8 @@
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver);
+int fdlog_initialize_by_rsa(char* root, char* key, char* iv, int server_ver);
 
-/*
- * Function: fdlog_initialize_static
- * ----------------------------
- *   Returns whether the initialization was successful
- *
- *   parameter from local
- *
- *   root: FDLog Root Directory
- *
- *   returns: 1 or 0
- */
-int fdlog_initialize_static(char* root);
 
 /*
  * Function: fdlog

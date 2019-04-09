@@ -878,7 +878,7 @@ int fdlog_sync_no_init(int server_id) {
 
 
 /*
- * Function: fdlog_initialize
+ * Function: fdlog_initialize_by_rsa
  * ----------------------------
  *   Returns whether the initialization was successful
  *
@@ -888,7 +888,7 @@ int fdlog_sync_no_init(int server_id) {
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver) {
+int fdlog_initialize_by_rsa(char* root, char* key, char* iv, int server_ver) {
     is_init_ok = FD_INIT_FAILURE;
     
     if (server_ver < 0) {
@@ -1011,104 +1011,6 @@ int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver) {
             return is_init_ok;
         }
     }
-    
-    remove_log_file(model->save_recent_days_num,model->log_folder_path);
-    is_init_ok = FD_INIT_SUCCESS;
-    return is_init_ok;
-}
-
-
-/*
- * Function: fdlog_initialize
- * ----------------------------
- *   Returns whether the initialization was successful
- *
- *   root: FDLog Root Directory
- *   key: AES128 KEY[16]
- *   iv: AES128 IV[16]
- *
- *   returns: 1 or 0
- */
-int fdlog_initialize_static(char* root) {
-    
-    char key[16] = "0123456789012345";
-    char iv[16] = "0123456789012345";
-    int server_ver = 0;
-    
-    is_init_ok = FD_INIT_FAILURE;
-    
-    if (server_ver < 0) {
-        fd_printf("FDLog fdlog_initialize: server_ver is %d，less than 0 \n", server_ver);
-        return is_init_ok;
-    }
-    
-    if (!fdlog_reset_global_var(&model,server_ver)) { return is_init_ok; }
-    if (!fdlog_init_dirs(root,&model)) { return is_init_ok; }
-    if (!fd_open_mmap_file(&model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }
-    
-    fd_aes_init_key_iv(key, iv);
-    fd_aes_inflate_iv(model->aes_iv);
-    
-    if (!fd_init_zlib(&model)) { return is_init_ok; }
-    if (!fdlog_update_cache_point_position(&model))
-        // 缓存文件格式错误，无法读取内容，直接从新开始覆盖掉旧的Cache文件内容。
-    {
-        if (!fix_cache_file_struct()) { // 修复日志缓存文件失败 放弃错误的缓存日志，造成一部分日志丢失 因为结构错乱。
-            
-            if (!fdlog_insert_mmap_file_header()) {
-                fd_printf("FDLog: insert_mmap_file_header failture! \n");
-                return is_init_ok;
-            }
-            
-        }
-        
-        else {  // 修复日志缓存文件成功
-            
-            // Read date on cache header as before date
-            cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
-            char* cache_date = (char*)calloc(1, 1024);
-            
-            // Cache file store server version
-            int cache_server_ver = cJSON_GetObjectItem(croot,FD_SERVER_VER)->valueint;
-            
-            strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
-            cJSON_Delete(croot);
-            
-            // Get current date as now
-            char* current_date = get_current_date();
-            
-            long before = atol(cache_date);
-            long now = atol(current_date);
-            
-            free(cache_date);
-            cache_date = NULL;
-            
-            free(current_date);
-            current_date = NULL;
-            
-            fd_printf("FDLog: before %ld  now %ld \n",before,now);
-            
-            if ((now > before) || (cache_server_ver != server_ver)) { // 缓存文件过期，不是当天的。 或者 服务器版本 不一致 意味着 key iv 不同
-                if (!fdlog_sync_no_init(cache_server_ver)) {
-                    fd_printf("FDLog: cache write to local log file failture! \n");
-                    return is_init_ok;
-                }
-                
-                if (!fdlog_insert_mmap_file_header()) {
-                    fd_printf("FDLog: insert_mmap_file_header failture! \n");
-                    return is_init_ok;
-                }
-            }
-        }
-        
-        // rebind cache point position
-        if (!fdlog_update_cache_point_position(&model)) {
-            fd_printf("FDLog: fdlog_update_cache_point_position failture! \n");
-            return is_init_ok;
-        }
-        
-    }
-    
     
     remove_log_file(model->save_recent_days_num,model->log_folder_path);
     is_init_ok = FD_INIT_SUCCESS;
