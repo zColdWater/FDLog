@@ -990,9 +990,13 @@ int fdlog_initialize_dynamic(char* root, char* key, char* iv, int server_ver) {
         fd_printf("FDLog: before %ld  now %ld \n",before,now);
         
         if ((now > before) || (cache_server_ver != server_ver)) { // 缓存文件过期，不是当天的。 或者 服务器版本 不一致 意味着 key iv 不同
-            if (!fdlog_sync_no_init(cache_server_ver)) {
-                fd_printf("FDLog: cache write to local log file failture! \n");
-                return is_init_ok;
+            
+            // write desk log file when cache file have log content
+            if (*model->mmap_content_len_ptr > 0) {
+                if (!fdlog_sync_no_init(cache_server_ver)) {
+                    fd_printf("FDLog: cache write to local log file failture! \n");
+                    return is_init_ok;
+                }
             }
             
             if (!fdlog_insert_mmap_file_header()) {

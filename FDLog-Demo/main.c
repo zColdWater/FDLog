@@ -44,6 +44,7 @@ char* rand_string_alloc(size_t size)
 int main(int argc, const char * argv[]) {
     
     // 对外是大端还是小端
+    // 释放堆内存
     
     // 当前地址
     char cwd[1024];
@@ -79,7 +80,7 @@ int main(int argc, const char * argv[]) {
 
     // 写入日志
     int i = 1;
-    while (i < 99999) {
+    while (i < 2) {
         char *log = rand_string_alloc(30);
         int flag = 5;
         long long localtime = 123123;
