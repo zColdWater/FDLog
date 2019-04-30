@@ -7,7 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F7489E9223235040042EEA7 /* fd_core_model.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F7489E8223235040042EEA7 /* fd_core_model.c */; };
+		4F8602C822783A2900FFD66E /* fd_aes_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B622783A2700FFD66E /* fd_aes_helper.c */; };
+		4F8602C922783A2900FFD66E /* fd_core_model.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B722783A2700FFD66E /* fd_core_model.c */; };
+		4F8602CA22783A2900FFD66E /* fd_directory_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B822783A2700FFD66E /* fd_directory_helper.c */; };
+		4F8602CB22783A2900FFD66E /* fd_json_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B922783A2700FFD66E /* fd_json_helper.c */; };
+		4F8602CC22783A2900FFD66E /* cJSON.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602BC22783A2800FFD66E /* cJSON.c */; };
+		4F8602CD22783A2900FFD66E /* fd_zlib_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602BF22783A2800FFD66E /* fd_zlib_helper.c */; };
+		4F8602CE22783A2900FFD66E /* fd_base_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602C022783A2800FFD66E /* fd_base_helper.c */; };
+		4F8602CF22783A2900FFD66E /* fd_console_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602C122783A2800FFD66E /* fd_console_helper.c */; };
+		4F8602D022783A2900FFD66E /* fd_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602C322783A2800FFD66E /* fd_log.c */; };
+		4F8602D122783A2900FFD66E /* fd_construct_data.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602C522783A2800FFD66E /* fd_construct_data.c */; };
+		4F8602D222783A2900FFD66E /* fd_mmap_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602C722783A2900FFD66E /* fd_mmap_helper.c */; };
 		4FC3A8762221856300B0FE77 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A8752221856300B0FE77 /* main.c */; };
 		4FC3A9F02221870C00B0FE77 /* x509_create.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9A62221870C00B0FE77 /* x509_create.c */; };
 		4FC3A9F12221870C00B0FE77 /* x509_crt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9A72221870C00B0FE77 /* x509_crt.c */; };
@@ -81,16 +91,6 @@
 		4FC3AA352221870C00B0FE77 /* ecjpake.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9ED2221870C00B0FE77 /* ecjpake.c */; };
 		4FC3AA362221870C00B0FE77 /* cipher.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9EE2221870C00B0FE77 /* cipher.c */; };
 		4FC3AA372221870C00B0FE77 /* ecdsa.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3A9EF2221870C00B0FE77 /* ecdsa.c */; };
-		4FC3AA51222387AF00B0FE77 /* fd_aes_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA4B222387AF00B0FE77 /* fd_aes_helper.c */; };
-		4FC3AA52222387AF00B0FE77 /* fd_zlib_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA4F222387AF00B0FE77 /* fd_zlib_helper.c */; };
-		4FC3AA7322241B4B00B0FE77 /* fd_mmap_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA7122241B4B00B0FE77 /* fd_mmap_helper.c */; };
-		4FC3AA7722241BE100B0FE77 /* fd_console_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA7622241BE100B0FE77 /* fd_console_helper.c */; };
-		4FC3AA9A2224DFE300B0FE77 /* fd_directory_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA992224DFE300B0FE77 /* fd_directory_helper.c */; };
-		4FC3AAA02224E30700B0FE77 /* cJSON.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AA9E2224E30700B0FE77 /* cJSON.c */; };
-		4FC3AAA42224E34400B0FE77 /* fd_json_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AAA32224E34400B0FE77 /* fd_json_helper.c */; };
-		4FC3AAAB22251C6300B0FE77 /* fd_base_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AAAA22251C6300B0FE77 /* fd_base_helper.c */; };
-		4FC3AABB222622A100B0FE77 /* fd_construct_data.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */; };
-		4FC3AABE22262E5B00B0FE77 /* fd_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FC3AABD22262E5B00B0FE77 /* fd_log.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -106,8 +106,29 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4F7489E6222E3D960042EEA7 /* fd_core_model.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_core_model.h; sourceTree = "<group>"; };
-		4F7489E8223235040042EEA7 /* fd_core_model.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fd_core_model.c; sourceTree = "<group>"; };
+		4F8602B122783A2700FFD66E /* fd_mmap_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_mmap_helper.h; sourceTree = "<group>"; };
+		4F8602B222783A2700FFD66E /* fd_directory_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_directory_helper.h; sourceTree = "<group>"; };
+		4F8602B322783A2700FFD66E /* fd_base_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_base_helper.h; sourceTree = "<group>"; };
+		4F8602B422783A2700FFD66E /* fd_console_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_console_helper.h; sourceTree = "<group>"; };
+		4F8602B522783A2700FFD66E /* fd_construct_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_construct_data.h; sourceTree = "<group>"; };
+		4F8602B622783A2700FFD66E /* fd_aes_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_aes_helper.c; sourceTree = "<group>"; };
+		4F8602B722783A2700FFD66E /* fd_core_model.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_core_model.c; sourceTree = "<group>"; };
+		4F8602B822783A2700FFD66E /* fd_directory_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_directory_helper.c; sourceTree = "<group>"; };
+		4F8602B922783A2700FFD66E /* fd_json_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_json_helper.c; sourceTree = "<group>"; };
+		4F8602BA22783A2700FFD66E /* fd_log_status.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_log_status.h; sourceTree = "<group>"; };
+		4F8602BB22783A2700FFD66E /* fd_json_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_json_helper.h; sourceTree = "<group>"; };
+		4F8602BC22783A2800FFD66E /* cJSON.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cJSON.c; sourceTree = "<group>"; };
+		4F8602BD22783A2800FFD66E /* fd_core_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_core_model.h; sourceTree = "<group>"; };
+		4F8602BE22783A2800FFD66E /* fd_log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_log.h; sourceTree = "<group>"; };
+		4F8602BF22783A2800FFD66E /* fd_zlib_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_zlib_helper.c; sourceTree = "<group>"; };
+		4F8602C022783A2800FFD66E /* fd_base_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_base_helper.c; sourceTree = "<group>"; };
+		4F8602C122783A2800FFD66E /* fd_console_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_console_helper.c; sourceTree = "<group>"; };
+		4F8602C222783A2800FFD66E /* fd_aes_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_aes_helper.h; sourceTree = "<group>"; };
+		4F8602C322783A2800FFD66E /* fd_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_log.c; sourceTree = "<group>"; };
+		4F8602C422783A2800FFD66E /* fd_zlib_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_zlib_helper.h; sourceTree = "<group>"; };
+		4F8602C522783A2800FFD66E /* fd_construct_data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_construct_data.c; sourceTree = "<group>"; };
+		4F8602C622783A2800FFD66E /* cJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cJSON.h; sourceTree = "<group>"; };
+		4F8602C722783A2900FFD66E /* fd_mmap_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_mmap_helper.c; sourceTree = "<group>"; };
 		4FC3A8722221856300B0FE77 /* FDLog-Demo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FDLog-Demo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FC3A8752221856300B0FE77 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		4FC3A95C2221870C00B0FE77 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -256,27 +277,6 @@
 		4FC3A9ED2221870C00B0FE77 /* ecjpake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ecjpake.c; sourceTree = "<group>"; };
 		4FC3A9EE2221870C00B0FE77 /* cipher.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cipher.c; sourceTree = "<group>"; };
 		4FC3A9EF2221870C00B0FE77 /* ecdsa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ecdsa.c; sourceTree = "<group>"; };
-		4FC3AA4B222387AF00B0FE77 /* fd_aes_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_aes_helper.c; sourceTree = "<group>"; };
-		4FC3AA4C222387AF00B0FE77 /* fd_aes_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_aes_helper.h; sourceTree = "<group>"; };
-		4FC3AA4E222387AF00B0FE77 /* fd_zlib_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_zlib_helper.h; sourceTree = "<group>"; };
-		4FC3AA4F222387AF00B0FE77 /* fd_zlib_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_zlib_helper.c; sourceTree = "<group>"; };
-		4FC3AA7122241B4B00B0FE77 /* fd_mmap_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_mmap_helper.c; sourceTree = "<group>"; };
-		4FC3AA7222241B4B00B0FE77 /* fd_mmap_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_mmap_helper.h; sourceTree = "<group>"; };
-		4FC3AA7522241BE100B0FE77 /* fd_console_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_console_helper.h; sourceTree = "<group>"; };
-		4FC3AA7622241BE100B0FE77 /* fd_console_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_console_helper.c; sourceTree = "<group>"; };
-		4FC3AA982224DFE300B0FE77 /* fd_directory_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_directory_helper.h; sourceTree = "<group>"; };
-		4FC3AA992224DFE300B0FE77 /* fd_directory_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_directory_helper.c; sourceTree = "<group>"; };
-		4FC3AA9C2224E30700B0FE77 /* cJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cJSON.h; sourceTree = "<group>"; };
-		4FC3AA9E2224E30700B0FE77 /* cJSON.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cJSON.c; sourceTree = "<group>"; };
-		4FC3AAA22224E34400B0FE77 /* fd_json_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_json_helper.h; sourceTree = "<group>"; };
-		4FC3AAA32224E34400B0FE77 /* fd_json_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_json_helper.c; sourceTree = "<group>"; };
-		4FC3AAA922251C6300B0FE77 /* fd_base_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_base_helper.h; sourceTree = "<group>"; };
-		4FC3AAAA22251C6300B0FE77 /* fd_base_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_base_helper.c; sourceTree = "<group>"; };
-		4FC3AAB4222621B100B0FE77 /* fd_log_status.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_log_status.h; sourceTree = "<group>"; };
-		4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd_construct_data.c; sourceTree = "<group>"; };
-		4FC3AABA222622A100B0FE77 /* fd_construct_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_construct_data.h; sourceTree = "<group>"; };
-		4FC3AABC22262E5B00B0FE77 /* fd_log.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_log.h; sourceTree = "<group>"; };
-		4FC3AABD22262E5B00B0FE77 /* fd_log.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fd_log.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -309,16 +309,29 @@
 		4FC3A8742221856300B0FE77 /* FDLog-Demo */ = {
 			isa = PBXGroup;
 			children = (
-				4FC3AAB52226227E00B0FE77 /* format_model */,
-				4FC3AAB22226218000B0FE77 /* fdlog */,
-				4FC3AAA522251BF200B0FE77 /* utils */,
-				4FC3AA9B2224E30700B0FE77 /* json */,
-				4FC3AA972224DFE300B0FE77 /* directory */,
-				4FC3AA7422241BE100B0FE77 /* print */,
-				4FC3AA4A222387AF00B0FE77 /* aes */,
-				4FC3AA50222387AF00B0FE77 /* mmap */,
-				4FC3AA48222387AF00B0FE77 /* model */,
-				4FC3AA4D222387AF00B0FE77 /* zlib */,
+				4F8602BC22783A2800FFD66E /* cJSON.c */,
+				4F8602C622783A2800FFD66E /* cJSON.h */,
+				4F8602B622783A2700FFD66E /* fd_aes_helper.c */,
+				4F8602C222783A2800FFD66E /* fd_aes_helper.h */,
+				4F8602C022783A2800FFD66E /* fd_base_helper.c */,
+				4F8602B322783A2700FFD66E /* fd_base_helper.h */,
+				4F8602C122783A2800FFD66E /* fd_console_helper.c */,
+				4F8602B422783A2700FFD66E /* fd_console_helper.h */,
+				4F8602C522783A2800FFD66E /* fd_construct_data.c */,
+				4F8602B522783A2700FFD66E /* fd_construct_data.h */,
+				4F8602B722783A2700FFD66E /* fd_core_model.c */,
+				4F8602BD22783A2800FFD66E /* fd_core_model.h */,
+				4F8602B822783A2700FFD66E /* fd_directory_helper.c */,
+				4F8602B222783A2700FFD66E /* fd_directory_helper.h */,
+				4F8602B922783A2700FFD66E /* fd_json_helper.c */,
+				4F8602BB22783A2700FFD66E /* fd_json_helper.h */,
+				4F8602BA22783A2700FFD66E /* fd_log_status.h */,
+				4F8602C322783A2800FFD66E /* fd_log.c */,
+				4F8602BE22783A2800FFD66E /* fd_log.h */,
+				4F8602C722783A2900FFD66E /* fd_mmap_helper.c */,
+				4F8602B122783A2700FFD66E /* fd_mmap_helper.h */,
+				4F8602BF22783A2800FFD66E /* fd_zlib_helper.c */,
+				4F8602C422783A2800FFD66E /* fd_zlib_helper.h */,
 				4FC3A95A2221870C00B0FE77 /* mbedtls */,
 				4FC3A8752221856300B0FE77 /* main.c */,
 			);
@@ -502,99 +515,6 @@
 			path = library;
 			sourceTree = "<group>";
 		};
-		4FC3AA48222387AF00B0FE77 /* model */ = {
-			isa = PBXGroup;
-			children = (
-				4F7489E6222E3D960042EEA7 /* fd_core_model.h */,
-				4F7489E8223235040042EEA7 /* fd_core_model.c */,
-			);
-			path = model;
-			sourceTree = "<group>";
-		};
-		4FC3AA4A222387AF00B0FE77 /* aes */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AA4B222387AF00B0FE77 /* fd_aes_helper.c */,
-				4FC3AA4C222387AF00B0FE77 /* fd_aes_helper.h */,
-			);
-			path = aes;
-			sourceTree = "<group>";
-		};
-		4FC3AA4D222387AF00B0FE77 /* zlib */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AA4E222387AF00B0FE77 /* fd_zlib_helper.h */,
-				4FC3AA4F222387AF00B0FE77 /* fd_zlib_helper.c */,
-			);
-			path = zlib;
-			sourceTree = "<group>";
-		};
-		4FC3AA50222387AF00B0FE77 /* mmap */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AA7122241B4B00B0FE77 /* fd_mmap_helper.c */,
-				4FC3AA7222241B4B00B0FE77 /* fd_mmap_helper.h */,
-			);
-			path = mmap;
-			sourceTree = "<group>";
-		};
-		4FC3AA7422241BE100B0FE77 /* print */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AA7522241BE100B0FE77 /* fd_console_helper.h */,
-				4FC3AA7622241BE100B0FE77 /* fd_console_helper.c */,
-			);
-			path = print;
-			sourceTree = "<group>";
-		};
-		4FC3AA972224DFE300B0FE77 /* directory */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AA982224DFE300B0FE77 /* fd_directory_helper.h */,
-				4FC3AA992224DFE300B0FE77 /* fd_directory_helper.c */,
-			);
-			path = directory;
-			sourceTree = "<group>";
-		};
-		4FC3AA9B2224E30700B0FE77 /* json */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AAA32224E34400B0FE77 /* fd_json_helper.c */,
-				4FC3AAA22224E34400B0FE77 /* fd_json_helper.h */,
-				4FC3AA9C2224E30700B0FE77 /* cJSON.h */,
-				4FC3AA9E2224E30700B0FE77 /* cJSON.c */,
-			);
-			path = json;
-			sourceTree = "<group>";
-		};
-		4FC3AAA522251BF200B0FE77 /* utils */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AAAA22251C6300B0FE77 /* fd_base_helper.c */,
-				4FC3AAA922251C6300B0FE77 /* fd_base_helper.h */,
-			);
-			path = utils;
-			sourceTree = "<group>";
-		};
-		4FC3AAB22226218000B0FE77 /* fdlog */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AAB4222621B100B0FE77 /* fd_log_status.h */,
-				4FC3AABC22262E5B00B0FE77 /* fd_log.h */,
-				4FC3AABD22262E5B00B0FE77 /* fd_log.c */,
-			);
-			path = fdlog;
-			sourceTree = "<group>";
-		};
-		4FC3AAB52226227E00B0FE77 /* format_model */ = {
-			isa = PBXGroup;
-			children = (
-				4FC3AAB9222622A100B0FE77 /* fd_construct_data.c */,
-				4FC3AABA222622A100B0FE77 /* fd_construct_data.h */,
-			);
-			path = format_model;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -654,44 +574,47 @@
 				4FC3A9F52221870C00B0FE77 /* camellia.c in Sources */,
 				4FC3AA0A2221870C00B0FE77 /* gcm.c in Sources */,
 				4FC3AA212221870C00B0FE77 /* pkcs11.c in Sources */,
-				4FC3AAA42224E34400B0FE77 /* fd_json_helper.c in Sources */,
 				4FC3AA0C2221870C00B0FE77 /* asn1write.c in Sources */,
+				4F8602CE22783A2900FFD66E /* fd_base_helper.c in Sources */,
 				4FC3AA362221870C00B0FE77 /* cipher.c in Sources */,
 				4FC3AA322221870C00B0FE77 /* net_sockets.c in Sources */,
 				4FC3AA082221870C00B0FE77 /* certs.c in Sources */,
 				4FC3AA0F2221870C00B0FE77 /* version_features.c in Sources */,
 				4FC3A9F12221870C00B0FE77 /* x509_crt.c in Sources */,
-				4FC3AAA02224E30700B0FE77 /* cJSON.c in Sources */,
 				4FC3AA062221870C00B0FE77 /* ssl_ticket.c in Sources */,
 				4FC3AA372221870C00B0FE77 /* ecdsa.c in Sources */,
-				4FC3AA52222387AF00B0FE77 /* fd_zlib_helper.c in Sources */,
+				4F8602D222783A2900FFD66E /* fd_mmap_helper.c in Sources */,
 				4FC3A9FE2221870C00B0FE77 /* ctr_drbg.c in Sources */,
 				4FC3AA1D2221870C00B0FE77 /* error.c in Sources */,
 				4FC3AA232221870C00B0FE77 /* memory_buffer_alloc.c in Sources */,
 				4FC3AA222221870C00B0FE77 /* base64.c in Sources */,
+				4F8602CA22783A2900FFD66E /* fd_directory_helper.c in Sources */,
 				4FC3AA1E2221870C00B0FE77 /* md2.c in Sources */,
 				4FC3AA2F2221870C00B0FE77 /* padlock.c in Sources */,
 				4FC3AA352221870C00B0FE77 /* ecjpake.c in Sources */,
 				4FC3AA262221870C00B0FE77 /* x509.c in Sources */,
 				4FC3AA342221870C00B0FE77 /* md.c in Sources */,
+				4F8602D022783A2900FFD66E /* fd_log.c in Sources */,
 				4FC3AA002221870C00B0FE77 /* dhm.c in Sources */,
 				4FC3AA012221870C00B0FE77 /* ssl_cache.c in Sources */,
 				4FC3AA252221870C00B0FE77 /* version.c in Sources */,
+				4F8602D122783A2900FFD66E /* fd_construct_data.c in Sources */,
 				4FC3AA192221870C00B0FE77 /* blowfish.c in Sources */,
 				4FC3AA2E2221870C00B0FE77 /* threading.c in Sources */,
+				4F8602C922783A2900FFD66E /* fd_core_model.c in Sources */,
 				4FC3AA0E2221870C00B0FE77 /* ccm.c in Sources */,
 				4FC3AA0B2221870C00B0FE77 /* sha1.c in Sources */,
-				4FC3AAAB22251C6300B0FE77 /* fd_base_helper.c in Sources */,
 				4FC3AA102221870C00B0FE77 /* entropy_poll.c in Sources */,
 				4FC3A8762221856300B0FE77 /* main.c in Sources */,
-				4FC3AA7722241BE100B0FE77 /* fd_console_helper.c in Sources */,
 				4FC3AA282221870C00B0FE77 /* ecp_curves.c in Sources */,
 				4FC3AA302221870C00B0FE77 /* pkcs12.c in Sources */,
+				4F8602CD22783A2900FFD66E /* fd_zlib_helper.c in Sources */,
 				4FC3AA2C2221870C00B0FE77 /* xtea.c in Sources */,
 				4FC3AA152221870C00B0FE77 /* pkparse.c in Sources */,
 				4FC3AA052221870C00B0FE77 /* rsa.c in Sources */,
 				4FC3AA2A2221870C00B0FE77 /* arc4.c in Sources */,
 				4FC3AA2D2221870C00B0FE77 /* x509write_crt.c in Sources */,
+				4F8602CF22783A2900FFD66E /* fd_console_helper.c in Sources */,
 				4FC3A9F02221870C00B0FE77 /* x509_create.c in Sources */,
 				4FC3AA042221870C00B0FE77 /* hmac_drbg.c in Sources */,
 				4FC3A9FC2221870C00B0FE77 /* des.c in Sources */,
@@ -703,21 +626,17 @@
 				4FC3AA1C2221870C00B0FE77 /* oid.c in Sources */,
 				4FC3AA312221870C00B0FE77 /* entropy.c in Sources */,
 				4FC3A9FB2221870C00B0FE77 /* cipher_wrap.c in Sources */,
-				4FC3AA7322241B4B00B0FE77 /* fd_mmap_helper.c in Sources */,
 				4FC3AA242221870C00B0FE77 /* ecp.c in Sources */,
 				4FC3AA122221870C00B0FE77 /* platform.c in Sources */,
 				4FC3AA132221870C00B0FE77 /* cmac.c in Sources */,
+				4F8602CB22783A2900FFD66E /* fd_json_helper.c in Sources */,
 				4FC3A9FF2221870C00B0FE77 /* aesni.c in Sources */,
 				4FC3AA142221870C00B0FE77 /* bignum.c in Sources */,
-				4F7489E9223235040042EEA7 /* fd_core_model.c in Sources */,
 				4FC3AA072221870C00B0FE77 /* asn1parse.c in Sources */,
 				4FC3AA332221870C00B0FE77 /* sha512.c in Sources */,
-				4FC3AA9A2224DFE300B0FE77 /* fd_directory_helper.c in Sources */,
-				4FC3AABB222622A100B0FE77 /* fd_construct_data.c in Sources */,
 				4FC3A9FA2221870C00B0FE77 /* x509_crl.c in Sources */,
 				4FC3AA032221870C00B0FE77 /* Makefile in Sources */,
 				4FC3AA022221870C00B0FE77 /* ssl_ciphersuites.c in Sources */,
-				4FC3AABE22262E5B00B0FE77 /* fd_log.c in Sources */,
 				4FC3AA172221870C00B0FE77 /* ripemd160.c in Sources */,
 				4FC3A9F82221870C00B0FE77 /* ecdh.c in Sources */,
 				4FC3AA272221870C00B0FE77 /* sha256.c in Sources */,
@@ -726,7 +645,8 @@
 				4FC3AA1A2221870C00B0FE77 /* pkcs5.c in Sources */,
 				4FC3AA162221870C00B0FE77 /* debug.c in Sources */,
 				4FC3A9F42221870C00B0FE77 /* ssl_srv.c in Sources */,
-				4FC3AA51222387AF00B0FE77 /* fd_aes_helper.c in Sources */,
+				4F8602C822783A2900FFD66E /* fd_aes_helper.c in Sources */,
+				4F8602CC22783A2900FFD66E /* cJSON.c in Sources */,
 				4FC3AA1F2221870C00B0FE77 /* md_wrap.c in Sources */,
 				4FC3A9FD2221870C00B0FE77 /* ssl_cookie.c in Sources */,
 				4FC3AA092221870C00B0FE77 /* pkwrite.c in Sources */,
