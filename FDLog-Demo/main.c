@@ -109,6 +109,7 @@
 #include <mbedtls/rsa.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
+#include <mbedtls/base64.h>
 
 int main()
 {
@@ -191,10 +192,40 @@ int main()
         return -1;
     }
 
+    
+    printf( "\n ====================== 开始Base64编码 ====================== \n" );
+    unsigned char results[1024];
+    
+    size_t olen1 = 0;
+    int ret1 = mbedtls_base64_encode((unsigned char*)results, 1024,
+                                     &olen1,
+                                     buf, strlen(buf));
+    printf("ret1: %d \n",ret1);
+    printf("strlen(buf): %lu \n",strlen(buf));
+    printf("results: %s \n",results);
+    printf( "\n ====================== 结束Base64编码 ====================== \n\n\n\n\n\n" );
+    
+    
+    printf( "\n ====================== 开始Base64解码 ====================== \n" );
+    unsigned char results1[1024];
+    unsigned char dst[] = "Zp3eOIz+f+KBSw54Suqc1RqXYJjfYg7DWTpMOUQbEFC2KBvyNwhHUfF8XVy0C92KhVXaK0x1CgFqDYXmumkuFg4/UDS/YiFC9Q5w6W4M65k1BP07nEW23q+C5YEoinzglhwyITop5nSJstRKckrNCXhFSYuG8jsiCW0qURdpzCg=";
+    
+    size_t olen2 = 0;
+    int ret2 = mbedtls_base64_decode((unsigned char*)results1, 1024, &olen2, dst, strlen(dst));
+    printf("ret2: %d \n",ret2);
+    printf("results1: %s \n",results1);
+    printf( "\n ====================== 结束Base64解码 ====================== \n\n\n\n\n\n" );
 
-
+    
+    printf("buf hex value: \n");
     for(int idx=0; idx<strlen(buf); printf("%02x", buf[idx++]));
+    printf ("\n\n\n\n");
+    
+    printf("buf string value: \n");
+    printf("%s",buf);
     printf ("\n");
+
+    
     mbedtls_pk_context pk1;
     mbedtls_pk_init(&pk1);
 
@@ -210,8 +241,9 @@ int main()
 
     printf( "\nGenerating the decrypted value" );
     fflush( stdout );
-
-    if( ( ret = mbedtls_pk_decrypt( &pk1, buf, olen, result, &olen, sizeof(result),
+    
+    if( ( ret = mbedtls_pk_decrypt( &pk1, results1, olen2, result, &olen2, sizeof(result),
+//    if( ( ret = mbedtls_pk_decrypt( &pk1, buf, olen, result, &olen, sizeof(result),
                                    mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 )
     {
         printf( " failed\n! mbedtls_pk_decrypt returned -0x%04x\n", -ret );
@@ -219,11 +251,10 @@ int main()
     }
     else
     {
-
         fflush( stdout );
         printf("\n\n%s----------------\n\n", result);
     }
-
+    
     return 0;
 }
 
