@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F5DC0042283EE0B00D413F2 /* fd_rsa_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F5DC0032283EE0B00D413F2 /* fd_rsa_helper.c */; };
 		4F8602C822783A2900FFD66E /* fd_aes_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B622783A2700FFD66E /* fd_aes_helper.c */; };
 		4F8602C922783A2900FFD66E /* fd_core_model.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B722783A2700FFD66E /* fd_core_model.c */; };
 		4F8602CA22783A2900FFD66E /* fd_directory_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8602B822783A2700FFD66E /* fd_directory_helper.c */; };
@@ -106,6 +107,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F5DC0022283EE0B00D413F2 /* fd_rsa_helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fd_rsa_helper.h; sourceTree = "<group>"; };
+		4F5DC0032283EE0B00D413F2 /* fd_rsa_helper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fd_rsa_helper.c; sourceTree = "<group>"; };
 		4F8602B122783A2700FFD66E /* fd_mmap_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_mmap_helper.h; sourceTree = "<group>"; };
 		4F8602B222783A2700FFD66E /* fd_directory_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_directory_helper.h; sourceTree = "<group>"; };
 		4F8602B322783A2700FFD66E /* fd_base_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd_base_helper.h; sourceTree = "<group>"; };
@@ -334,6 +337,8 @@
 				4F8602C422783A2800FFD66E /* fd_zlib_helper.h */,
 				4FC3A95A2221870C00B0FE77 /* mbedtls */,
 				4FC3A8752221856300B0FE77 /* main.c */,
+				4F5DC0022283EE0B00D413F2 /* fd_rsa_helper.h */,
+				4F5DC0032283EE0B00D413F2 /* fd_rsa_helper.c */,
 			);
 			path = "FDLog-Demo";
 			sourceTree = "<group>";
@@ -609,6 +614,7 @@
 				4FC3AA282221870C00B0FE77 /* ecp_curves.c in Sources */,
 				4FC3AA302221870C00B0FE77 /* pkcs12.c in Sources */,
 				4F8602CD22783A2900FFD66E /* fd_zlib_helper.c in Sources */,
+				4F5DC0042283EE0B00D413F2 /* fd_rsa_helper.c in Sources */,
 				4FC3AA2C2221870C00B0FE77 /* xtea.c in Sources */,
 				4FC3AA152221870C00B0FE77 /* pkparse.c in Sources */,
 				4FC3AA052221870C00B0FE77 /* rsa.c in Sources */,
