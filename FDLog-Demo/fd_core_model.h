@@ -31,6 +31,11 @@
 #define FD_SERVER_VER "fd_server_ver" // 服务器版本
 #define FD_SIZE "fd_mmap_size"
 
+#define FD_AES_IV "IV" // AES 加密 IV （ 解析服务器下发RSA加密数据中的IV字段 ）
+#define FD_AES_KEY "key" // AES 加密 KEY （ 解析服务器下发RSA加密数据中的key字段 ）
+#define FD_SERVER_VER1 "version" // 服务器版本 （ 解析服务器下发RSA加密数据中的version字段 ）
+
+
 #define FD_MAX_PATH 1024 * 3
 #define FD_MAX_FILE_COUNT 1024 * 2 // 当天最多日志个数 2048个
 #define FD_MMAP_HEADER_CONTENT_LEN 1024 // 缓存MMAP文件头部信息 存储大小，目前1024完全够用，如果修改插入头部内容多少需要修改此处值。

@@ -57,11 +57,8 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
 
-    // 开始记录日志
-    char KEY[] = "HKSNHYUFHNJHYQNF";
-    char IV[] = "JHKMNHUOSHUDYJAS";
-
-    int success = fdlog_initialize_by_rsa(cwd, KEY, IV, 1);
+    unsigned char ctr[] = "KiVeKuTqa3tLFpWt++u9LZa+8BoLBTotPScQ289yVEYVB8CRk+SnVAW0bztzbJcvVBPzRUaiLddiTeTnYsH/wyuuthEj8M7/DmMks3tghL1QGcNqnuCKGuuA9ACwqDljmVtHUDtNCw2EhF9Z7wbfc5zoHjaemMH7f4JknT9U3BQ=";
+    int success = fdlog_initialize_by_rsa(cwd, ctr);
     if (!success) {
         printf("fd_initialize_log failture! \n");
         return 0;
@@ -96,16 +93,6 @@ int main(int argc, const char * argv[]) {
         fdlog(data);
         i++;
     }
-
-    
-//    unsigned char ctr[] = "KiVeKuTqa3tLFpWt++u9LZa+8BoLBTotPScQ289yVEYVB8CRk+SnVAW0bztzbJcvVBPzRUaiLddiTeTnYsH/wyuuthEj8M7/DmMks3tghL1QGcNqnuCKGuuA9ACwqDljmVtHUDtNCw2EhF9Z7wbfc5zoHjaemMH7f4JknT9U3BQ=";
-//    unsigned char result[MBEDTLS_MPI_MAX_SIZE];
-//    memset(result, 0, MBEDTLS_MPI_MAX_SIZE);
-//
-//    int decodeRet = fd_rsa_decode(ctr,result,MBEDTLS_MPI_MAX_SIZE);
-//    printf("decodeRet: %d \n",decodeRet);
-//    printf("result: %s \n",result);
-
 
     return 0;
 }

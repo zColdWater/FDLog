@@ -20,6 +20,8 @@
 #include "fd_json_helper.h"
 #include "fd_console_helper.h"
 #include "fd_base_helper.h"
+#include <mbedtls/pk.h>
+#include "fd_rsa_helper.h"
 
 extern FDLOGMODEL *model;
 extern int fd_is_debug;
@@ -883,15 +885,41 @@ int fdlog_sync_no_init(int server_id) {
  *   Returns whether the initialization was successful
  *
  *   root: FDLog Root Directory
- *   key: AES128 KEY[16]
- *   iv: AES128 IV[16]
+ *   ctr: RSA Ctr
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize_by_rsa(char* root, char* key, char* iv, int server_ver) {
+int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
+    
     is_init_ok = FD_INIT_FAILURE;
     
-    if (server_ver < 0) {
+    if ((root == NULL) || (ctr == NULL)) {
+        fd_printf("FDLog fdlog_initialize_by_rsa: root or ctr is NULL \n");
+        return is_init_ok;
+    }
+    
+    unsigned char result[MBEDTLS_MPI_MAX_SIZE];
+    memset(result, 0, MBEDTLS_MPI_MAX_SIZE);
+    int isRSADecodeSuccess = fd_rsa_decode(ctr,result,MBEDTLS_MPI_MAX_SIZE);
+    if (isRSADecodeSuccess != 0) {
+        fd_printf("FDLog fdlog_initialize_by_rsa: fd_rsa_decode failture \n");
+        return is_init_ok;
+    }
+    
+    // read key iv version from server
+    cJSON* croot = cJSON_Parse((char*)result);
+    char* iv = (char*)calloc(1, 1024);
+    char* key = (char*)calloc(1, 1024);
+    int server_ver = cJSON_GetObjectItem(croot,FD_SERVER_VER1)->valueint;
+    strcpy(iv, cJSON_GetObjectItem(croot,FD_AES_IV)->valuestring);
+    strcpy(key, cJSON_GetObjectItem(croot,FD_AES_KEY)->valuestring);
+    cJSON_Delete(croot);
+    
+    size_t iv_len = strlen(iv);
+    size_t key_len = strlen(key);
+
+    // guard server_ver iv_len and key_len is correct format
+    if (server_ver < 0 || iv_len != 16 || key_len != 16) {
         fd_printf("FDLog fdlog_initialize: server_ver is %d，less than 0 \n", server_ver);
         return is_init_ok;
     }

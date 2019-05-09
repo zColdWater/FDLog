@@ -19,15 +19,12 @@
  * ----------------------------
  *   Returns whether the initialization was successful
  *
- *   parameter from server
- *
  *   root: FDLog Root Directory
- *   key: AES128 KEY[16]
- *   iv: AES128 IV[16]
+ *   ctr: RSA Ctr
  *
  *   returns: 1 or 0
  */
-int fdlog_initialize_by_rsa(char* root, char* key, char* iv, int server_ver);
+int fdlog_initialize_by_rsa(char* root, unsigned char* ctr);
 
 
 /*
