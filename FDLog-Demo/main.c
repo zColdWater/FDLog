@@ -135,13 +135,10 @@ int main()
                                                MBEDTLS_CTR_DRBG_PR_ON );
     ////////////////////////////////////////////////////////////////////////
     
-    // 上下文 pk
     mbedtls_pk_context pk;
-    // 初始化 上下文pk
     mbedtls_pk_init( &pk );
     
-    // 加密内容
-    unsigned char to_encrypt[]="Ford_Mustang";
+    unsigned char to_encrypt[]="Yongpeng.Zhu";
     unsigned char to_decrypt[MBEDTLS_MPI_MAX_SIZE];
     const unsigned char pub_key[]=
     "-----BEGIN PUBLIC KEY-----\r\n"
@@ -182,7 +179,6 @@ int main()
     printf( "\nGenerating the encrypted value\n" );
     fflush( stdout );
 
-    // 加密
     if( ( ret = mbedtls_pk_encrypt( &pk, to_encrypt, sizeof(to_encrypt),
                                    buf, &olen, sizeof(buf),
                                    mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 )
