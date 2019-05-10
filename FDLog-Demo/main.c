@@ -15,6 +15,44 @@
 #include "fd_log.h"
 #include "fd_rsa_helper.h"
 #include <mbedtls/pk.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/base64.h>
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////// 解密日志文件流程 ////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 读文件
+//    char* content = (char*)calloc(1, 128);
+//    FILE *file_temp = fopen("/Users/yongpeng.zhu/Library/Developer/Xcode/DerivedData/FDLog-Demo-gyroeflfuxxqyicqdebrvreigkbk/Build/Products/Debug/fdlog_v1/logs/20190509/201905091", "ab+");
+//    if (NULL != file_temp) {  //初始化文件流开启
+//        fseek(file_temp, 9, SEEK_SET);
+//        fread(content, 128, sizeof(char), file_temp);
+//        fclose(file_temp);
+//    }
+//
+//    unsigned char results[MBEDTLS_MPI_MAX_SIZE];
+//    memset(results, 0, MBEDTLS_MPI_MAX_SIZE);
+//    // base64 encode 后字节数
+//    size_t olen1 = 0;
+//    int ret1 = mbedtls_base64_encode((unsigned char*)results, sizeof(results),&olen1,content, 128);
+//    printf("results: %s \n",results);
+//    printf("\n");
+
+
+// 做验证的步骤:
+// 1.截取文件一个单元的16进制字节流。
+// 2.对字节流做Base64，然后去云端decode，对比流是否正确。 https://cryptii.com/pipes/base64-to-hex
+// 3.用这个Base64字符串去做AES128解密，得到压缩文件流的Base64字符串。 https://www.devglan.com/online-tools/aes-encryption-decryption
+// 4.在用这个压缩文件流的Base64字符串去做云端做解压得到密文实体。 http://www.txtwizard.net/compression
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 // random string
@@ -79,21 +117,21 @@ int main(int argc, const char * argv[]) {
     temp = NULL;
 
     // 写入日志
-    int i = 1;
-    while (i < 19999) {
-        char *log = rand_string_alloc(30);
-        int flag = 5;
-        long long localtime = 123123;
-        char thread_name[] = "main";
-        int thread_id = 1;
-        int is_main = 1;
-        int level = 0;
-        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
-        printf("i: %d\n",i);
-        fdlog(data);
-        i++;
-    }
-
+//    int i = 1;
+//    while (i < 19999) {
+//        char *log = rand_string_alloc(30);
+//        int flag = 5;
+//        long long localtime = 123123;
+//        char thread_name[] = "main";
+//        int thread_id = 1;
+//        int is_main = 1;
+//        int level = 0;
+//        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
+//        printf("i: %d\n",i);
+//        fdlog(data);
+//        i++;
+//    }
+    
     return 0;
 }
 

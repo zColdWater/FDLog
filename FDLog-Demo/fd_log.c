@@ -924,6 +924,10 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
         return is_init_ok;
     }
     
+    printf("iv: %s \n",iv);
+    printf("key: %s \n",key);
+
+    
     if (!fdlog_reset_global_var(&model,server_ver)) { return is_init_ok; }
     if (!fdlog_init_dirs(root,&model)) { return is_init_ok; }
     if (!fd_open_mmap_file(&model, model->mmap_cache_file_path, &model->mmap_ptr)) { return is_init_ok; }

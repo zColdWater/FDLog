@@ -59,6 +59,7 @@ fd_construct_json_data(char *log, int flag, long long local_time, char *thread_n
                 // 长度+1 在后面拼加 '\n' 换行符号。
                 size_t length = str_len + 1;
                 unsigned char *temp_data = (unsigned char *) malloc(length);
+                memset(temp_data, 0, length);
                 if (NULL != temp_data) {
                     
                     unsigned char *temp_point = temp_data;
