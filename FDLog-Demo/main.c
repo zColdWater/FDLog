@@ -117,20 +117,20 @@ int main(int argc, const char * argv[]) {
     temp = NULL;
 
     // 写入日志
-//    int i = 1;
-//    while (i < 19999) {
-//        char *log = rand_string_alloc(30);
-//        int flag = 5;
-//        long long localtime = 123123;
-//        char thread_name[] = "main";
-//        int thread_id = 1;
-//        int is_main = 1;
-//        int level = 0;
-//        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
-//        printf("i: %d\n",i);
-//        fdlog(data);
-//        i++;
-//    }
+    int i = 1;
+    while (i < 19999) {
+        char *log = rand_string_alloc(30);
+        int flag = 5;
+        long long localtime = 123123;
+        char thread_name[] = "main";
+        int thread_id = 1;
+        int is_main = 1;
+        int level = 0;
+        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
+        printf("i: %d\n",i);
+        fdlog(data);
+        i++;
+    }
     
     return 0;
 }

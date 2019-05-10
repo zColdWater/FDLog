@@ -26,7 +26,6 @@
  */
 int fdlog_initialize_by_rsa(char* root, unsigned char* ctr);
 
-
 /*
  * Function: fdlog
  * ----------------------------
@@ -69,7 +68,6 @@ void fdlog_open_debug(int is_open);
  */
 void fdlog_save_recent_days(int num);
 
-
 /*
  * Function: fdlog_set_logfile_max_size
  * ----------------------------
@@ -79,7 +77,6 @@ void fdlog_save_recent_days(int num);
  *
  */
 void fdlog_set_logfile_max_size(int maxsize);
-
 
 /*
  * Function: fdlog_log_folder_path
