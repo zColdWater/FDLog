@@ -20,7 +20,7 @@
 #include "fd_json_helper.h"
 #include "fd_console_helper.h"
 #include "fd_base_helper.h"
-#include <mbedtls/pk.h>
+#include "pk.h"
 #include "fd_rsa_helper.h"
 
 extern FDLOGMODEL *model;
@@ -152,7 +152,7 @@ int fix_log_file_struct(char *log_path) {
  *  Max size of logfile
  *
  */
-void fdlog_set_logfile_max_size(int maxsize) {
+void fdlog_set_logfile_max_size(unsigned long long maxsize) {
     if (is_init_ok && (maxsize < 1024*1024*5)) {
         model->max_logfix_size = maxsize;
     }
@@ -168,7 +168,9 @@ void fdlog_set_logfile_max_size(int maxsize) {
  *
  */
 void fdlog_log_folder_path(char* path) {
-    strcpy(path, model->log_folder_path);
+    if ((model != NULL) && (model->log_folder_path != NULL)) {
+        strcpy(path, model->log_folder_path);
+    }
 }
 
 
@@ -907,12 +909,27 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
     }
     
     // read key iv version from server
-    cJSON* croot = cJSON_Parse((char*)result);
+    cJSON* croot = cJSON_Parse((char*)result); // 数组32
+    fd_printf("FDLog fdlog_initialize_by_rsa: cJSON type:%d \n",croot->type);
+    if (croot->type != (1 << 5)) {
+        // 注意：因为服务器给的是数组，所以这里校验数据类型，不是数组初始化失败。
+        fd_printf("FDLog fdlog_initialize_by_rsa: data not Array type \n");
+        return is_init_ok;
+    }
+    int arr_size = cJSON_GetArraySize(croot);
+    if (arr_size <= 0) {
+        fd_printf("FDLog fdlog_initialize_by_rsa: array size less than 1 \n");
+        return is_init_ok;
+    }
+    
+    cJSON* object = (cJSON *)calloc(1, sizeof(struct cJSON));
+    cJSON* temp_obj = cJSON_GetArrayItem(croot, 0);
+    memcpy(object, temp_obj, sizeof(struct cJSON));
     char* iv = (char*)calloc(1, 1024);
     char* key = (char*)calloc(1, 1024);
-    int server_ver = cJSON_GetObjectItem(croot,FD_SERVER_VER1)->valueint;
-    strcpy(iv, cJSON_GetObjectItem(croot,FD_AES_IV)->valuestring);
-    strcpy(key, cJSON_GetObjectItem(croot,FD_AES_KEY)->valuestring);
+    int server_ver = cJSON_GetObjectItem(object,FD_SERVER_VER1)->valueint;
+    strcpy(iv, cJSON_GetObjectItem(object,FD_AES_IV)->valuestring);
+    strcpy(key, cJSON_GetObjectItem(object,FD_AES_KEY)->valuestring);
     cJSON_Delete(croot);
     
     size_t iv_len = strlen(iv);
@@ -1073,8 +1090,8 @@ int fdlog(FD_Construct_Data *data) {
     
     // when mmap cache file content length more than max_length scale
     // then cache content sync to local log file
-    if ((float)*model->mmap_content_len_ptr > (float)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
-        fd_printf("FDLog: cache content need sync to local log file %f \n",(float)*model->mmap_content_len_ptr);
+    if (*model->mmap_content_len_ptr > (int)(FD_MMAP_LENGTH * FD_MAX_MMAP_SCALE)) {
+        fd_printf("FDLog: cache content need sync to local log file %d \n",*model->mmap_content_len_ptr);
         if (!fdlog_sync()) {
             fd_printf("FDLog: sync cache to local failture! \n");
             return 0;

@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mbedtls/pk.h>
-#include <mbedtls/rsa.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/base64.h>
+#include "pk.h"
+#include "rsa.h"
+#include "entropy.h"
+#include "ctr_drbg.h"
+#include "base64.h"
+
+
 
 
 //const unsigned char pub_key[]=

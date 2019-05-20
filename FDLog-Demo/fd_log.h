@@ -56,7 +56,7 @@ int fdlog_sync(void);
  *
  */
 void fdlog_open_debug(int is_open);
-
+ 
 /*
  * Function: fdlog_save_recent_days
  * ----------------------------
@@ -76,7 +76,7 @@ void fdlog_save_recent_days(int num);
  *  Max size of logfile
  *
  */
-void fdlog_set_logfile_max_size(int maxsize);
+void fdlog_set_logfile_max_size(unsigned long long maxsize);
 
 /*
  * Function: fdlog_log_folder_path
