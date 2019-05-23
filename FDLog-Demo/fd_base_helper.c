@@ -47,10 +47,10 @@ int fd_cpu_byteorder(void) {
         t.i = 1;
         if (t.c == 1) {
             FD_BYTEORDER = FD_BYTEORDER_LOW;
-            fd_printf("cpu_byteorder_clogan > system is a low byteorder\n");
+            fd_printf("FDLog: cpu_byteorder_clogan > system is a low byteorder\n");
         } else {
             FD_BYTEORDER = FD_BYTEORDER_HIGH;
-            fd_printf("cpu_byteorder_clogan > system is a high byteorder\n");
+            fd_printf("FDLog: cpu_byteorder_clogan > system is a high byteorder\n");
         }
     }
     return FD_BYTEORDER;

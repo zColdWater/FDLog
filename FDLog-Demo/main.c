@@ -126,9 +126,10 @@ int main(int argc, const char * argv[]) {
         int thread_id = 1;
         int is_main = 1;
         int level = 0;
-        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
-        printf("i: %d\n",i);
-        fdlog(data);
+//        fd_construct_json_data(<#char *log#>, <#char *flag#>, <#long long local_time#>, <#char *thread_name#>, <#long long thread_id#>, <#int is_main#>, <#int level#>, <#int log_type#>, <#char *app_net#>, <#char *user_system_name#>, <#char *app_name#>, <#char *app_version#>, <#char *phone_brand#>, <#char *user_id#>, <#char *user_name#>, <#char *user_device#>, <#char *user_system_version#>, <#char *identifier#>)
+//        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
+//        printf("i: %d\n",i);
+//        fdlog(data);
         i++;
     }
     

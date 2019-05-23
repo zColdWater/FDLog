@@ -22,8 +22,24 @@ typedef struct {
  *   returns: FD_Construct_Data data
  */
 FD_Construct_Data *
-fd_construct_json_data(char *log, int flag, long long local_time, char *thread_name,
-                           long long thread_id, int is_main, int level);
+fd_construct_json_data(char *log,
+                       char *flag,
+                       long long local_time,
+                       char *thread_name,
+                       long long thread_id,
+                       int is_main,
+                       int level,
+                       int log_type,
+                       char *app_net,
+                       char *user_system_name,
+                       char *app_name,
+                       char *app_version,
+                       char *phone_brand,
+                       char *user_id,
+                       char *user_name,
+                       char *user_device,
+                       char *user_system_version,
+                       char *identifier);
 
 
 /*

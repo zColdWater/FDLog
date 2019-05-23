@@ -6,20 +6,47 @@
 #include "fd_console_helper.h"
 #include "fd_core_model.h"
 
-static const char *log_key = "c"; // log content
-static const char *flag_key = "f"; // log flag module
-static const char *log_level = "lv"; // log level
-static const char *localtime_key = "l"; // local time
-static const char *threadname_key = "n"; // thread name
-static const char *threadid_key = "i"; // thread id
-static const char *ismain_key = "m"; // main thread ?
-static const char *log_version = "v"; // version
+static const char *fdlog_key = "c";                   // 类型: String 日志内容 例如: " 这里需要注意，我出现问题了 "
+static const char *fdlog_type = "lt";                 // 类型: Int 日志类型 例如: 业务日志(2), 性能日志(1), 崩溃日志(0)
+static const char *fdflag_key = "f";                  // 类型: String 日志模块 例如: VOM ，SO ，MER 等等
+static const char *fdlog_level = "lv";                // 类型: Int 日志等级 例如: Info Warning Error
+static const char *fdlocaltime_key = "l";             // 类型: String 日志记录时间 例如: 1558427368
+static const char *fdthreadname_key = "n";            // 类型: String 日志线程名字 例如: FDLogThread
+static const char *fdthreadid_key = "i";              // 类型: Int 日志线程ID 例如: 4 , 5, 10
+static const char *fdismain_key = "m";                // 类型: Int 日志是否是主线程 例如: 1 , 0
+static const char *fdlog_version = "v";               // 类型: Int 日志本地版本 例如: 1 , 2 , 3 , 4 等等
 
+static const char *fdapp_net = "nt";                  // 类型: String 网络环境 例如: HRPD 4G 3G 2G GPRS 2.75G EDGE 等等
+static const char *fduser_system_name = "sys_n";      // 类型: String 手机操作系统名称 例如: Android, iOS
+static const char *fdapp_name = "an";                 // 类型: String App名字 例如: NioApp, NioMate, ToolKit 等等
+static const char *fdapp_version = "av";              // 类型: String App版本 例如: 3.5.0 , 3.5.1, 4.0.0 等等
+static const char *fdphone_brand = "pb";              // 类型: String 手机品牌 例如: Apple, HuaWei, ViVo 等等
+static const char *fduser_id = "ui";                  // 类型: String 用户id 例如: 12700912, 12700913 等等
+static const char *fduser_name = "un";                // 类型: String 用户名字 例如: YongPeng.Zhu, Tony.Zou 等等
+static const char *fduser_device = "ud";              // 类型: String 用户设备详细信息 例如: "iPhoneX 12.2 MQA52CH/A" 等等
+static const char *fduser_system_version = "sys_v";   // 类型: String 手机操作系统版本 例如: 12.1 , 10.1 等
+static const char *fdidentifier = "uid";              // 类型: String 单条日志唯一id 建议用uuid
 
 
 FD_Construct_Data *
-fd_construct_json_data(char *log, int flag, long long local_time, char *thread_name,
-                           long long thread_id, int is_main, int level) {
+fd_construct_json_data(char *log,
+                       char *flag,
+                       long long local_time,
+                       char *thread_name,
+                       long long thread_id,
+                       int is_main,
+                       int level,
+                       int log_type,
+                       char *app_net,
+                       char *user_system_name,
+                       char *app_name,
+                       char *app_version,
+                       char *phone_brand,
+                       char *user_id,
+                       char *user_name,
+                       char *user_device,
+                       char *user_system_version,
+                       char *identifier) {
     
     FD_Construct_Data *construct_data = NULL;
     cJSON *root = NULL;
@@ -31,22 +58,52 @@ fd_construct_json_data(char *log, int flag, long long local_time, char *thread_n
     if (NULL != root) {
         if (NULL != map) {
             
-            fd_add_item_string(map, log_key, log);
-            fd_add_item_number(map, flag_key, (double) flag);
-            fd_add_item_number(map, localtime_key, (double) local_time);
-            fd_add_item_string(map, threadname_key, thread_name);
-            fd_add_item_number(map, threadid_key, (double) thread_id);
-            fd_add_item_bool(map, ismain_key, is_main);
-            fd_add_item_string(map, log_version, FD_VERSION_NUMBER);
-            fd_add_item_number(map, log_level, level);
-
-            
-            
+            // 日志内容
+            fd_add_item_string(map, fdlog_key, log);
+            // 日志模块名字: Vom SO 等等
+            fd_add_item_string(map, fdflag_key, flag);
+            // 记录时间
+            fd_add_item_number(map, fdlocaltime_key, (double) local_time);
+            // 线程名字
+            fd_add_item_string(map, fdthreadname_key, thread_name);
+            // 线程ID
+            fd_add_item_number(map, fdthreadid_key, (double) thread_id);
+            // 是否在主线程
+            fd_add_item_bool(map, fdismain_key, is_main);
+            // 日志版本: 1
+            fd_add_item_string(map, fdlog_version, FD_VERSION_NUMBER);
+            // 日志等级: Info(2) Warning(1) Error(0)
+            fd_add_item_number(map, fdlog_level, level);
+            // 日志类型: 业务日志 性能日志 等等
+            fd_add_item_number(map, fdlog_type, log_type);
+            // 网络环境: 2G 4G
+            fd_add_item_string(map, fdapp_net, app_net);
+            // 手机操作系统名字: Android
+            fd_add_item_string(map, fduser_system_name, user_system_name);
+            // 应用名字: NioApp
+            fd_add_item_string(map, fdapp_name, app_name);
+            // 应用版本: 4.0.0
+            fd_add_item_string(map, fdapp_version, app_version);
+            // 手机品牌: HuaWei
+            fd_add_item_string(map, fdphone_brand, phone_brand);
+            // 用户ID: 44r1d14412
+            fd_add_item_string(map, fduser_id, user_id);
+            // 用户名字: Yongpeng.Zhu
+            fd_add_item_string(map, fduser_name, user_name);
+            // 用户设备详细信息: iPhoneX 12.2 MQA52CH/A
+            fd_add_item_string(map, fduser_device, user_device);
+            // 用户系统版本: 12.1
+            fd_add_item_string(map, fduser_system_version, user_system_version);
+            // UUID单条日志文件唯一标识符: ASDFGHJKASDFGHSDF
+            fd_add_item_string(map, fdidentifier, identifier);
             
             fd_inflate_json_by_map(root, map);
             
             // 生成Jsonstring
             char *back_data = cJSON_PrintUnformatted(root);
+            
+            fd_printf("FDLog: log content is %s \n",back_data);
+            
             // 为FD_Construct_Data申请堆内存
             construct_data = (FD_Construct_Data *) malloc(sizeof(FD_Construct_Data));
             
@@ -73,10 +130,10 @@ fd_construct_json_data(char *log, int flag, long long local_time, char *thread_n
                     
                 } else {
                     
-                    free(construct_data); //创建数据
+                    free(construct_data);
                     construct_data = NULL;
                     fd_printf(
-                            "construct_json_data_clogan > malloc memory fail for temp_data\n");
+                            "fdlog: construct_json_data_clogan > malloc memory fail for temp_data\n");
                 }
             }
             

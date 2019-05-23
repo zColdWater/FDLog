@@ -24,12 +24,12 @@
 #include "fd_rsa_helper.h"
 
 extern FDLOGMODEL *model;
-extern int fd_is_debug;
 
 #define FD_INIT_SUCCESS 1; // log init success
 #define FD_INIT_FAILURE 0; // log init failture
 static int is_init_ok = FD_INIT_FAILURE;
-
+static int is_logging = 0; // 是否正在记录日志
+static int is_sync_log = 0; // 是否正在同步缓存到日志
 
 /*
  * Function: fix_cache_file_struct
@@ -43,7 +43,7 @@ static int is_init_ok = FD_INIT_FAILURE;
 int fix_cache_file_struct() {
     
     if (!model->mmap_content_len_ptr || !model->mmap_content_len_ptr) {
-        fd_printf("FDLog fix_cache_file_struct: no init");
+        fd_printf("FDLog: FDLog fix_cache_file_struct: no init");
         return 0;
     }
     
@@ -95,45 +95,55 @@ int fix_log_file_struct(char *log_path) {
     else {
         fseek(fp, 0, SEEK_END);
         long long longBytes = ftell(fp); // len
+        if (longBytes < 1) {
+            fd_printf("fd_log: bytes length less than one byte %d \n",longBytes);
+            return 0;
+        }
+        
         fseek(fp, 0, SEEK_SET);
         int* file_server_ver = (int*)calloc(1, 4);
         fread(file_server_ver, 1, sizeof(int), fp);
         
         fseek(fp, 4, SEEK_SET); // 从第4个字节开始读取，因为前4个字节保存服务器版本 Int值。
-        char logs[longBytes];
-        fread(logs, 1, longBytes, fp);
+        long long logs_length = longBytes - 4;
+        char logs[logs_length];
+        fread(logs, sizeof(char), logs_length, fp);
         fclose(fp);
-
-        ReverseArray(logs, longBytes);
+        ReverseArray(logs, logs_length);
         
-        if (logs[0] == FD_MMAP_WRITE_CONTENT_TAILER) {
+        if (logs[0] == FD_MMAP_WRITE_CONTENT_TAILER) { // 日志协议完整，不需要修复 直接退出。
             return 1;
         }
         
+        // 日志协议缺失，需要将无效的日志信息移除。
         int i = 0;
-        while (i < longBytes) {
+        while (i < logs_length) {
             char temp = logs[i];
-            if (temp == FD_MMAP_WRITE_CONTENT_HEADER) {
+            if (temp == FD_MMAP_WRITE_CONTENT_HEADER) { // 找到日志协议头
                 temp = logs[i + 1];
-                if (temp == FD_MMAP_WRITE_CONTENT_TAILER) {
+                if (temp == FD_MMAP_WRITE_CONTENT_TAILER) { // 找到日志协议头的上一位 检查是否是协议尾，如果是协议尾 证明日志是连续有效的。
 
-                    // clear file content
+                    // 清空当前日志文件
                     FILE *file = fopen(log_path, "w");
                     if (!file) { perror("Could not open file"); }
                     fclose(file);
-
-                    ReverseArray(logs, longBytes);
+                    
+                    // 反转日志信息
+                    ReverseArray(logs, logs_length);
+                    // 需要移除的多余日志部分字节数
                     int remove_len = i + 1;
-                    char logs_temp[longBytes - remove_len];
-                    memcpy(logs_temp, logs, longBytes - remove_len);
+                    char* logs_temp = (char *)calloc(logs_length - remove_len, sizeof(char));
+                    memcpy(logs_temp, logs, logs_length - remove_len);
 
                     FILE * fp = fopen(log_path, "ab+");
+                    int server_version_byte = 4;
                     if (fp != NULL) {
-                        fwrite(file_server_ver, 1, 4, fp); // 写入server版本
-                        fwrite(logs_temp, sizeof(char), longBytes - remove_len, fp);
+                        fwrite(file_server_ver, 1, server_version_byte, fp); // 写入server版本
+                        fwrite(logs_temp, sizeof(char), longBytes - remove_len - server_version_byte, fp);
                     }
                     else { perror("Could not open file"); }
                     fclose(fp);
+                    free(logs_temp);
                     return 1;
                 }
             }
@@ -202,12 +212,7 @@ void fdlog_save_recent_days(int num) {
  *
  */
 void fdlog_open_debug(int is_open) {
-    if (is_open) {
-        fd_is_debug = 1;
-    }
-    else {
-        fd_is_debug = 0;
-    }
+    fd_set_debug(is_open);
 }
 
 
@@ -229,7 +234,7 @@ int fdlog_init_dirs(const char *root_path, FDLOGMODEL **model) {
     FDLOGMODEL* model1 = *model;
     
     if (!model1->is_init_global_vars) {
-        fd_printf("FDLog init_fdlog_dirs: is_init_global_vars is 0 ! \n");
+        fd_printf("FDLog: FDLog init_fdlog_dirs: is_init_global_vars is 0 ! \n");
         return 0;
     }
     
@@ -285,7 +290,7 @@ int fdlog_init_dirs(const char *root_path, FDLOGMODEL **model) {
 int fdlog_insert_mmap_file_header() {
     
     if (!model->is_bind_mmap) {
-        fd_printf("FDLog: mmap file not bind memory point! \n");
+        fd_printf("FDLog: FDLog: mmap file not bind memory point! \n");
         return 0;
     }
     
@@ -365,21 +370,21 @@ int fdlog_is_valid_cache() {
     }
     unsigned char *temp = model->mmap_ptr;
     if (*temp == FD_MMAP_FILE_HEADER) {
-        fd_printf("READ FD_MMAP_FILE_HEADER ✅\n");
+        fd_printf("FDLog: READ FD_MMAP_FILE_HEADER ✅\n");
         temp += 1;
         int *temp_header_content_len = (int*)temp;
         temp += sizeof(int);
         temp += *temp_header_content_len;
         if (*temp == FD_MMAP_FILE_TAILER) {
-            fd_printf("READ FD_MMAP_FILE_TAILER ✅\n");
+            fd_printf("FDLog: READ FD_MMAP_FILE_TAILER ✅\n");
             temp += 1;
             if (*temp == FD_MMAP_TOTAL_LOG_LEN_HEADER) {
-                fd_printf("READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
+                fd_printf("FDLog: READ FD_MMAP_FILE_CONTENT_HEADER ✅\n");
                 temp += 1;
                 int *temp_content_len_ptr = (int *)temp;
                 temp += sizeof(int);
                 if (*temp == FD_MMAP_TOTAL_LOG_LEN_TAILER) {
-                    fd_printf("READ FD_MMAP_FILE_CONTENT_TAILER ✅\n");
+                    fd_printf("FDLog: READ FD_MMAP_FILE_CONTENT_TAILER ✅\n");
                     temp += 1;
                     int mmap_header_len = 2 + sizeof(int) + *temp_header_content_len;
                     int mmap_content_len = 2 + sizeof(int) + *temp_content_len_ptr;
@@ -389,10 +394,10 @@ int fdlog_is_valid_cache() {
                     
                     char tailer_c = *(temp_tailer_ptr - 1);
                     if (tailer_c == FD_MMAP_TOTAL_LOG_LEN_TAILER || tailer_c == FD_MMAP_WRITE_CONTENT_TAILER) {
-                        fd_printf("FDLog mmap_header_len: %d \n",mmap_header_len);
-                        fd_printf("FDLog mmap_content_len: %d \n",mmap_content_len);
-                        fd_printf("FDLog mmap_header_len+mmap_content_len: %d \n",mmap_header_len + mmap_content_len);
-                        fd_printf("FDLog mmap cache file can read! \n");
+                        fd_printf("FDLog: FDLog mmap_header_len: %d \n",mmap_header_len);
+                        fd_printf("FDLog: FDLog mmap_content_len: %d \n",mmap_content_len);
+                        fd_printf("FDLog: FDLog mmap_header_len+mmap_content_len: %d \n",mmap_header_len + mmap_content_len);
+                        fd_printf("FDLog: FDLog mmap cache file can read! \n");
                         return 1;
                     }
                 }
@@ -459,17 +464,17 @@ int fdlog_update_cache_point_position(FDLOGMODEL **model) {
 int fdlog_write_to_cache(FD_Construct_Data *data) {
     
     if(!fdlog_is_valid_cache()) {
-        fd_printf("FDLog fdlog_write_to_cache: file is invalid, can't read content! \n");
+        fd_printf("FDLog: FDLog fdlog_write_to_cache: file is invalid, can't read content! \n");
         return 0;
     }
     if (!is_init_ok) {
-        fd_printf("FDLog fdlog_write_to_cache: log init failture, can't write to cache! \n");
+        fd_printf("FDLog: FDLog fdlog_write_to_cache: log init failture, can't write to cache! \n");
         return 0;
     }
     if (!model->is_ready_gzip) {
-        fd_printf("FDLog fdlog_write_to_cache: model->is_ready_gzip is false, reinit zlib! \n");
+        fd_printf("FDLog: FDLog fdlog_write_to_cache: model->is_ready_gzip is false, reinit zlib! \n");
         if (!fd_init_zlib(&model)) {
-            fd_printf("FDLog fdlog_write_to_cache: fd_init_zlib failture! \n");
+            fd_printf("FDLog: FDLog fdlog_write_to_cache: fd_init_zlib failture! \n");
             return 0;
         }
     }
@@ -487,7 +492,7 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         if (fd_zlib_compress(&model,data->data, data->data_len, Z_SYNC_FLUSH)) {
             fd_zlib_end_compress(&model);
             fd_aes_inflate_iv(model->aes_iv);
-            fd_printf("FDLog fdlog_write_to_cache: success! \n");
+            fd_printf("FDLog: FDLog fdlog_write_to_cache: success! \n");
             return 1;
         }
     }
@@ -593,14 +598,21 @@ int fdlog_reset_global_var(FDLOGMODEL** model, int server_ver) {
  *   returns: 1 or 0
  */
 int fdlog_sync() {
+    if (is_sync_log) {
+        fd_printf("FDLog: FDLog fdlog_sync: other task sync log, you need waiting other task finish \n");
+        return 0;
+    }
     
+    is_sync_log = 1;
     if (!is_init_ok) {
-        fd_printf("FDLog fdlog_sync: init failture! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: init failture! \n");
+        is_sync_log = 0;
         return 0;
     }
     
     if (model->is_zlibing) {
-        fd_printf("FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
+        is_sync_log = 0;
         return 0;
     }
 
@@ -612,7 +624,8 @@ int fdlog_sync() {
             is_new_logfile = 1;
         }
         else {
-            fd_printf("FDLog fdlog_sync: create new file failture! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: create new file failture! \n");
+            is_sync_log = 0;
             return 0;
         }
     }
@@ -633,16 +646,17 @@ int fdlog_sync() {
             memcpy(model->log_file_len, &longBytes, sizeof(long));
             fclose(file_temp);
         } else {
-            fd_printf("FDLog fdlog_sync: fopen log file failture! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: fopen log file failture! \n");
             free(last_file_name);
             last_file_name = NULL;
+            is_sync_log = 0;
             return 0;
         }
     }
     
     // 如果当前日志文件大小大于日志设定最大大小，重新创建新日志文件。
     if ((*model->log_file_len) > model->max_logfix_size) {
-        fd_printf("FDLog fdlog_sync: current log file size:%lu \n",*model->log_file_len);
+        fd_printf("FDLog: FDLog fdlog_sync: current log file size:%lu \n",*model->log_file_len);
         if (!is_new_logfile) {
             memset(model->log_file_path, 0, FD_MAX_PATH);
             memset(model->log_file_len, 0, sizeof(long));
@@ -650,7 +664,8 @@ int fdlog_sync() {
             is_new_logfile = 1;
         }
         else {
-            fd_printf("FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
+            is_sync_log = 0;
             return 0;
         }
     }
@@ -661,7 +676,8 @@ int fdlog_sync() {
     // 全新日志文件没有内容
     if (is_new_logfile) {
         if (stream == NULL) {
-            fd_printf("FDLog fdlog_sync: open file failture! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: open file failture! \n");
+            is_sync_log = 0;
             return 0;
         }
         // 插入 server 版本号
@@ -677,6 +693,7 @@ int fdlog_sync() {
     if (stream == NULL)
     {
         perror("Could not open file");
+        is_sync_log = 0;
         return 0;
     }
     else {
@@ -695,7 +712,8 @@ int fdlog_sync() {
             if (!is_new_logfile) { // 存在日志文件
                 // create new logfile
                 if (!create_new_current_date_logfile()) {
-                    fd_printf("FDLog fdlog_sync: create new file failture! \n");
+                    fd_printf("FDLog: FDLog fdlog_sync: create new file failture! \n");
+                    is_sync_log = 0;
                     return 0;
                 }
                 stream1 = fopen(model->log_file_path, "ab+");
@@ -722,14 +740,17 @@ int fdlog_sync() {
     
     // Reset mmap cahce file
     if (!fdlog_insert_mmap_file_header()) {
-        fd_printf("FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
+        is_sync_log = 0;
         return 0;
     }
     if (!fdlog_update_cache_point_position(&model)) {
-        fd_printf("FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
+        is_sync_log = 0;
         return 0;
     }
     
+    is_sync_log = 0;
     return 1;
 }
 
@@ -746,7 +767,7 @@ int fdlog_sync() {
 int fdlog_sync_no_init(int server_id) {
     
     if (model->is_zlibing) {
-        fd_printf("FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: zlibing data can't sync cache to local log! \n");
         return 0;
     }
     
@@ -758,7 +779,7 @@ int fdlog_sync_no_init(int server_id) {
             is_new_logfile = 1;
         }
         else {
-            fd_printf("FDLog fdlog_sync: create new file failture! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: create new file failture! \n");
             return 0;
         }
     }
@@ -779,7 +800,7 @@ int fdlog_sync_no_init(int server_id) {
             memcpy(model->log_file_len, &longBytes, sizeof(long));
             fclose(file_temp);
         } else {
-            fd_printf("FDLog fdlog_sync: fopen log file failture! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: fopen log file failture! \n");
             free(last_file_name);
             last_file_name = NULL;
             return 0;
@@ -788,7 +809,7 @@ int fdlog_sync_no_init(int server_id) {
     
     // 如果当前日志文件大小大于日志设定最大大小，重新创建新日志文件。
     if ((*model->log_file_len) > model->max_logfix_size) {
-        fd_printf("FDLog fdlog_sync: current log file size:%lu \n",*model->log_file_len);
+        fd_printf("FDLog: FDLog fdlog_sync: current log file size:%lu \n",*model->log_file_len);
         if (!is_new_logfile) {
             memset(model->log_file_path, 0, FD_MAX_PATH);
             memset(model->log_file_len, 0, sizeof(long));
@@ -796,7 +817,7 @@ int fdlog_sync_no_init(int server_id) {
             is_new_logfile = 1;
         }
         else {
-            fd_printf("FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: new file length still more that FD_MAX_LOG_SIZE! This is bug!!! \n");
             return 0;
         }
     }
@@ -807,7 +828,7 @@ int fdlog_sync_no_init(int server_id) {
     // 全新日志文件没有内容
     if (is_new_logfile) {
         if (stream == NULL) {
-            fd_printf("FDLog fdlog_sync: open file failture! \n");
+            fd_printf("FDLog: FDLog fdlog_sync: open file failture! \n");
             return 0;
         }
         // 插入 server 版本号
@@ -842,7 +863,7 @@ int fdlog_sync_no_init(int server_id) {
             if (!is_new_logfile) { // 存在日志文件
                 // create new logfile
                 if (!create_new_current_date_logfile()) {
-                    fd_printf("FDLog fdlog_sync: create new file failture! \n");
+                    fd_printf("FDLog: FDLog fdlog_sync: create new file failture! \n");
                     return 0;
                 }
                 stream1 = fopen(model->log_file_path, "ab+");
@@ -869,11 +890,11 @@ int fdlog_sync_no_init(int server_id) {
     
     // Reset mmap cahce file
     if (!fdlog_insert_mmap_file_header()) {
-        fd_printf("FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: fdlog_insert_mmap_file_header failture! \n");
         return 0;
     }
     if (!fdlog_update_cache_point_position(&model)) {
-        fd_printf("FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
+        fd_printf("FDLog: FDLog fdlog_sync: fdlog_update_cache_point_position failture! \n");
         return 0;
     }
     
@@ -896,7 +917,7 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
     is_init_ok = FD_INIT_FAILURE;
     
     if ((root == NULL) || (ctr == NULL)) {
-        fd_printf("FDLog fdlog_initialize_by_rsa: root or ctr is NULL \n");
+        fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: root or ctr is NULL \n");
         return is_init_ok;
     }
     
@@ -904,21 +925,21 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
     memset(result, 0, MBEDTLS_MPI_MAX_SIZE);
     int isRSADecodeSuccess = fd_rsa_decode(ctr,result,MBEDTLS_MPI_MAX_SIZE);
     if (isRSADecodeSuccess != 0) {
-        fd_printf("FDLog fdlog_initialize_by_rsa: fd_rsa_decode failture \n");
+        fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: fd_rsa_decode failture \n");
         return is_init_ok;
     }
     
     // read key iv version from server
     cJSON* croot = cJSON_Parse((char*)result); // 数组32
-    fd_printf("FDLog fdlog_initialize_by_rsa: cJSON type:%d \n",croot->type);
+    fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: cJSON type:%d \n",croot->type);
     if (croot->type != (1 << 5)) {
         // 注意：因为服务器给的是数组，所以这里校验数据类型，不是数组初始化失败。
-        fd_printf("FDLog fdlog_initialize_by_rsa: data not Array type \n");
+        fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: data not Array type \n");
         return is_init_ok;
     }
     int arr_size = cJSON_GetArraySize(croot);
     if (arr_size <= 0) {
-        fd_printf("FDLog fdlog_initialize_by_rsa: array size less than 1 \n");
+        fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: array size less than 1 \n");
         return is_init_ok;
     }
     
@@ -937,12 +958,12 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
 
     // guard server_ver iv_len and key_len is correct format
     if (server_ver < 0 || iv_len != 16 || key_len != 16) {
-        fd_printf("FDLog fdlog_initialize: server_ver is %d，less than 0 \n", server_ver);
+        fd_printf("FDLog: FDLog fdlog_initialize: server_ver is %d，less than 0 or iv, key length wrong! \n", server_ver);
         return is_init_ok;
     }
     
-    printf("iv: %s \n",iv);
-    printf("key: %s \n",key);
+    fd_printf("FDLog: iv: %s \n",iv);
+    fd_printf("FDLog: key: %s \n",key);
 
     
     if (!fdlog_reset_global_var(&model,server_ver)) { return is_init_ok; }
@@ -1077,14 +1098,20 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
  *   returns: 1 or 0
  */
 int fdlog(FD_Construct_Data *data) {
-    
+    if (is_logging) {
+        fd_printf("FDLog: other task logging, you need waiting other task finish. \n");
+        return 0;
+    }
+    is_logging = 1;
     if (!is_init_ok) {
         fd_printf("FDLog: init failture!\n");
+        is_logging = 0;
         return 0;
     }
     
     if (model->is_zlibing) {
         fd_printf("FDLog: can't write because already zlibing \n");
+        is_logging = 0;
         return 0;
     }
     
@@ -1094,15 +1121,18 @@ int fdlog(FD_Construct_Data *data) {
         fd_printf("FDLog: cache content need sync to local log file %d \n",*model->mmap_content_len_ptr);
         if (!fdlog_sync()) {
             fd_printf("FDLog: sync cache to local failture! \n");
+            is_logging = 0;
             return 0;
         }
     }
 
     if (!fdlog_write_to_cache(data)) {
         fd_printf("FDLog: write to cache failture! \n");
+        is_logging = 0;
         return 0;
     }
     
+    is_logging = 0;
     return 1;
 }
 

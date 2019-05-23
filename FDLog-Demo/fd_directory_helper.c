@@ -52,13 +52,13 @@ int fd_makedir(const char *path) {
     size_t pathLen = strlen(path);
     char currentPath[FD_MAX_PATH] = {0};
 
-    fd_printf("makedir > path : %s\n", path);
+    fd_printf("FDLog: makedir > path : %s\n", path);
     //相对路径
     if ('/' != path[0]) {
         //获取当前路径
         getcwd(currentPath, FD_MAX_PATH);
         strcat(currentPath, "/");
-        fd_printf("makedir > currentPath : %s\n", currentPath);
+        fd_printf("FDLog: makedir > currentPath : %s\n", currentPath);
         beginCmpPath = strlen(currentPath);
         strcat(currentPath, path);
         if (path[pathLen - 1] != '/') {
@@ -137,7 +137,7 @@ char* look_for_last_logfile() {
         const char *c = files_name[j];
         long d = atol(c);
         files_name_number[j] = d;
-        fd_printf("%ld\n", d);
+        fd_printf("FDLog: %ld\n", d);
     }
     
     for (int n=0; n < i; n++) {
@@ -204,7 +204,7 @@ int create_new_current_date_logfile() {
         strcat(logfile, date);
         strcat(logfile, additional_str);
         strcpy(file_name, logfile);
-        fd_printf("logfile:%s \n",logfile);
+        fd_printf("FDLog: logfile:%s \n",logfile);
         
         /// 遍历文件夹里面的文件名
         int is_same_name = 0;
@@ -212,9 +212,9 @@ int create_new_current_date_logfile() {
         struct dirent *ent;
         if ((dir = opendir (current_file_folder_name)) != NULL) {
             while ((ent = readdir (dir)) != NULL) {
-                fd_printf ("%s\n", ent->d_name);
+                fd_printf ("fdlog: %s\n", ent->d_name);
                 if(strcmp(logfile,ent->d_name)==0) {
-                    fd_printf("日志文件有重名\n");
+                    fd_printf("FDLog: 日志文件有重名\n");
                     is_same_name = 1;
                     break;
                 }
@@ -249,7 +249,7 @@ int create_new_current_date_logfile() {
             memcpy(model->log_file_path, current_file_folder_name, FD_MAX_PATH);
             fclose(file_temp);
         } else {
-            fd_printf("文件流打开失败!\n");
+            fd_printf("FDLog: 文件流打开失败!\n");
             free(date);
             free(current_file_folder_name);
             date = NULL;
@@ -393,7 +393,7 @@ int create_date_logfile(char *folder_path, char* name) {
         strcat(logfile, name);
         strcat(logfile, additional_str);
         strcpy(file_name, logfile);
-        fd_printf("logfile:%s \n",logfile);
+        fd_printf("FDLog: logfile:%s \n",logfile);
         
         /// 遍历文件夹里面的文件名
         int is_same_name = 0;
@@ -403,7 +403,7 @@ int create_date_logfile(char *folder_path, char* name) {
             while ((ent = readdir (dir)) != NULL) {
                 fd_printf ("%s\n", ent->d_name);
                 if(strcmp(logfile,ent->d_name)==0) {
-                    fd_printf("FDLog create_date_logfile: filelog same name \n");
+                    fd_printf("FDLog: FDLog create_date_logfile: filelog same name \n");
                     is_same_name = 1;
                     break;
                 }
@@ -427,7 +427,7 @@ int create_date_logfile(char *folder_path, char* name) {
         if (NULL != file_temp) {  //初始化文件流开启
             fclose(file_temp);
         } else {
-            fd_printf("FDLog create_date_logfile: create log file failture! \n");
+            fd_printf("FDLog: FDLog create_date_logfile: create log file failture! \n");
             free(path);
             path = NULL;
             return 0;
@@ -443,7 +443,7 @@ int create_date_logfile(char *folder_path, char* name) {
 void remove_log_file(int save_recent_days_num, char* root_path) {
     
     if (save_recent_days_num < 0) {
-        fd_printf("remove_log_file: save_recent_days_num can't less than zero or equal zero! \n");
+        fd_printf("FDLog: remove_log_file: save_recent_days_num can't less than zero or equal zero! \n");
         return;
     }
     
@@ -464,7 +464,7 @@ void remove_log_file(int save_recent_days_num, char* root_path) {
         while ((ent = readdir (dir)) != NULL) {
             long d = atol(ent->d_name);
             if ( d == 0 ) {
-                printf("remove_log_file: is invalid file! \n");
+                fd_printf("FDLog: remove_log_file: is invalid file! \n");
                 continue;
             }
             if (d < target_Dt) {

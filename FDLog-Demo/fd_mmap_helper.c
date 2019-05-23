@@ -14,7 +14,7 @@ int fd_open_mmap_file(FDLOGMODEL **model,char *mmap_file_path, unsigned char **b
     FDLOGMODEL* model1 = *model;
     
     if (model1 == NULL) {
-        fd_printf("FDLog fd_open_mmap_file: FDLOGMODEL model is NULL ");
+        fd_printf("FDLog: FDLog fd_open_mmap_file: FDLOGMODEL model is NULL ");
         return 0;
     }
     
@@ -45,7 +45,7 @@ int fd_open_mmap_file(FDLOGMODEL **model,char *mmap_file_path, unsigned char **b
                     _size = fwrite(zero_data, sizeof(char), size, file);
                     fflush(file);
                     if (_size == size) {
-                        fd_printf("copy data 2 mmap file success\n");
+                        fd_printf("FDLog: copy data 2 mmap file success\n");
                         isFileOk = 1;
                         isNeedCheck = 1;
                     } else { // 写入存在失败
@@ -83,7 +83,7 @@ int fd_open_mmap_file(FDLOGMODEL **model,char *mmap_file_path, unsigned char **b
                 back = FD_MMAP_MMAP;
                 model1->is_bind_mmap = 1;
             } else { // MMAP绑定失败
-                fd_printf("open mmap fail , reason : %s \n", strerror(errno));
+                fd_printf("FDLog: open mmap fail , reason : %s \n", strerror(errno));
             }
             close(fd);
             if (back == FD_MMAP_MMAP && access(filepath, F_OK) != -1) {
@@ -95,7 +95,7 @@ int fd_open_mmap_file(FDLOGMODEL **model,char *mmap_file_path, unsigned char **b
                     munmap(p_map, size);
             }
         } else {
-            fd_printf("open(%s) fail: %s\n", filepath, strerror(errno));
+            fd_printf("FDLog: open(%s) fail: %s\n", filepath, strerror(errno));
         }
     }
     

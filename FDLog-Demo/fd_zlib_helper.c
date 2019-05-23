@@ -34,12 +34,12 @@ int fd_init_zlib(FDLOGMODEL **model) {
     if (ret1 == Z_OK) {
         model1->is_ready_gzip = 1;
         *model = model1;
-        fd_printf("deflateInit2 success! \n");
+        fd_printf("FDLog: deflateInit2 success! \n");
         return 1;
     }
     else {
         *model = model1;
-        fd_printf("deflateInit2 failture! \n");
+        fd_printf("FDLog: deflateInit2 failture! \n");
         return 0;
     }
 }
@@ -49,7 +49,7 @@ int fd_zlib_compress(FDLOGMODEL **model,char *data, int data_len, int type) {
     FDLOGMODEL* model1 = *model;
     
     if (model1->is_zlibing) {
-        fd_printf("FDLog fd_zlib_compress: fdlog writing cache, can't write again! \n");
+        fd_printf("FDLog: FDLog fd_zlib_compress: fdlog writing cache, can't write again! \n");
         return 0;
     }
     else {
