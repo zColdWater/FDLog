@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cppcheck - HTML report - [project name]</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+.highlight .hll { background-color: #ffffcc }
+.highlight  { background: #ffffff; }
+.highlight .c { color: #888888 } /* Comment */
+.highlight .err { color: #FF0000; background-color: #FFAAAA } /* Error */
+.highlight .k { color: #008800; font-weight: bold } /* Keyword */
+.highlight .o { color: #333333 } /* Operator */
+.highlight .ch { color: #888888 } /* Comment.Hashbang */
+.highlight .cm { color: #888888 } /* Comment.Multiline */
+.highlight .cp { color: #557799 } /* Comment.Preproc */
+.highlight .cpf { color: #888888 } /* Comment.PreprocFile */
+.highlight .c1 { color: #888888 } /* Comment.Single */
+.highlight .cs { color: #cc0000; font-weight: bold } /* Comment.Special */
+.highlight .gd { color: #A00000 } /* Generic.Deleted */
+.highlight .ge { font-style: italic } /* Generic.Emph */
+.highlight .gr { color: #FF0000 } /* Generic.Error */
+.highlight .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.highlight .gi { color: #00A000 } /* Generic.Inserted */
+.highlight .go { color: #888888 } /* Generic.Output */
+.highlight .gp { color: #c65d09; font-weight: bold } /* Generic.Prompt */
+.highlight .gs { font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.highlight .gt { color: #0044DD } /* Generic.Traceback */
+.highlight .kc { color: #008800; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #008800; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #008800; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #003388; font-weight: bold } /* Keyword.Pseudo */
+.highlight .kr { color: #008800; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #333399; font-weight: bold } /* Keyword.Type */
+.highlight .m { color: #6600EE; font-weight: bold } /* Literal.Number */
+.highlight .s { background-color: #fff0f0 } /* Literal.String */
+.highlight .na { color: #0000CC } /* Name.Attribute */
+.highlight .nb { color: #007020 } /* Name.Builtin */
+.highlight .nc { color: #BB0066; font-weight: bold } /* Name.Class */
+.highlight .no { color: #003366; font-weight: bold } /* Name.Constant */
+.highlight .nd { color: #555555; font-weight: bold } /* Name.Decorator */
+.highlight .ni { color: #880000; font-weight: bold } /* Name.Entity */
+.highlight .ne { color: #FF0000; font-weight: bold } /* Name.Exception */
+.highlight .nf { color: #0066BB; font-weight: bold } /* Name.Function */
+.highlight .nl { color: #997700; font-weight: bold } /* Name.Label */
+.highlight .nn { color: #0e84b5; font-weight: bold } /* Name.Namespace */
+.highlight .nt { color: #007700 } /* Name.Tag */
+.highlight .nv { color: #996633 } /* Name.Variable */
+.highlight .ow { color: #000000; font-weight: bold } /* Operator.Word */
+.highlight .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight .mb { color: #6600EE; font-weight: bold } /* Literal.Number.Bin */
+.highlight .mf { color: #6600EE; font-weight: bold } /* Literal.Number.Float */
+.highlight .mh { color: #005588; font-weight: bold } /* Literal.Number.Hex */
+.highlight .mi { color: #0000DD; font-weight: bold } /* Literal.Number.Integer */
+.highlight .mo { color: #4400EE; font-weight: bold } /* Literal.Number.Oct */
+.highlight .sa { background-color: #fff0f0 } /* Literal.String.Affix */
+.highlight .sb { background-color: #fff0f0 } /* Literal.String.Backtick */
+.highlight .sc { color: #0044DD } /* Literal.String.Char */
+.highlight .dl { background-color: #fff0f0 } /* Literal.String.Delimiter */
+.highlight .sd { color: #DD4422 } /* Literal.String.Doc */
+.highlight .s2 { background-color: #fff0f0 } /* Literal.String.Double */
+.highlight .se { color: #666666; font-weight: bold; background-color: #fff0f0 } /* Literal.String.Escape */
+.highlight .sh { background-color: #fff0f0 } /* Literal.String.Heredoc */
+.highlight .si { background-color: #eeeeee } /* Literal.String.Interpol */
+.highlight .sx { color: #DD2200; background-color: #fff0f0 } /* Literal.String.Other */
+.highlight .sr { color: #000000; background-color: #fff0ff } /* Literal.String.Regex */
+.highlight .s1 { background-color: #fff0f0 } /* Literal.String.Single */
+.highlight .ss { color: #AA6600 } /* Literal.String.Symbol */
+.highlight .bp { color: #007020 } /* Name.Builtin.Pseudo */
+.highlight .fm { color: #0066BB; font-weight: bold } /* Name.Function.Magic */
+.highlight .vc { color: #336699 } /* Name.Variable.Class */
+.highlight .vg { color: #dd7700; font-weight: bold } /* Name.Variable.Global */
+.highlight .vi { color: #3333BB } /* Name.Variable.Instance */
+.highlight .vm { color: #996633 } /* Name.Variable.Magic */
+.highlight .il { color: #0000DD; font-weight: bold } /* Literal.Number.Integer.Long */
+    </style>
+    <script language="javascript">
+      function getStyle(el,styleProp) {
+        if (el.currentStyle)
+          var y = el.currentStyle[styleProp];
+        else if (window.getComputedStyle)
+          var y = document.defaultView.getComputedStyle(el,null).getPropertyValue(styleProp);
+        return y;
+      }
+      function toggle() {
+        var el = this.expandable_content;
+        var mark = this.expandable_marker;
+        if (el.style.display == "block") {
+          el.style.display = "none";
+          mark.innerHTML = "[+]";
+        } else {
+          el.style.display = "block";
+          mark.innerHTML = "[-]";
+        }
+      }
+      function init_expandables() {
+        var elts = document.getElementsByClassName("expandable");
+        for (var i = 0; i < elts.length; i++) {
+          var el = elts[i];
+          var clickable = el.getElementsByTagName("span")[0];
+          var marker = clickable.getElementsByClassName("marker")[0];
+          var content = el.getElementsByClassName("content")[0];
+          var width = clickable.clientWidth - parseInt(getStyle(content, "padding-left")) - parseInt(getStyle(content, "padding-right"));
+          content.style.width = width + "px";
+          clickable.expandable_content = content;
+          clickable.expandable_marker = marker;
+          clickable.onclick = toggle;
+        }
+      }
+      function set_class_display(c, st) {
+        var elements = document.querySelectorAll('.' + c),
+            len = elements.length;
+        for (i = 0; i < len; i++) {
+            elements[i].style.display = st;
+        }
+      }
+      function toggle_class_visibility(id) {
+        var box = document.getElementById(id);
+        set_class_display(id, box.checked ? '' : 'none');
+      }
+    </script>
+  </head>
+  <body onload="init_expandables()">
+      <div id="header">
+        <h1>Cppcheck report - [project name]: mbedtls/library/threading.c </h1>
+      </div>
+      <div id="menu" dir="rtl">
+       <p id="filename"><a href="index.html">Defects:</a> threading.c</p>
+<a href='58.html#line-25'> preprocessorErrorDirective 25</a>
+      </div>
+      <div id="content">
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137</pre></div></td><td class="code"><div class="highlight"><pre><span></span><a name="line-1"></a><span class="cm">/*</span>
+<a name="line-2"></a><span class="cm"> *  Threading abstraction layer</span>
+<a name="line-3"></a><span class="cm"> *</span>
+<a name="line-4"></a><span class="cm"> *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved</span>
+<a name="line-5"></a><span class="cm"> *  SPDX-License-Identifier: Apache-2.0</span>
+<a name="line-6"></a><span class="cm"> *</span>
+<a name="line-7"></a><span class="cm"> *  Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); you may</span>
+<a name="line-8"></a><span class="cm"> *  not use this file except in compliance with the License.</span>
+<a name="line-9"></a><span class="cm"> *  You may obtain a copy of the License at</span>
+<a name="line-10"></a><span class="cm"> *</span>
+<a name="line-11"></a><span class="cm"> *  http://www.apache.org/licenses/LICENSE-2.0</span>
+<a name="line-12"></a><span class="cm"> *</span>
+<a name="line-13"></a><span class="cm"> *  Unless required by applicable law or agreed to in writing, software</span>
+<a name="line-14"></a><span class="cm"> *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT</span>
+<a name="line-15"></a><span class="cm"> *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<a name="line-16"></a><span class="cm"> *  See the License for the specific language governing permissions and</span>
+<a name="line-17"></a><span class="cm"> *  limitations under the License.</span>
+<a name="line-18"></a><span class="cm"> *</span>
+<a name="line-19"></a><span class="cm"> *  This file is part of mbed TLS (https://tls.mbed.org)</span>
+<a name="line-20"></a><span class="cm"> */</span>
+<a name="line-21"></a>
+<a name="line-22"></a><span class="cp">#if !defined(MBEDTLS_CONFIG_FILE)</span>
+<a name="line-23"></a><span class="cp">#include</span> <span class="cpf">&quot;mbedtls/config.h&quot;</span><span class="cp"></span>
+<a name="line-24"></a><span class="cp">#else</span>
+<a name="line-25"></a><span class="hll"><span class="cp">#include</span> <span class="cpf">MBEDTLS_CONFIG_FILE</span><span class="cp"></span><span class='error2'>&lt;--- No header in #include</span>
+</span><a name="line-26"></a><span class="cp">#endif</span>
+<a name="line-27"></a>
+<a name="line-28"></a><span class="cp">#if defined(MBEDTLS_THREADING_C)</span>
+<a name="line-29"></a>
+<a name="line-30"></a><span class="cp">#include</span> <span class="cpf">&quot;mbedtls/threading.h&quot;</span><span class="cp"></span>
+<a name="line-31"></a>
+<a name="line-32"></a><span class="cp">#if defined(MBEDTLS_THREADING_PTHREAD)</span>
+<a name="line-33"></a><span class="k">static</span> <span class="kt">void</span> <span class="nf">threading_mutex_init_pthread</span><span class="p">(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="p">)</span>
+<a name="line-34"></a><span class="p">{</span>
+<a name="line-35"></a>    <span class="k">if</span><span class="p">(</span> <span class="n">mutex</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="p">)</span>
+<a name="line-36"></a>        <span class="k">return</span><span class="p">;</span>
+<a name="line-37"></a>
+<a name="line-38"></a>    <span class="n">mutex</span><span class="o">-&gt;</span><span class="n">is_valid</span> <span class="o">=</span> <span class="n">pthread_mutex_init</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mutex</span><span class="o">-&gt;</span><span class="n">mutex</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">;</span>
+<a name="line-39"></a><span class="p">}</span>
+<a name="line-40"></a>
+<a name="line-41"></a><span class="k">static</span> <span class="kt">void</span> <span class="nf">threading_mutex_free_pthread</span><span class="p">(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="p">)</span>
+<a name="line-42"></a><span class="p">{</span>
+<a name="line-43"></a>    <span class="k">if</span><span class="p">(</span> <span class="n">mutex</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">||</span> <span class="o">!</span><span class="n">mutex</span><span class="o">-&gt;</span><span class="n">is_valid</span> <span class="p">)</span>
+<a name="line-44"></a>        <span class="k">return</span><span class="p">;</span>
+<a name="line-45"></a>
+<a name="line-46"></a>    <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">pthread_mutex_destroy</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mutex</span><span class="o">-&gt;</span><span class="n">mutex</span> <span class="p">);</span>
+<a name="line-47"></a>    <span class="n">mutex</span><span class="o">-&gt;</span><span class="n">is_valid</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<a name="line-48"></a><span class="p">}</span>
+<a name="line-49"></a>
+<a name="line-50"></a><span class="k">static</span> <span class="kt">int</span> <span class="nf">threading_mutex_lock_pthread</span><span class="p">(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="p">)</span>
+<a name="line-51"></a><span class="p">{</span>
+<a name="line-52"></a>    <span class="k">if</span><span class="p">(</span> <span class="n">mutex</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">||</span> <span class="o">!</span> <span class="n">mutex</span><span class="o">-&gt;</span><span class="n">is_valid</span> <span class="p">)</span>
+<a name="line-53"></a>        <span class="k">return</span><span class="p">(</span> <span class="n">MBEDTLS_ERR_THREADING_BAD_INPUT_DATA</span> <span class="p">);</span>
+<a name="line-54"></a>
+<a name="line-55"></a>    <span class="k">if</span><span class="p">(</span> <span class="n">pthread_mutex_lock</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mutex</span><span class="o">-&gt;</span><span class="n">mutex</span> <span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">)</span>
+<a name="line-56"></a>        <span class="k">return</span><span class="p">(</span> <span class="n">MBEDTLS_ERR_THREADING_MUTEX_ERROR</span> <span class="p">);</span>
+<a name="line-57"></a>
+<a name="line-58"></a>    <span class="k">return</span><span class="p">(</span> <span class="mi">0</span> <span class="p">);</span>
+<a name="line-59"></a><span class="p">}</span>
+<a name="line-60"></a>
+<a name="line-61"></a><span class="k">static</span> <span class="kt">int</span> <span class="nf">threading_mutex_unlock_pthread</span><span class="p">(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="p">)</span>
+<a name="line-62"></a><span class="p">{</span>
+<a name="line-63"></a>    <span class="k">if</span><span class="p">(</span> <span class="n">mutex</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">||</span> <span class="o">!</span> <span class="n">mutex</span><span class="o">-&gt;</span><span class="n">is_valid</span> <span class="p">)</span>
+<a name="line-64"></a>        <span class="k">return</span><span class="p">(</span> <span class="n">MBEDTLS_ERR_THREADING_BAD_INPUT_DATA</span> <span class="p">);</span>
+<a name="line-65"></a>
+<a name="line-66"></a>    <span class="k">if</span><span class="p">(</span> <span class="n">pthread_mutex_unlock</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mutex</span><span class="o">-&gt;</span><span class="n">mutex</span> <span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">)</span>
+<a name="line-67"></a>        <span class="k">return</span><span class="p">(</span> <span class="n">MBEDTLS_ERR_THREADING_MUTEX_ERROR</span> <span class="p">);</span>
+<a name="line-68"></a>
+<a name="line-69"></a>    <span class="k">return</span><span class="p">(</span> <span class="mi">0</span> <span class="p">);</span>
+<a name="line-70"></a><span class="p">}</span>
+<a name="line-71"></a>
+<a name="line-72"></a><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_init</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_init_pthread</span><span class="p">;</span>
+<a name="line-73"></a><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_free</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_free_pthread</span><span class="p">;</span>
+<a name="line-74"></a><span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_lock</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_lock_pthread</span><span class="p">;</span>
+<a name="line-75"></a><span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_unlock</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_unlock_pthread</span><span class="p">;</span>
+<a name="line-76"></a>
+<a name="line-77"></a><span class="cm">/*</span>
+<a name="line-78"></a><span class="cm"> * With phtreads we can statically initialize mutexes</span>
+<a name="line-79"></a><span class="cm"> */</span>
+<a name="line-80"></a><span class="cp">#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1 }</span>
+<a name="line-81"></a>
+<a name="line-82"></a><span class="cp">#endif </span><span class="cm">/* MBEDTLS_THREADING_PTHREAD */</span><span class="cp"></span>
+<a name="line-83"></a>
+<a name="line-84"></a><span class="cp">#if defined(MBEDTLS_THREADING_ALT)</span>
+<a name="line-85"></a><span class="k">static</span> <span class="kt">int</span> <span class="nf">threading_mutex_fail</span><span class="p">(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="p">)</span>
+<a name="line-86"></a><span class="p">{</span>
+<a name="line-87"></a>    <span class="p">((</span><span class="kt">void</span><span class="p">)</span> <span class="n">mutex</span> <span class="p">);</span>
+<a name="line-88"></a>    <span class="k">return</span><span class="p">(</span> <span class="n">MBEDTLS_ERR_THREADING_BAD_INPUT_DATA</span> <span class="p">);</span>
+<a name="line-89"></a><span class="p">}</span>
+<a name="line-90"></a><span class="k">static</span> <span class="kt">void</span> <span class="nf">threading_mutex_dummy</span><span class="p">(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span><span class="n">mutex</span> <span class="p">)</span>
+<a name="line-91"></a><span class="p">{</span>
+<a name="line-92"></a>    <span class="p">((</span><span class="kt">void</span><span class="p">)</span> <span class="n">mutex</span> <span class="p">);</span>
+<a name="line-93"></a>    <span class="k">return</span><span class="p">;</span>
+<a name="line-94"></a><span class="p">}</span>
+<a name="line-95"></a>
+<a name="line-96"></a><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_init</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_dummy</span><span class="p">;</span>
+<a name="line-97"></a><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_free</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_dummy</span><span class="p">;</span>
+<a name="line-98"></a><span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_lock</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_fail</span><span class="p">;</span>
+<a name="line-99"></a><span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">mbedtls_mutex_unlock</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="o">=</span> <span class="n">threading_mutex_fail</span><span class="p">;</span>
+<a name="line-100"></a>
+<a name="line-101"></a><span class="cm">/*</span>
+<a name="line-102"></a><span class="cm"> * Set functions pointers and initialize global mutexes</span>
+<a name="line-103"></a><span class="cm"> */</span>
+<a name="line-104"></a><span class="kt">void</span> <span class="nf">mbedtls_threading_set_alt</span><span class="p">(</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">mutex_init</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">),</span>
+<a name="line-105"></a>                       <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">mutex_free</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">),</span>
+<a name="line-106"></a>                       <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">mutex_lock</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">),</span>
+<a name="line-107"></a>                       <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">mutex_unlock</span><span class="p">)(</span> <span class="n">mbedtls_threading_mutex_t</span> <span class="o">*</span> <span class="p">)</span> <span class="p">)</span>
+<a name="line-108"></a><span class="p">{</span>
+<a name="line-109"></a>    <span class="n">mbedtls_mutex_init</span> <span class="o">=</span> <span class="n">mutex_init</span><span class="p">;</span>
+<a name="line-110"></a>    <span class="n">mbedtls_mutex_free</span> <span class="o">=</span> <span class="n">mutex_free</span><span class="p">;</span>
+<a name="line-111"></a>    <span class="n">mbedtls_mutex_lock</span> <span class="o">=</span> <span class="n">mutex_lock</span><span class="p">;</span>
+<a name="line-112"></a>    <span class="n">mbedtls_mutex_unlock</span> <span class="o">=</span> <span class="n">mutex_unlock</span><span class="p">;</span>
+<a name="line-113"></a>
+<a name="line-114"></a>    <span class="n">mbedtls_mutex_init</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mbedtls_threading_readdir_mutex</span> <span class="p">);</span>
+<a name="line-115"></a>    <span class="n">mbedtls_mutex_init</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mbedtls_threading_gmtime_mutex</span> <span class="p">);</span>
+<a name="line-116"></a><span class="p">}</span>
+<a name="line-117"></a>
+<a name="line-118"></a><span class="cm">/*</span>
+<a name="line-119"></a><span class="cm"> * Free global mutexes</span>
+<a name="line-120"></a><span class="cm"> */</span>
+<a name="line-121"></a><span class="kt">void</span> <span class="nf">mbedtls_threading_free_alt</span><span class="p">(</span> <span class="kt">void</span> <span class="p">)</span>
+<a name="line-122"></a><span class="p">{</span>
+<a name="line-123"></a>    <span class="n">mbedtls_mutex_free</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mbedtls_threading_readdir_mutex</span> <span class="p">);</span>
+<a name="line-124"></a>    <span class="n">mbedtls_mutex_free</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">mbedtls_threading_gmtime_mutex</span> <span class="p">);</span>
+<a name="line-125"></a><span class="p">}</span>
+<a name="line-126"></a><span class="cp">#endif </span><span class="cm">/* MBEDTLS_THREADING_ALT */</span><span class="cp"></span>
+<a name="line-127"></a>
+<a name="line-128"></a><span class="cm">/*</span>
+<a name="line-129"></a><span class="cm"> * Define global mutexes</span>
+<a name="line-130"></a><span class="cm"> */</span>
+<a name="line-131"></a><span class="cp">#ifndef MUTEX_INIT</span>
+<a name="line-132"></a><span class="cp">#define MUTEX_INIT</span>
+<a name="line-133"></a><span class="cp">#endif</span>
+<a name="line-134"></a><span class="n">mbedtls_threading_mutex_t</span> <span class="n">mbedtls_threading_readdir_mutex</span> <span class="n">MUTEX_INIT</span><span class="p">;</span>
+<a name="line-135"></a><span class="n">mbedtls_threading_mutex_t</span> <span class="n">mbedtls_threading_gmtime_mutex</span> <span class="n">MUTEX_INIT</span><span class="p">;</span>
+<a name="line-136"></a>
+<a name="line-137"></a><span class="cp">#endif </span><span class="cm">/* MBEDTLS_THREADING_C */</span><span class="cp"></span>
+</pre></div>
+</td></tr></table>
+      </div>
+      <div id="footer">
+        <p>
+         Cppcheck 1.87 - a tool for static C/C++ code analysis</br>
+         </br>
+         Internet: <a href="http://cppcheck.net">http://cppcheck.net</a></br>
+         IRC: <a href="irc://irc.freenode.net/cppcheck">irc://irc.freenode.net/cppcheck</a></br>
+        <p>
+      </div>
+  </body>
+</html>

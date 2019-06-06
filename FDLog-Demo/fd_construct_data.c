@@ -31,7 +31,7 @@ static const char *fdidentifier = "uid";              // 类型: String 单条�
 FD_Construct_Data *
 fd_construct_json_data(char *log,
                        char *flag,
-                       long long local_time,
+                       char *local_time,
                        char *thread_name,
                        long long thread_id,
                        int is_main,
@@ -63,7 +63,7 @@ fd_construct_json_data(char *log,
             // 日志模块名字: Vom SO 等等
             fd_add_item_string(map, fdflag_key, flag);
             // 记录时间
-            fd_add_item_number(map, fdlocaltime_key, (double) local_time);
+            fd_add_item_string(map, fdlocaltime_key, local_time);
             // 线程名字
             fd_add_item_string(map, fdthreadname_key, thread_name);
             // 线程ID

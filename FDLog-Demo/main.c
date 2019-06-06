@@ -14,11 +14,11 @@
 #include <stdlib.h>
 #include "fd_log.h"
 #include "fd_rsa_helper.h"
-#include <mbedtls/pk.h>
-#include <mbedtls/rsa.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/base64.h>
+#include <mbedtls/fd_pk.h>
+#include <mbedtls/fd_rsa.h>
+#include <mbedtls/fd_entropy.h>
+#include <mbedtls/fd_ctr_drbg.h>
+#include <mbedtls/fd_base64.h>
 
 
 
@@ -95,7 +95,7 @@ int main(int argc, const char * argv[]) {
         return 1;
     }
 
-    unsigned char ctr[] = "KiVeKuTqa3tLFpWt++u9LZa+8BoLBTotPScQ289yVEYVB8CRk+SnVAW0bztzbJcvVBPzRUaiLddiTeTnYsH/wyuuthEj8M7/DmMks3tghL1QGcNqnuCKGuuA9ACwqDljmVtHUDtNCw2EhF9Z7wbfc5zoHjaemMH7f4JknT9U3BQ=";
+    unsigned char ctr[] = "Lnwak+kfNWuUcqiRJYIfvDSbsACL4hPdnwaTQw5EX6VhLNYJL63vaLbK5oop7fqWDd7IM1LmHFMrC0lFkjv3C4jirtizPtB3hECDLBb6bCdyyiecXuT7c5vJGiJVBc73BgfX2u7OOne93INxGe/UKQhj5SXv5XaEdhctlIwBh4I=";
     int success = fdlog_initialize_by_rsa(cwd, ctr);
     if (!success) {
         printf("fd_initialize_log failture! \n");
@@ -118,18 +118,16 @@ int main(int argc, const char * argv[]) {
 
     // 写入日志
     int i = 1;
-    while (i < 19999) {
-        char *log = rand_string_alloc(30);
-        int flag = 5;
-        long long localtime = 123123;
-        char thread_name[] = "main";
-        int thread_id = 1;
-        int is_main = 1;
-        int level = 0;
-//        fd_construct_json_data(<#char *log#>, <#char *flag#>, <#long long local_time#>, <#char *thread_name#>, <#long long thread_id#>, <#int is_main#>, <#int level#>, <#int log_type#>, <#char *app_net#>, <#char *user_system_name#>, <#char *app_name#>, <#char *app_version#>, <#char *phone_brand#>, <#char *user_id#>, <#char *user_name#>, <#char *user_device#>, <#char *user_system_version#>, <#char *identifier#>)
-//        FD_Construct_Data *data = fd_construct_json_data(log, flag, localtime, thread_name,thread_id, is_main, level);
-//        printf("i: %d\n",i);
-//        fdlog(data);
+    while (i < 20000) {
+//        char *log = rand_string_alloc(30);
+//        int flag = 5;
+//        long long localtime = 123123;
+//        char thread_name[] = "main";
+//        int thread_id = 1;
+//        int is_main = 1;
+//        int level = 0;
+        FD_Construct_Data *data = fd_construct_json_data("1", "1", 1, "1", 1, 1, 1, 1, "1", "1", "1", "1", "1", "1", "1", "1", "1", "1");
+        fdlog(data);
         i++;
     }
     

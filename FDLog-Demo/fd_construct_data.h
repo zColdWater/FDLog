@@ -24,7 +24,7 @@ typedef struct {
 FD_Construct_Data *
 fd_construct_json_data(char *log,
                        char *flag,
-                       long long local_time,
+                       char *local_time,
                        char *thread_name,
                        long long thread_id,
                        int is_main,

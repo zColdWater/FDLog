@@ -20,7 +20,7 @@
 #include "fd_json_helper.h"
 #include "fd_console_helper.h"
 #include "fd_base_helper.h"
-#include "pk.h"
+#include "fd_pk.h"
 #include "fd_rsa_helper.h"
 
 extern FDLOGMODEL *model;
@@ -479,6 +479,35 @@ int fdlog_write_to_cache(FD_Construct_Data *data) {
         }
     }
     
+    
+    // 1. 拿到缓存文件时间
+    // 2. 对比当前时间 与 缓存文件时间
+    // 3. 如果一致，继续。 如果不一致，同步 缓存到日志，重新插入头部。
+    
+    // Read date on cache header as before date
+    cJSON* croot = cJSON_Parse(model->mmap_header_content_ptr);
+    char* cache_date = (char*)calloc(1, 1024);
+    strcpy(cache_date, cJSON_GetObjectItem(croot,FD_DATE)->valuestring);
+    cJSON_Delete(croot);
+    
+    // Get current date as now
+    char* current_date = get_current_date();
+    
+    long before = atol(cache_date);
+    long now = atol(current_date);
+    
+    if (before != now) {
+        fd_printf("FDLog: FDLog fdlog_write_to_cache: cache content before today, so need save to log file. \n");
+        fdlog_sync();
+    }
+
+    free(cache_date);
+    cache_date = NULL;
+    
+    free(current_date);
+    current_date = NULL;
+    
+    
     // Tailer must be point to write tailer or header tailer
     // otherwise cache file struct not correct!
     if ((*(model->mmap_tailer_ptr - 1) == FD_MMAP_WRITE_CONTENT_TAILER) ||
@@ -615,9 +644,21 @@ int fdlog_sync() {
         is_sync_log = 0;
         return 0;
     }
-
+    
+    if (*(model->mmap_content_len_ptr) == 0) {
+        fd_printf("FDLog: FDLog fdlog_sync: cache content is nil, so can't sync");
+        is_sync_log = 0;
+        return 0;
+    }
+    
+    // TODO: 逻辑需要整理
+    // 1. 获取缓存文件 日志
+    // 2. 对比当前日志 与 缓存文件日志
+    // 3. 如果缓存日志不是当前日期，创建一个那个日志下的文件，写入。
+    
     int is_new_logfile = 0;
     char* last_file_name = look_for_last_logfile();
+    
     // 如果 找不到上一次的日志文件
     if (last_file_name == NULL) {
         if (create_new_current_date_logfile()) {
@@ -760,7 +801,7 @@ int fdlog_sync() {
  * ----------------------------
  *   Returns whether the sync cache to local log file was successful
  *
- *   Don't need to init before invoke fdlog_sync_no_init
+ *   此方法调用 不需要提前 FDLog 初始化 即 fdlog_initialize_by_rsa
  *
  *   returns: 1 or 0
  */
@@ -913,18 +954,25 @@ int fdlog_sync_no_init(int server_id) {
  *   returns: 1 or 0
  */
 int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
-    
     is_init_ok = FD_INIT_FAILURE;
+
+    // TODO:
+    // 暂不支持大端字节序的CPU
+    // 原因: Server目前只处理小端子节序，后续考虑 将大小子节序信息 告诉Server然后用来解密。
+    if (fd_cpu_byteorder() != FD_BYTEORDER_LOW) {
+        fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: not support big endian \n");
+        return is_init_ok;
+    }
+    
     
     if ((root == NULL) || (ctr == NULL)) {
         fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: root or ctr is NULL \n");
-        return is_init_ok;
     }
     
     unsigned char result[MBEDTLS_MPI_MAX_SIZE];
     memset(result, 0, MBEDTLS_MPI_MAX_SIZE);
-    int isRSADecodeSuccess = fd_rsa_decode(ctr,result,MBEDTLS_MPI_MAX_SIZE);
-    if (isRSADecodeSuccess != 0) {
+    int is_rsa_decode_success = fd_rsa_decode(ctr,result,MBEDTLS_MPI_MAX_SIZE);
+    if (is_rsa_decode_success != 0) {
         fd_printf("FDLog: FDLog fdlog_initialize_by_rsa: fd_rsa_decode failture \n");
         return is_init_ok;
     }
@@ -1098,11 +1146,19 @@ int fdlog_initialize_by_rsa(char* root, unsigned char* ctr) {
  *   returns: 1 or 0
  */
 int fdlog(FD_Construct_Data *data) {
+    
+    if (data->data_len > FD_MAX_LOG_LENGTH) {
+        fd_printf("FDLog: log content length more than FD_MAX_LOG_LENGTH(110000) bytes, make content be short please. \n");
+        return 0;
+    }
+    
     if (is_logging) {
         fd_printf("FDLog: other task logging, you need waiting other task finish. \n");
         return 0;
     }
+    
     is_logging = 1;
+    
     if (!is_init_ok) {
         fd_printf("FDLog: init failture!\n");
         is_logging = 0;

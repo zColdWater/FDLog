@@ -28,7 +28,7 @@
 
 #define FD_LOG_CACHE_NAME "cache.mmap"
 #define FD_DATE "fd_date"
-#define FD_SERVER_VER "fd_server_ver" // 服务器版本
+#define FD_SERVER_VER "fd_server_ver" // 服务器下发 AES(Key & IV) 的版本
 #define FD_SIZE "fd_mmap_size"
 
 #define FD_AES_IV "IV" // AES 加密 IV （ 解析服务器下发RSA加密数据中的IV字段 ）
@@ -39,6 +39,7 @@
 #define FD_MAX_PATH 1024 * 3
 #define FD_MAX_FILE_COUNT 1024 * 2 // 当天最多日志个数 2048个
 #define FD_MMAP_HEADER_CONTENT_LEN 1024 // 缓存MMAP文件头部信息 存储大小，目前1024完全够用，如果修改插入头部内容多少需要修改此处值。
+#define FD_MAX_LOG_LENGTH 110000 // 单条日志最大输入字节要小于110000。
 
 /* 当缓存内容占整个文件到这个比例时 会输出到日志文件中 */
 #define FD_MAX_MMAP_SCALE 0.3
@@ -68,7 +69,7 @@ typedef struct fd_core_model {
     int is_ready_gzip; // 0 or 1
     int is_init_global_vars; // 0 or 1
     int is_zlibing; // 0 or 1 是否正在压缩状态
-    int server_ver; // 服务器的版本号
+    int server_ver; // 服务器的版本号 其实就是 AES（KEY 和 IV）对应的版本
     
     unsigned int save_recent_days_num; // 保存最近多少天的日志
     unsigned long long max_logfix_size; // 日志文件最大尺寸

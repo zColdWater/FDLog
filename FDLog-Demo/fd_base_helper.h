@@ -1,6 +1,10 @@
 #ifndef fd_base_helper_h
 #define fd_base_helper_h
 
+#define FD_BYTEORDER_NONE  0
+#define FD_BYTEORDER_HIGH 1
+#define FD_BYTEORDER_LOW 2
+
 /**
  获取当前系统时间
 

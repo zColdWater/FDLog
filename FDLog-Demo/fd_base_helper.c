@@ -3,9 +3,6 @@
 #include <sys/time.h>
 #include <memory.h>
 
-#define FD_BYTEORDER_NONE  0
-#define FD_BYTEORDER_HIGH 1
-#define FD_BYTEORDER_LOW 2
 
 void ReverseArray(char arr[], long long size)
 {
